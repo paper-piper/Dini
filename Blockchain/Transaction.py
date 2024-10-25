@@ -36,6 +36,15 @@ class Transaction:
                     str(self.recipient_pk.public_numbers().n)[:3] + "...",
                     self.amount)
 
+    def __repr__(self):
+        """
+        Provide a readable string representation of the transaction for debugging.
+        :return: A string representation of the transaction, including sender, recipient, and amount.
+        """
+        sender_id = str(self.sender_pk.public_numbers().n)[:3]
+        recipient_id = str(self.recipient_pk.public_numbers().n)[:3]
+        return f"Transaction(Sender: {sender_id}..., Recipient: {recipient_id}..., Amount: {self.amount})"
+
     def calculate_hash(self):
         """
         Calculate a SHA-256 hash of the transaction contents.
@@ -94,16 +103,21 @@ class Transaction:
             return False
 
 
+def get_sk_pk_pair():
+    ps = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    return ps, ps.public_key()
+
+
 def assertion_check():
     """
     Performs various assertions to verify the functionality of the Transaction class using actual PK-SK signing.
-
     :return: None
     """
+    logger.info("Starting assertions check for Transaction class...")
+
     # Generate a test private and public key for signing and verification
-    sender_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    sender_public_key = sender_private_key.public_key()
-    recipient_public_key = rsa.generate_private_key(public_exponent=65537, key_size=2048).public_key()
+    sender_private_key, sender_public_key = get_sk_pk_pair()
+    _, recipient_public_key = get_sk_pk_pair()
 
     # Create a test transaction
     transaction = Transaction(sender_public_key, recipient_public_key, 10)
