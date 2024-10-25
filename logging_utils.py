@@ -1,6 +1,6 @@
 import logging
 import os
-ROOT_DIRECTORY = "..\\logs\\"
+ROOT_DIRECTORY = "..\\Logs\\"
 
 
 def setup_logger(name, level=logging.DEBUG):

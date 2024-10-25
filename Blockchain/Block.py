@@ -30,7 +30,7 @@ class Block:
         self.transactions = transactions
         self.timestamp = timestamp or time.time()
         self.nonce = 0
-        self.hash = self.calculate_hash()
+        self.hash = None  # Initially None to avoid confusion before mining
         logger.info("Block created with previous hash: %s, transactions: %s", previous_hash, transactions)
 
     def calculate_hash(self):
@@ -61,6 +61,7 @@ class Block:
 
         logger.info("Starting mining with difficulty %d...", difficulty)
 
+        self.hash = self.calculate_hash()
         while self.hash[:difficulty] != target:
             self.nonce += 1
             self.hash = self.calculate_hash()
@@ -79,6 +80,33 @@ class Block:
                              self.nonce, best_hash, max_trailing_zeros)
 
         logger.info("Block mined successfully. Nonce: %d, Hash: %s", self.nonce, self.hash)
+
+    def validate_transactions(self):
+        """
+        Validates each transaction in the block to ensure integrity.
+
+        :return: True if all transactions are valid, False otherwise.
+        """
+        for transaction in self.transactions:
+            if not transaction.verify_signature():
+                logger.warning("Invalid transaction detected: %s", transaction)
+                return False
+        logger.info("All transactions validated successfully for block: %s", self)
+        return True
+
+    def __repr__(self):
+        """
+        Provides a readable string representation of the block.
+
+        :return: A string representation of the block.
+        """
+        if len(self.transactions) < 5:
+            transaction_reprs = ", ".join(repr(tx) for tx in self.transactions)
+            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
+                    f" Nonce: {self.nonce}, Transactions: [{transaction_reprs}])")
+        else:
+            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
+                    f" Nonce: {self.nonce}, Transactions: {len(self.transactions)})")
 
 
 def assertion_check():
