@@ -1,5 +1,6 @@
 import hashlib
 import time
+from Transaction import Transaction, get_sk_pk_pair
 from logging_utils import setup_logger
 
 # Setup logger for file
@@ -21,9 +22,8 @@ class Block:
         """
         Initialize a Block instance with a previous block's hash, a list of transactions,
         and an optional timestamp.
-
         :param previous_hash: The hash of the previous block in the chain.
-        :param transactions: A list of transactions included in this block.
+        :param transactions: A list of Transaction objects included in this block.
         :param timestamp: The time when the block is created, defaults to current time.
         """
         self.previous_hash = previous_hash
@@ -39,33 +39,67 @@ class Block:
 
         :return: A string representing the hash of the block.
         """
-        data = f"{self.previous_hash}{self.transactions}{self.timestamp}{self.nonce}"
+        # Serialize transactions to strings using repr
+        serialized_transactions = ''.join(repr(tx) for tx in self.transactions)
+        data = f"{self.previous_hash}{serialized_transactions}{self.timestamp}{self.nonce}"
         block_hash = hashlib.sha256(data.encode()).hexdigest()
-        logger.debug("Block hash calculated: %s", block_hash)
         return block_hash
 
     def mine_block(self, difficulty):
         """
         Perform Proof of Work by finding a hash that meets the difficulty target.
+        The process involves incrementing the nonce until the hash of the block's contents
+        meets the required difficulty, which is represented by a hash starting with a certain
+        number of leading zeros.
 
-        :param difficulty: The number of leading zeros required in the hash.
+        :param difficulty: The number of leading zeros required in the hash for Proof of Work.
         :return: None
         """
         target = "0" * difficulty
+        best_hash = None
+        max_trailing_zeros = 0
+
+        logger.info("Starting mining with difficulty %d...", difficulty)
+
         while self.hash[:difficulty] != target:
             self.nonce += 1
             self.hash = self.calculate_hash()
+
+            # Count trailing zeros in the current hash
+            trailing_zeros = len(self.hash) - len(self.hash.rstrip("0"))
+
+            # Update the best hash if the current hash has more trailing zeros
+            if trailing_zeros > max_trailing_zeros:
+                max_trailing_zeros = trailing_zeros
+                best_hash = self.hash
+
+            # Log the best hash every 100,000 attempts
+            if self.nonce % 100000 == 0:
+                logger.debug("Mining attempt %d, Best hash so far: %s (Trailing zeros: %d)",
+                             self.nonce, best_hash, max_trailing_zeros)
+
         logger.info("Block mined successfully. Nonce: %d, Hash: %s", self.nonce, self.hash)
 
 
 def assertion_check():
     """
-    Performs various assertions to verify the functionality of the Block class.
-
+    Performs various assertions to verify the functionality of the Block class using Transaction objects.
     :return: None
     """
-    # Create a test block
-    test_block = Block("0" * 64, ["transaction1", "transaction2"])
+    logger.info("Starting assertions check for Block class...")
+
+    # Create sample Transaction objects
+    sender_private_key, sender_public_key = get_sk_pk_pair()
+    _, recipient_public_key = get_sk_pk_pair()
+
+    transaction1 = Transaction(sender_public_key, recipient_public_key, 10)
+    transaction1.sign_transaction(sender_private_key)
+
+    transaction2 = Transaction(sender_public_key, recipient_public_key, 20)
+    transaction2.sign_transaction(sender_private_key)
+
+    # Create a test block with transactions
+    test_block = Block("0" * 64, [transaction1, transaction2])
 
     # Verify the hash calculation
     initial_hash = test_block.calculate_hash()
