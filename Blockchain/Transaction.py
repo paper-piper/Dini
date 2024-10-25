@@ -1,4 +1,7 @@
 import hashlib
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.exceptions import InvalidSignature
 from logging_utils import setup_logger
 
 # Setup logger for file
@@ -13,90 +16,113 @@ VERIFICATION_FAIL_ERROR = "Verification should fail with incorrect public key"
 
 class Transaction:
     """
-    Represents a single transaction in the cryptocurrency network. Each transaction includes the sender's
-    and recipient's identifiers, the transaction amount, and an optional signature to ensure authenticity.
+    Represents a transaction in the cryptocurrency network, with a sender, recipient,
+    amount, and a digital signature for validation using an actual PK-SK system.
     """
 
-    def __init__(self, sender_id, recipient_id, amount):
+    def __init__(self, sender_pk, recipient_pk, amount):
         """
-        Initialize a Transaction instance with sender ID, recipient ID, and amount.
-
-        :param sender_id: Unique ID for the sender, simulating a public key.
-        :param recipient_id: Unique ID for the recipient.
+        Initialize a Transaction instance with the sender's and recipient's public keys and the amount.
+        :param sender_pk: RSA public key object representing the sender's public key.
+        :param recipient_pk: RSA public key object representing the recipient's public key.
         :param amount: The amount of currency to be transferred.
         """
-        self.sender_id = sender_id
-        self.recipient_id = recipient_id
+        self.sender_pk = sender_pk
+        self.recipient_pk = recipient_pk
         self.amount = amount
         self.signature = None
-        logger.info("Transaction created: %s -> %s : %s", sender_id, recipient_id, amount)
+        logger.info("Transaction created: Sender: %s, Recipient: %s, Amount: %s",
+                    str(self.sender_pk.public_numbers().n)[:3] + "...",
+                    str(self.recipient_pk.public_numbers().n)[:3] + "...",
+                    self.amount)
 
     def calculate_hash(self):
         """
-        Calculate a SHA-256 hash of the transaction details, acting as a unique identifier.
+        Calculate a SHA-256 hash of the transaction contents.
 
         :return: Hash string representing the transaction.
         """
-        data = f"{self.sender_id}{self.recipient_id}{self.amount}"
+        data = f"{self.sender_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}" \
+               f"{self.recipient_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}" \
+               f"{self.amount}"
         transaction_hash = hashlib.sha256(data.encode()).hexdigest()
-        logger.debug("Transaction hash calculated: %s", transaction_hash)
+        logger.debug("Transaction hash calculated: %s", transaction_hash[:5] + "...")
         return transaction_hash
 
     def sign_transaction(self, private_key):
         """
-        Simulates signing the transaction using a private key by hashing the transaction with the key.
+        Sign the transaction using the sender's private key.
 
-        :param private_key: String representing the sender's private key.
+        :param private_key: RSA private key object representing the sender's private key.
         :return: None
         """
         if not private_key:
             logger.error("Failed to sign transaction: Missing private key.")
             raise ValueError("Private key is required for signing a transaction.")
 
-        hash_value = self.calculate_hash()
-        self.signature = hashlib.sha256((hash_value + private_key).encode()).hexdigest()
-        logger.info("Transaction signed. Signature: %s", self.signature)
+        # Calculate hash and sign it
+        hash_value = self.calculate_hash().encode()
+        self.signature = private_key.sign(
+            hash_value,
+            padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
+            hashes.SHA256()
+        )
+        logger.info("Transaction signed. Signature: %s", str(self.signature)[:5] + "...")
 
-    def verify_signature(self, public_key):
+    def verify_signature(self):
         """
-        Verifies the transaction signature against the provided public key.
+        Verify the transaction's signature using the sender's public key.
 
-        :param public_key: Public key string to verify the transaction.
-        :return: True if the signature matches the transaction and public key; otherwise, False.
+        :return: True if the signature is valid, False otherwise.
         """
         if not self.signature:
             logger.error("Verification failed: No signature present in transaction.")
             raise ValueError("No signature in this transaction.")
 
-        expected_signature = hashlib.sha256((self.calculate_hash() + public_key).encode()).hexdigest()
-        is_valid = expected_signature == self.signature
-        logger.debug("Signature verification %s", "succeeded" if is_valid else "failed")
-        return is_valid
+        hash_value = self.calculate_hash().encode()
+        try:
+            self.sender_pk.verify(
+                self.signature,
+                hash_value,
+                padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
+                hashes.SHA256()
+            )
+            logger.debug("Signature verification succeeded")
+            return True
+        except InvalidSignature:
+            logger.debug("Signature verification failed")
+            return False
 
 
 def assertion_check():
     """
-    Performs various assertions to verify the functionality of the Transaction class.
+    Performs various assertions to verify the functionality of the Transaction class using actual PK-SK signing.
 
     :return: None
     """
-    # Create a test transaction
-    transaction = Transaction("Alice", "Bob", 10)
+    # Generate a test private and public key for signing and verification
+    sender_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    sender_public_key = sender_private_key.public_key()
+    recipient_public_key = rsa.generate_private_key(public_exponent=65537, key_size=2048).public_key()
 
-    # Calculate hash and verify expected hash structure (length)
+    # Create a test transaction
+    transaction = Transaction(sender_public_key, recipient_public_key, 10)
+
+    # Calculate hash and verify expected hash structure
     assert len(transaction.calculate_hash()) == 64, HASH_LENGTH_ERROR
 
     # Sign transaction and verify signature is created
-    transaction.sign_transaction("alice_private_key")
+    transaction.sign_transaction(sender_private_key)
     assert transaction.signature is not None, SIGNATURE_CREATION_ERROR
 
-    # Verify the signature - should return True with correct 'public key'
-    assert transaction.verify_signature("alice_private_key"), VERIFICATION_SUCCESS_ERROR
+    # Verify the signature - should return True with correct public key
+    assert transaction.verify_signature(), VERIFICATION_SUCCESS_ERROR
 
-    # Attempt verification with incorrect public key - should return False
-    assert not transaction.verify_signature("wrong_key"), VERIFICATION_FAIL_ERROR
+    # Modify the amount and check that verification fails
+    transaction.amount = 20
+    assert not transaction.verify_signature(), VERIFICATION_FAIL_ERROR
 
-    logger.info("All assertions passed.")
+    logger.info("All assertions passed for Transaction class.")
 
 
 if __name__ == "__main__":
