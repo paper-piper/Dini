@@ -20,7 +20,7 @@ class Transaction:
     amount, and a digital signature for validation using an actual PK-SK system.
     """
 
-    def __init__(self, sender_pk, recipient_pk, amount):
+    def __init__(self, sender_pk, recipient_pk, amount, signature=None):
         """
         Initialize a Transaction instance with the sender's and recipient's public keys and the amount.
         :param sender_pk: RSA public key object representing the sender's public key.
@@ -30,11 +30,32 @@ class Transaction:
         self.sender_pk = sender_pk
         self.recipient_pk = recipient_pk
         self.amount = amount
-        self.signature = None
+        self.signature = signature
         logger.info("Transaction created: Sender: %s, Recipient: %s, Amount: %s",
                     str(self.sender_pk.public_numbers().n)[:3] + "...",
                     str(self.recipient_pk.public_numbers().n)[:3] + "...",
                     self.amount)
+
+    def to_dict(self):
+        return {
+            "sender_pk": self.sender_pk.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode(),
+            "recipient_pk": self.recipient_pk.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode(),
+            "amount": self.amount,
+            "signature": self.signature.hex() if self.signature else None,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        sender_pk = serialization.load_pem_public_key(data["sender_pk"].encode())
+        recipient_pk = serialization.load_pem_public_key(data["recipient_pk"].encode())
+        signature = bytes.fromhex(data["signature"]) if data["signature"] else None
+        return cls(sender_pk, recipient_pk, data["amount"], signature)
 
     def __repr__(self):
         """
@@ -44,6 +65,7 @@ class Transaction:
         sender_id = str(self.sender_pk.public_numbers().n)[:3]
         recipient_id = str(self.recipient_pk.public_numbers().n)[:3]
         return f"Transaction(Sender: {sender_id}..., Recipient: {recipient_id}..., Amount: {self.amount})"
+
 
     def calculate_hash(self):
         """

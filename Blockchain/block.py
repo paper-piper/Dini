@@ -1,6 +1,6 @@
 import hashlib
 import time
-from transaction import Transaction, get_sk_pk_pair
+from Blockchain.transaction import Transaction, get_sk_pk_pair
 from logging_utils import setup_logger
 
 # Setup logger for file
@@ -18,7 +18,7 @@ class Block:
     a reference to the previous block's hash, a timestamp, a nonce for Proof of Work, and a hash.
     """
 
-    def __init__(self, previous_hash, transactions, timestamp=None):
+    def __init__(self, previous_hash, transactions, timestamp=None, nonce=0, block_hash=None):
         """
         Initialize a Block instance with a previous block's hash, a list of transactions,
         and an optional timestamp.
@@ -29,9 +29,43 @@ class Block:
         self.previous_hash = previous_hash
         self.transactions = transactions
         self.timestamp = timestamp or time.time()
-        self.nonce = 0
-        self.hash = None  # Initially None to avoid confusion before mining
+        self.nonce = nonce
+        self.block_hash = block_hash  # Initially None to avoid confusion before mining
         logger.info("Block created with previous hash: %s, transactions: %s", previous_hash, transactions)
+
+    def to_dict(self):
+        return {
+            "previous_hash": self.previous_hash,
+            "transactions": [tx.to_dict() for tx in self.transactions],
+            "timestamp": self.timestamp,
+            "nonce": self.nonce,
+            "hash": self.block_hash,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        transactions = [Transaction.from_dict(tx_data) for tx_data in data["transactions"]]
+        return cls(
+            previous_hash=data["previous_hash"],
+            transactions=transactions,
+            timestamp=data["timestamp"],
+            nonce=data["nonce"],
+            block_hash=data["hash"],
+        )
+
+    def __repr__(self):
+        """
+        Provides a readable string representation of the block.
+
+        :return: A string representation of the block.
+        """
+        if len(self.transactions) < 5:
+            transaction_reprs = ", ".join(repr(tx) for tx in self.transactions)
+            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.block_hash[:6]}...,"
+                    f" Nonce: {self.nonce}, Transactions: [{transaction_reprs}])")
+        else:
+            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.block_hash[:6]}...,"
+                    f" Nonce: {self.nonce}, Transactions: {len(self.transactions)})")
 
     def calculate_hash(self):
         """
@@ -58,20 +92,6 @@ class Block:
         logger.info("All transactions validated successfully for block: %s", self)
         return True
 
-    def __repr__(self):
-        """
-        Provides a readable string representation of the block.
-
-        :return: A string representation of the block.
-        """
-        if len(self.transactions) < 5:
-            transaction_reprs = ", ".join(repr(tx) for tx in self.transactions)
-            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
-                    f" Nonce: {self.nonce}, Transactions: [{transaction_reprs}])")
-        else:
-            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
-                    f" Nonce: {self.nonce}, Transactions: {len(self.transactions)})")
-
 
 def assertion_check():
     """
@@ -95,7 +115,7 @@ def assertion_check():
 
     # Verify the hash calculation before mining
     initial_hash = test_block.calculate_hash()
-    assert test_block.hash is None, HASH_VALIDATION_ERROR  # Ensure no hash is set initially
+    assert test_block.block_hash is None, HASH_VALIDATION_ERROR  # Ensure no hash is set initially
     assert initial_hash == test_block.calculate_hash(), HASH_VALIDATION_ERROR
 
     logger.info("All assertions passed for Block class.")
