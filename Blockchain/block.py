@@ -30,7 +30,7 @@ class Block:
         self.transactions = transactions
         self.timestamp = timestamp or time.time()
         self.nonce = nonce
-        self.block_hash = block_hash  # Initially None to avoid confusion before mining
+        self.hash = block_hash  # Initially None to avoid confusion before mining
         logger.info("Block created with previous hash: %s, transactions: %s", previous_hash, transactions)
 
     def to_dict(self):
@@ -39,7 +39,7 @@ class Block:
             "transactions": [tx.to_dict() for tx in self.transactions],
             "timestamp": self.timestamp,
             "nonce": self.nonce,
-            "hash": self.block_hash,
+            "hash": self.hash,
         }
 
     @classmethod
@@ -61,10 +61,10 @@ class Block:
         """
         if len(self.transactions) < 5:
             transaction_reprs = ", ".join(repr(tx) for tx in self.transactions)
-            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.block_hash[:6]}...,"
+            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
                     f" Nonce: {self.nonce}, Transactions: [{transaction_reprs}])")
         else:
-            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.block_hash[:6]}...,"
+            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
                     f" Nonce: {self.nonce}, Transactions: {len(self.transactions)})")
 
     def calculate_hash(self):
@@ -115,7 +115,7 @@ def assertion_check():
 
     # Verify the hash calculation before mining
     initial_hash = test_block.calculate_hash()
-    assert test_block.block_hash is None, HASH_VALIDATION_ERROR  # Ensure no hash is set initially
+    assert test_block.hash is None, HASH_VALIDATION_ERROR  # Ensure no hash is set initially
     assert initial_hash == test_block.calculate_hash(), HASH_VALIDATION_ERROR
 
     logger.info("All assertions passed for Block class.")

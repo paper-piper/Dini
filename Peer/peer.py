@@ -35,7 +35,7 @@ class Peer:
     def pass_block(self, block):
         """Pass the mined or received block to other peers."""
         # Network broadcast logic to be implemented
-        self.logger.info("Broadcasting block with hash: %s", block.block_hash)
+        self.logger.info("Broadcasting block with hash: %s", block.hash)
 
     def add_peer(self, peer_info):
         """Adds a new peer to the network list."""
