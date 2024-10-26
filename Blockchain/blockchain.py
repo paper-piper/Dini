@@ -1,5 +1,5 @@
-from Block import Block
-from Transaction import Transaction, get_sk_pk_pair
+from block import Block
+from transaction import Transaction, get_sk_pk_pair
 from logging_utils import setup_logger
 
 # Setup logger for file
@@ -54,32 +54,25 @@ class Blockchain:
         logger.debug("Retrieved latest block: %s", latest_block)
         return latest_block
 
-    def mine_block(self, block):
-        """
-        Mines a given block using the set difficulty level.
-
-        :param block: The block to mine.
-        :return: None
-        """
-        block.mine_block(self.difficulty)
-
     def add_block(self, new_block):
         """
         Add a new block to the chain after mining it with the specified difficulty.
         :param new_block: The block to be added to the blockchain.
-        :return: None
+        :return: True if block valid and added, else False
         """
         # Check if the block has a valid hash for the difficulty level
         if new_block.hash is None or new_block.hash[:self.difficulty] != "0" * self.difficulty:
             logger.error("Failed to add block: Block is not mined or does not meet the difficulty requirements.")
-            return
+            return False
 
         new_block.previous_hash = self.get_latest_block().hash
         if new_block.validate_transactions():
             self.chain.append(new_block)
             logger.info("New block added: %s", new_block)
+            return True
         else:
             logger.error("Failed to add block: Contains invalid transactions.")
+        return False
 
     def is_chain_valid(self):
         """
@@ -127,18 +120,25 @@ def assertion_check():
     transaction2 = Transaction(sender_public_key, recipient_public_key, 20)
     transaction2.sign_transaction(sender_private_key)
 
-    # Initialize blockchain
-    blockchain = Blockchain()
+    # Initialize blockchain with default difficulty
+    blockchain = Blockchain(difficulty=4)
 
     # Check genesis block
     assert blockchain.chain[0].transactions[0].amount == 0, GENESIS_BLOCK_ERROR
 
-    # Create and mine new block with transactions
+    # Create a new block with transactions
     new_block = Block(blockchain.get_latest_block().hash, [transaction1, transaction2])
-    blockchain.mine_block(new_block)
-    assert new_block.hash[:blockchain.difficulty] == "0" * blockchain.difficulty, "Mining failed"
 
-    # Add mined block and validate the blockchain
+    # Manually mine the block by finding a valid nonce and hash
+    target = "0" * blockchain.difficulty
+    while new_block.hash is None or new_block.hash[:blockchain.difficulty] != target:
+        new_block.nonce += 1
+        new_block.hash = new_block.calculate_hash()
+
+    # Verify that the mined block meets the difficulty requirements
+    assert new_block.hash[:blockchain.difficulty] == target, "Mining failed"
+
+    # Add mined block to the blockchain and validate the chain's integrity
     blockchain.add_block(new_block)
     assert blockchain.is_chain_valid(), BLOCKCHAIN_VALIDITY_ERROR
 

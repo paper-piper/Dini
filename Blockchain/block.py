@@ -1,6 +1,6 @@
 import hashlib
 import time
-from Transaction import Transaction, get_sk_pk_pair
+from transaction import Transaction, get_sk_pk_pair
 from logging_utils import setup_logger
 
 # Setup logger for file
@@ -44,42 +44,6 @@ class Block:
         data = f"{self.previous_hash}{serialized_transactions}{self.timestamp}{self.nonce}"
         block_hash = hashlib.sha256(data.encode()).hexdigest()
         return block_hash
-
-    def mine_block(self, difficulty):
-        """
-        Perform Proof of Work by finding a hash that meets the difficulty target.
-        The process involves incrementing the nonce until the hash of the block's contents
-        meets the required difficulty, which is represented by a hash starting with a certain
-        number of leading zeros.
-
-        :param difficulty: The number of leading zeros required in the hash for Proof of Work.
-        :return: None
-        """
-        target = "0" * difficulty
-        best_hash = None
-        max_trailing_zeros = 0
-
-        logger.info("Starting mining with difficulty %d...", difficulty)
-
-        self.hash = self.calculate_hash()
-        while self.hash[:difficulty] != target:
-            self.nonce += 1
-            self.hash = self.calculate_hash()
-
-            # Count trailing zeros in the current hash
-            trailing_zeros = len(self.hash) - len(self.hash.rstrip("0"))
-
-            # Update the best hash if the current hash has more trailing zeros
-            if trailing_zeros > max_trailing_zeros:
-                max_trailing_zeros = trailing_zeros
-                best_hash = self.hash
-
-            # Log the best hash every 100,000 attempts
-            if self.nonce % 100000 == 0:
-                logger.debug("Mining attempt %d, Best hash so far: %s (Trailing zeros: %d)",
-                             self.nonce, best_hash, max_trailing_zeros)
-
-        logger.info("Block mined successfully. Nonce: %d, Hash: %s", self.nonce, self.hash)
 
     def validate_transactions(self):
         """
@@ -129,15 +93,10 @@ def assertion_check():
     # Create a test block with transactions
     test_block = Block("0" * 64, [transaction1, transaction2])
 
-    # Verify the hash calculation
+    # Verify the hash calculation before mining
     initial_hash = test_block.calculate_hash()
-    assert test_block.hash == initial_hash, HASH_VALIDATION_ERROR
-
-    # Verify that mining works correctly
-    difficulty = 2  # Set a small difficulty for testing purposes
-    test_block.mine_block(difficulty)
-    assert test_block.hash[:difficulty] == "0" * difficulty, MINE_SUCCESS_ERROR
-    assert test_block.nonce > 0, NONCE_INCREMENT_ERROR
+    assert test_block.hash is None, HASH_VALIDATION_ERROR  # Ensure no hash is set initially
+    assert initial_hash == test_block.calculate_hash(), HASH_VALIDATION_ERROR
 
     logger.info("All assertions passed for Block class.")
 
