@@ -1,5 +1,7 @@
 import socket
 import pickle
+import json
+from dini_Settings import ProtocolSettings
 
 # Message protocol
 # <message len>:<message type>:<message parameters>
@@ -19,14 +21,15 @@ MESSAGE_DIVIDER = ":"
 
 def send_message(sock, msg_type, *msg_params):
     message = encode_protocol(msg_type, *msg_params)
-    encrypted_message = encrypt_message(message)
+    encrypted_message = encrypt_object(message)
     # Convert the message to bytes and send it over the socket
     sock.sendall(encrypted_message)
 
 
 def receive_message(sock):
-    raw_message = get_raw_message(sock)
-
+    msg_type, encrypted_raw_object = get_raw_message(sock)
+    received_object = decrypt_object(encrypted_raw_object)
+    return msg_type, received_object
 
 def get_raw_message(sock):
     # Step 1: Read the message length until encountering ":"
@@ -38,7 +41,10 @@ def get_raw_message(sock):
         message_len_str += char  # Add the character to the length string
 
     message_len = int(message_len_str)  # Convert the length to an integer
+    # Step 2: get the message type
 
+    msg_type = ""
+    # TODO: extract message type since message parameter is bytes
     # Step 2: Read the rest of the message with the specified length
     message = ""
     while len(message) < message_len:
@@ -46,35 +52,75 @@ def get_raw_message(sock):
         message += char  # Add the character to the message
 
     return message
-def encrypt_message(message) -> bytes:
+def encrypt_object(message) -> bytes:
     pass
 
 
-def decrypt_message(message) -> object:
+def decrypt_object(message) -> object:
     pass
 
-def encode_protocol(msg_type: str, *msg_params: str) -> str:
-    # Join all the parameters with ":" as the separator
-    message = f"{msg_type}:{':'.join(msg_params)}"
+def construct_message(message_type, *params):
+    """
+    Constructs a message following the protocol format:
+    <parameters length> : <message type> : <parameters>
 
-    # Calculate the length of the message
-    message_len = len(message)
+    :param message_type: The type of message (e.g., "transaction").
+    :param params: List of parameters to include in the message.
+    :return: Formatted message as a string.
+    """
+    # Ensure parameters are in a list format
+    parameters = list(params)
 
-    # Return the encoded protocol string
-    return f"{message_len}:{message}"
+    # Serialize parameters as a JSON string for consistent formatting
+    parameters_data = pickle.dumps(parameters)
+
+    # Check parameter length against the maximum allowed length
+    parameters_length = len(parameters_data)
+    if parameters_length > ProtocolSettings.MAX_PARAMETER_LENGTH:
+        raise (f"Error: Parameters length ({parameters_length}) exceeds the maximum allowed length of"
+              f" {ProtocolSettings.MAX_PARAMETER_LENGTH}.")
+
+    # Construct the final message
+    return f"{parameters_length}:{message_type}:{parameters_data.hex()}"
 
 
-def decode_protocol(raw_message: str) -> (str, list):
-    # Split the raw message into components using ":" as the separator
-    components = raw_message.split(":")
+def parse_message(received_message):
+    """
+    Parses a received message following the protocol format and extracts components.
 
-    # The first part is the message type
-    msg_type = components[0]
+    :param received_message: The message string to parse.
+    :return: Tuple containing (message_type, parameters) or None if format is invalid.
+    """
+    try:
+        # Split the message by the protocol delimiter
+        parameters_length, message_type, parameters_hex = received_message.split(":", 2)
 
-    # The rest are message parameters
-    msg_params = components[1:]  # Get all parameters after the type
+        # Convert parameters length to integer
+        parameters_length = int(parameters_length)
 
-    return msg_type, msg_params
+        # Decode the hex-encoded parameters back to bytes
+        parameters_data = bytes.fromhex(parameters_hex)
+
+        # Check if the received parameters length matches the actual length
+        if parameters_length != len(parameters_data):
+            print("Error: Parameters length mismatch.")
+            return None
+
+        # Deserialize the parameters using pickle
+        parameters = pickle.loads(parameters_data)
+
+        # Ensure parameters are in list format
+        if not isinstance(parameters, list):
+            print("Error: Parameters must be in list format.")
+            return None
+
+        return message_type, parameters
+
+    except (ValueError, pickle.PickleError) as e:
+        print(f"Error parsing message: {e}")
+        return None
+
+
 
 
 
