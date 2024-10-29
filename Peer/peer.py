@@ -5,27 +5,30 @@ from Blockchain.blockchain import Blockchain, Transaction, Block
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 
+
 class Peer:
-    def __init__(self, blockchain, peer_type):
+    def __init__(self, blockchain, peer_type, filename):
         self.blockchain = blockchain
         self.peer_type = peer_type
+        self.filename = filename
         self.peers = []  # List of connected peers
         self.logger = logging.getLogger(f"{peer_type}_peer")
 
-    def save_blockchain(self, filename="blockchain.json"):
+    def save_blockchain(self):
         """Saves the current blockchain to a file in JSON format."""
-        with open(filename, "w") as f:
-            json.dump(self.blockchain.to_dict(), f)
-        self.logger.info("Blockchain saved to %s", filename)
+        with open(self.filename, "w") as f:
+            json.dump(self.blockchain.to_dict(), f, indent=4)
+        print(f"Blockchain saved to {self.filename}")
 
-    def load_blockchain(self, filename="blockchain.json"):
+    def load_blockchain(self):
         """Loads the blockchain from a file if it exists."""
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                self.blockchain.from_dict(json.load(f))
-            self.logger.info("Blockchain loaded from %s", filename)
+        if os.path.exists(self.filename):
+            with open(self.filename, "r") as f:
+                blockchain_data = json.load(f)
+                self.blockchain = Blockchain.from_dict(blockchain_data)
+            print(f"Blockchain loaded from {self.filename}")
         else:
-            self.logger.warning("No blockchain file found to load.")
+            print(f"No blockchain file found to load at {self.filename}")
 
     def request_block(self, block_hash):
         """Request a specific block from other peers."""
@@ -42,7 +45,9 @@ class Peer:
         self.peers.append(peer_info)
         self.logger.info("New peer added: %s", peer_info)
 
-def create_sample_data(filename="sample_blockchain.json"):
+
+def create_sample_blockchain():
+    """Creates a sample blockchain with transactions and a block."""
     # Generate RSA keys for sample transactions
     sender_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     recipient_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -64,26 +69,35 @@ def create_sample_data(filename="sample_blockchain.json"):
     sample_blockchain = Blockchain(difficulty=2)
     sample_blockchain.chain.append(sample_block)
 
-    # Serialize the blockchain to dictionary form and save to a file
-    with open(filename, "w") as f:
-        json.dump(sample_blockchain.to_dict(), f, indent=4)
-
-    print(f"Sample blockchain data saved to {filename}")
+    print("Sample blockchain created.")
+    return sample_blockchain
 
 
-def load_and_resave_blockchain(input_filename="sample_blockchain.json", output_filename="resaved_blockchain.json"):
-    # Load the blockchain data from the input file
-    with open(input_filename, "r") as f:
-        blockchain_data = json.load(f)
+def save_blockchain_with_peer(filename="sample_blockchain.json"):
+    """Creates a Peer instance with a sample blockchain and saves it to a file."""
+    # Create sample blockchain
+    sample_blockchain = create_sample_blockchain()
 
-    # Reconstruct the blockchain object from the dictionary
-    loaded_blockchain = Blockchain.from_dict(blockchain_data)
+    # Create Peer with blockchain and save to file
+    peer = Peer(blockchain=sample_blockchain, peer_type="test_peer")
+    peer.save_blockchain()
 
-    # Save the reconstructed blockchain to the output file
+    print(f"Blockchain saved to {filename} using Peer class.")
+
+
+def load_and_resave_with_peer(input_filename="sample_blockchain.json", output_filename="resaved_blockchain.json"):
+    """Loads blockchain from a file with a Peer instance and resaves it to another file."""
+    # Load the blockchain with Peer
+    peer = Peer(blockchain=Blockchain(difficulty=2), peer_type="test_peer")
+    peer.load_blockchain()
+
+    # Resave the loaded blockchain to a new file
     with open(output_filename, "w") as f:
-        json.dump(loaded_blockchain.to_dict(), f, indent=4)
+        json.dump(peer.blockchain.to_dict(), f, indent=4)
 
-    print(f"Blockchain data loaded from {input_filename} and saved to {output_filename}")
+    print(f"Blockchain loaded from {input_filename} and resaved to {output_filename} using Peer class.")
+
 
 # Test the function
-load_and_resave_blockchain()
+save_blockchain_with_peer()
+load_and_resave_with_peer()
