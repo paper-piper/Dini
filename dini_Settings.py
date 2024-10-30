@@ -13,4 +13,15 @@ class FileSettings:
 
 
 class ProtocolSettings:
-    MAX_PARAMETER_LENGTH = 256
+    # NEED TO BE CAREFUL ABOUT THAT VALUE, BECAUSE IT WILL LEAD TO A CRASH IN ENCODING
+    LENGTH_FIELD_SIZE = 4
+    MSG_TYPE_LENGTH = 4
+
+    # Message types
+    SEND_OBJECT = "send"
+    REQUEST_OBJECT = "reqt"
+
+    # Message parameters
+    PEER = "peer"
+    BLOCK = "block"
+    TRANSACTION = "transaction"
