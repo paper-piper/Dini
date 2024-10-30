@@ -20,16 +20,17 @@ MESSAGE_DIVIDER = ":"
 
 
 def send_message(sock, msg_type, *msg_params):
-    message = encode_protocol(msg_type, *msg_params)
+    message = construct_message(msg_type, *msg_params)
     encrypted_message = encrypt_object(message)
     # Convert the message to bytes and send it over the socket
     sock.sendall(encrypted_message)
 
 
 def receive_message(sock):
-    msg_type, encrypted_raw_object = get_raw_message(sock)
-    received_object = decrypt_object(encrypted_raw_object)
+    encrypted_msg_type, encrypted_raw_object = get_raw_message(sock)
+    msg_type, received_object = decrypt_message(encrypted_raw_object)
     return msg_type, received_object
+
 
 def get_raw_message(sock):
     # Step 1: Read the message length until encountering ":"
@@ -52,11 +53,13 @@ def get_raw_message(sock):
         message += char  # Add the character to the message
 
     return message
+
+
 def encrypt_object(message) -> bytes:
     pass
 
 
-def decrypt_object(message) -> object:
+def decrypt_message(message) -> object:
     pass
 
 def construct_message(message_type, *params):
