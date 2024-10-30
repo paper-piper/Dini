@@ -2,15 +2,16 @@ import logging
 import json
 import os
 from Blockchain.blockchain import Blockchain, Transaction, Block
-
 from cryptography.hazmat.primitives.asymmetric import rsa
+from dini_Settings import FileSettings
+from protocol import send_message, receive_message
 
 
 class Peer:
-    def __init__(self, blockchain, peer_type, filename):
+    def __init__(self, blockchain, peer_type):
         self.blockchain = blockchain
         self.peer_type = peer_type
-        self.filename = filename
+        self.filename = FileSettings.BLOCKCHAIN_FILE_NAME
         self.peers = []  # List of connected peers
         self.logger = logging.getLogger(f"{peer_type}_peer")
 
