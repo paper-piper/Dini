@@ -4,7 +4,7 @@ import struct
 from logging_utils import setup_logger
 
 # Setup logger for file
-logger = setup_logger("protocol_log")
+logger = setup_logger("protocol_module")
 
 
 def send_message(sock, msg_type, *msg_params):
@@ -35,6 +35,12 @@ def receive_message(sock):
         msg_type = decrypt_object(encrypted_msg_type)
         object_bytes = decrypt_object(encrypted_raw_object)
         msg_object = pickle.loads(object_bytes)
+
+        # If the first item is a dictionary string, attempt to rehydrate it
+        if isinstance(msg_object[0], dict):
+            match
+            msg_object[0] = msg_object[0].__class__.from_dict(msg_object[0])
+
         return msg_type, msg_object
     except (pickle.PickleError, ValueError, ConnectionError) as e:
         logger.error(f"Failed to receive and decode message: {e}")
@@ -66,6 +72,7 @@ def receive_encrypted_message(sock) -> tuple:
     :return: A tuple of encrypted message type and parameters
     """
     try:
+        # Step 1: Read and decrypt the message length field
         length_field_bytes = bytearray()
         while len(length_field_bytes) < ProtocolSettings.LENGTH_FIELD_SIZE:
             byte = sock.recv(1)
@@ -74,8 +81,10 @@ def receive_encrypted_message(sock) -> tuple:
             length_field_bytes.extend(byte)
 
         encrypted_length = bytes(length_field_bytes)
-        msg_length = decrypt_object(encrypted_length)
+        decrypted_length = decrypt_object(encrypted_length)
+        msg_length = struct.unpack('!I', decrypted_length)[0]  # Unpack as an integer
 
+        # Step 2: Read the message type field
         message_type_bytes = bytearray()
         while len(message_type_bytes) < ProtocolSettings.MSG_TYPE_LENGTH:
             byte = sock.recv(1)
@@ -85,6 +94,7 @@ def receive_encrypted_message(sock) -> tuple:
 
         encrypted_message_type = bytes(message_type_bytes)
 
+        # Step 3: Read the exact number of bytes for the message parameters
         params_data = bytearray()
         while len(params_data) < msg_length:
             byte = sock.recv(1)
@@ -108,7 +118,11 @@ def construct_message(message_type: str, *message_params) -> bytes:
     :return: The constructed message as bytes
     """
     try:
-        params_data = pickle.dumps(message_params)
+        if len(message_params) > 0 and hasattr(message_params[0], "to_dict"):
+            # Convert the first parameter to a dictionary if it has to_dict method
+            message_params = (message_params[0].to_dict(),) + message_params[1:]
+
+        params_data = pickle.dumps(list(message_params))
         params_max_size = 2 ** (ProtocolSettings.LENGTH_FIELD_SIZE * 8)
         if len(params_data) > params_max_size:
             raise ValueError("Encoded message exceeds maximum allowable length.")
