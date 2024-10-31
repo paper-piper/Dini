@@ -2,16 +2,20 @@ import pickle
 from dini_Settings import ProtocolSettings
 import struct
 from logging_utils import setup_logger
-
+from Blockchain.transaction import Transaction, get_sk_pk_pair
+from Blockchain.blockchain import Blockchain
+from Blockchain.block import Block
+from Peer.peer import Peer
 # Setup logger for file
 logger = setup_logger("protocol_module")
+
 
 def send_message(sock, msg_type, msg_sub_type, *msg_params):
     """
     Constructs and sends an encrypted message over the socket.
     :param sock: The socket through which the message is sent.
-    :param msg_type: The general type of the message (4 bytes).
-    :param msg_sub_type: The specific sub-type of the message (4 bytes).
+    :param msg_type: The primary command type (e.g., SEND, REQUEST).
+    :param msg_sub_type: The specific object type (e.g., peer, block, transaction).
     :param msg_params: Additional parameters for the message.
     :return: None
     """
@@ -23,26 +27,40 @@ def send_message(sock, msg_type, msg_sub_type, *msg_params):
         logger.error(f"Failed to send message: {e}")
         raise
 
+
 def receive_message(sock):
     """
     Receives and decrypts an encrypted message from the socket.
     :param sock: The socket from which the message is received.
-    :return: A tuple of message type, message sub-type, and the decoded message parameters
+    :return: A tuple of message type, sub-type, and the decoded message object
     """
     try:
-        encrypted_msg_type, encrypted_msg_sub_type, encrypted_raw_object = receive_encrypted_message(sock)
+        encrypted_msg_type, encrypted_msg_sub_type, encrypted_params = receive_encrypted_message(sock)
         msg_type = decrypt_object(encrypted_msg_type)
         msg_sub_type = decrypt_object(encrypted_msg_sub_type)
-        object_bytes = decrypt_object(encrypted_raw_object)
-        msg_object = pickle.loads(object_bytes)
+        params_bytes = decrypt_object(encrypted_params)
+        params = pickle.loads(params_bytes)
+        # Handle specific message types with object conversion if needed
+        if msg_type == ProtocolSettings.SEND_OBJECT:
+            main_param = params[0]
 
-        if isinstance(msg_object[0], dict):
-            msg_object[0] = msg_object[0].__class__.from_dict(msg_object[0])
+            match msg_sub_type:
+                case ProtocolSettings.TRANSACTION:
+                    main_param = Transaction.from_dict(main_param)
+                case ProtocolSettings.BLOCK:
+                    main_param = Block.from_dict(main_param)
+                case ProtocolSettings.BLOCKCHAIN:
+                    main_param = Blockchain.from_dict(main_param)
+                case ProtocolSettings.PEER:
+                    main_param = Peer.from_dict(main_param)
 
-        return msg_type, msg_sub_type, msg_object
+            params[0] = main_param
+
+        return msg_type, msg_sub_type, params
     except (pickle.PickleError, ValueError, ConnectionError) as e:
         logger.error(f"Failed to receive and decode message: {e}")
         raise
+
 
 def encrypt_object(message_object) -> bytes:
     """
@@ -52,6 +70,7 @@ def encrypt_object(message_object) -> bytes:
     """
     return message_object
 
+
 def decrypt_object(message_object):
     """
     Placeholder for decryption function.
@@ -60,6 +79,7 @@ def decrypt_object(message_object):
     """
     return message_object
 
+
 def receive_encrypted_message(sock) -> tuple:
     """
     Receives an encrypted message, extracting message length, type, sub-type, and parameters.
@@ -67,29 +87,45 @@ def receive_encrypted_message(sock) -> tuple:
     :return: A tuple of encrypted message type, sub-type, and parameters
     """
     try:
-        # Read and decrypt the message length field (4 bytes)
-        length_field_bytes = sock.recv(4)
-        if not length_field_bytes:
-            raise ConnectionError("Socket connection closed unexpectedly")
-        decrypted_length = decrypt_object(length_field_bytes)
+        # Step 1: Read and decrypt the message length field
+        length_field_bytes = bytearray()
+        while len(length_field_bytes) < 4:  # Message length is always 4 bytes
+            byte = sock.recv(1)
+            if not byte:
+                raise ConnectionError("Socket connection closed unexpectedly")
+            length_field_bytes.extend(byte)
+
+        encrypted_length = bytes(length_field_bytes)
+        decrypted_length = decrypt_object(encrypted_length)
         msg_length = struct.unpack('!I', decrypted_length)[0]
 
-        # Read the message type (4 bytes)
-        message_type_bytes = sock.recv(4)
-        if not message_type_bytes:
-            raise ConnectionError("Socket connection closed unexpectedly")
+        # Step 2: Read the message type field
+        message_type_bytes = bytearray()
+        while len(message_type_bytes) < 4:  # Message type is always 4 bytes
+            byte = sock.recv(1)
+            if not byte:
+                raise ConnectionError("Socket connection closed unexpectedly")
+            message_type_bytes.extend(byte)
+
         encrypted_message_type = bytes(message_type_bytes)
 
-        # Read the message sub-type (4 bytes)
-        message_sub_type_bytes = sock.recv(4)
-        if not message_sub_type_bytes:
-            raise ConnectionError("Socket connection closed unexpectedly")
+        # Step 3: Read the message sub-type field
+        message_sub_type_bytes = bytearray()
+        while len(message_sub_type_bytes) < 4:  # Message sub-type is always 4 bytes
+            byte = sock.recv(1)
+            if not byte:
+                raise ConnectionError("Socket connection closed unexpectedly")
+            message_sub_type_bytes.extend(byte)
+
         encrypted_message_sub_type = bytes(message_sub_type_bytes)
 
-        # Read the exact number of bytes for the message parameters
-        params_data = sock.recv(msg_length)
-        if len(params_data) < msg_length:
-            raise ConnectionError("Incomplete message received")
+        # Step 4: Read the exact number of bytes for the message parameters
+        params_data = bytearray()
+        while len(params_data) < msg_length:
+            byte = sock.recv(1)
+            if not byte:
+                raise ConnectionError("Socket connection closed unexpectedly")
+            params_data.extend(byte)
 
         encrypted_params = bytes(params_data)
         return encrypted_message_type, encrypted_message_sub_type, encrypted_params
@@ -98,54 +134,56 @@ def receive_encrypted_message(sock) -> tuple:
         logger.error(f"Failed to receive encrypted message: {e}")
         raise
 
+
 def construct_message(msg_type: str, msg_sub_type: str, *msg_params) -> bytes:
     """
     Constructs a message according to protocol, serializing and structuring the components.
-    :param msg_type: The general type of message (4 bytes).
-    :param msg_sub_type: The specific sub-type of message (4 bytes).
+    :param msg_type: The primary command type (e.g., SEND, REQUEST).
+    :param msg_sub_type: The specific object type (e.g., peer, block, transaction).
     :param msg_params: Message parameters to be serialized.
     :return: The constructed message as bytes
     """
     try:
-        # Convert first parameter if it has a to_dict method
         if len(msg_params) > 0 and hasattr(msg_params[0], "to_dict"):
             msg_params = (msg_params[0].to_dict(),) + msg_params[1:]
 
-        # Serialize all parameters as a list
         params_data = pickle.dumps(list(msg_params))
-        params_max_size = 2 ** (ProtocolSettings.LENGTH_FIELD_SIZE * 8)
+        params_max_size = 2 ** (4 * 8)  # 4 bytes for length
         if len(params_data) > params_max_size:
             raise ValueError("Encoded message exceeds maximum allowable length.")
 
-        # Encode msg_type and msg_sub_type, ensuring they are 4 bytes each
         msg_type_encoded = msg_type.encode('utf-8').ljust(4, b'\x00')
         msg_sub_type_encoded = msg_sub_type.encode('utf-8').ljust(4, b'\x00')
 
-        # Construct the full message
+        full_message = msg_type_encoded + msg_sub_type_encoded + params_data
         message_length = len(params_data)
-        length_prefix = struct.pack('!I', message_length)  # 4 bytes for length
-        full_message = length_prefix + msg_type_encoded + msg_sub_type_encoded + params_data
+        length_prefix = struct.pack('!I', message_length)
 
-        return full_message
+        final_message = length_prefix + full_message
+        return final_message
 
     except (pickle.PickleError, ValueError) as e:
         logger.error(f"Failed to construct message: {e}")
         raise
+
 
 def assertion_check():
     """
     Tests core functions to validate expected functionality.
     """
     test_sock = None  # Placeholder for actual socket testing if implemented
-    assert construct_message("TEST", "SUBT", "param1", 123)  # Checking construct_message functionality
+    _, pk = get_sk_pk_pair()
+    _, recvpk = get_sk_pk_pair()
+    transaction = Transaction(pk, recvpk, 100)
+    assert construct_message(ProtocolSettings.SEND_OBJECT, ProtocolSettings.TRANSACTION, transaction)  # Check construct_message
 
-    # Encrypt/decrypt placeholders should round-trip without changes
     test_object = b"sample_object"
     encrypted = encrypt_object(test_object)
     decrypted = decrypt_object(encrypted)
     assert decrypted == test_object, "Encrypt/Decrypt test failed"
 
     logger.info("All assertions passed.")
+
 
 if __name__ == "__main__":
     assertion_check()

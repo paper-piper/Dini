@@ -1,9 +1,13 @@
-import logging
 import json
 import os
 from Blockchain.blockchain import Blockchain, Transaction, Block
 from cryptography.hazmat.primitives.asymmetric import rsa
 from dini_Settings import FileSettings
+from logging_utils import setup_logger
+from cryptography.hazmat.primitives import serialization
+
+# Setup logger for receiver file
+logger = setup_logger("receiver_module")
 
 
 class Peer:
@@ -12,7 +16,30 @@ class Peer:
         self.peer_type = peer_type
         self.filename = FileSettings.BLOCKCHAIN_FILE_NAME
         self.peers = []  # List of connected peers
-        self.logger = logging.getLogger(f"{peer_type}_peer")
+
+    def to_dict(self):
+        """
+        Converts the Peer object into a dictionary, including the blockchain and peer information.
+        :return: Dictionary representation of the Peer object.
+        """
+        return {
+            "blockchain": self.blockchain.to_dict(),  # Convert blockchain using its to_dict method
+            "peer_type": self.peer_type,
+            "peers": self.peers
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Creates a Peer object from a dictionary, reconstructing the blockchain and peer information.
+        :param data: Dictionary containing peer information.
+        :return: Peer object.
+        """
+        blockchain = Blockchain.from_dict(data["blockchain"])  # Reconstruct blockchain using from_dict
+        peer_type = data["peer_type"]
+        peer_instance = cls(blockchain, peer_type)
+        peer_instance.peers = data["peers"]
+        return peer_instance
 
     def save_blockchain(self):
         """Saves the current blockchain to a file in JSON format."""
@@ -33,17 +60,17 @@ class Peer:
     def request_block(self, block_hash):
         """Request a specific block from other peers."""
         # Network request logic to be implemented
-        self.logger.info("Requesting block with hash: %s", block_hash)
+        logger.info("Requesting block with hash: %s", block_hash)
 
     def pass_block(self, block):
         """Pass the mined or received block to other peers."""
         # Network broadcast logic to be implemented
-        self.logger.info("Broadcasting block with hash: %s", block.hash)
+        logger.info("Broadcasting block with hash: %s", block.hash)
 
     def add_peer(self, peer_info):
         """Adds a new peer to the network list."""
         self.peers.append(peer_info)
-        self.logger.info("New peer added: %s", peer_info)
+        logger.info("New peer added: %s", peer_info)
 
 
 def create_sample_blockchain():
@@ -98,6 +125,11 @@ def load_and_resave_with_peer(input_filename="sample_blockchain.json", output_fi
     print(f"Blockchain loaded from {input_filename} and resaved to {output_filename} using Peer class.")
 
 
-# Test the function
-save_blockchain_with_peer()
-load_and_resave_with_peer()
+def main():
+    # Test the function
+    save_blockchain_with_peer()
+    load_and_resave_with_peer()
+
+
+if __name__ == "__main__":
+    main()
