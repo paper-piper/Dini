@@ -144,6 +144,7 @@ def construct_message(msg_type: str, msg_sub_type: str, *msg_params) -> bytes:
     :return: The constructed message as bytes
     """
     try:
+        # TODO: handle no parameters
         if len(msg_params) > 0 and hasattr(msg_params[0], "to_dict"):
             msg_params = (msg_params[0].to_dict(),) + msg_params[1:]
 

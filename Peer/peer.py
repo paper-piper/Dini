@@ -2,9 +2,9 @@ import json
 import os
 from Blockchain.blockchain import Blockchain, Transaction, Block
 from cryptography.hazmat.primitives.asymmetric import rsa
-from dini_Settings import FileSettings
+from dini_Settings import FileSettings, ProtocolSettings
 from logging_utils import setup_logger
-from cryptography.hazmat.primitives import serialization
+from Protocol.protocol import receive_message, send_message
 
 # Setup logger for receiver file
 logger = setup_logger("receiver_module")
@@ -12,10 +12,14 @@ logger = setup_logger("receiver_module")
 
 class Peer:
     def __init__(self, blockchain, peer_type):
+        # TODO: add socket to peer (with to dict and from dict)
         self.blockchain = blockchain
         self.peer_type = peer_type
         self.filename = FileSettings.BLOCKCHAIN_FILE_NAME
         self.peers = []  # List of connected peers
+
+        # TODO: make thread for incoming messages
+        # TODO: make thread dealing with incoming messages
 
     def to_dict(self):
         """
@@ -59,9 +63,14 @@ class Peer:
 
     def request_block(self, block_hash):
         """Request a specific block from other peers."""
-        # Network request logic to be implemented
+        # TODO: decide which peer to ask from
+        for peer in self.peers:
+            send_message(peer.sock, ProtocolSettings.REQUEST_OBJECT, ProtocolSettings.BLOCK)
         logger.info("Requesting block with hash: %s", block_hash)
 
+    def validate_block(self):
+        # bonus
+        pass
     def pass_block(self, block):
         """Pass the mined or received block to other peers."""
         # Network broadcast logic to be implemented
