@@ -3,17 +3,19 @@ import os
 ROOT_DIRECTORY = "..\\Logs\\"
 
 
-def setup_logger(name, level=logging.DEBUG):
+def setup_logger(name, root_directory=None,level=logging.DEBUG):
     """
     Configures and returns a logger.
 
     :param name: The name of the logger (typically the file name).
+    :param root_directory: optional, a specified root directory
     :param level: The logging level (default is DEBUG).
     :return: Configured logger object.
     """
-    if not os.path.exists(ROOT_DIRECTORY):
-        os.makedirs(ROOT_DIRECTORY)
-    log_file = ROOT_DIRECTORY + name + ".log"
+    root_directory = ROOT_DIRECTORY if root_directory is None else root_directory
+    if not os.path.exists(root_directory):
+        os.makedirs(root_directory)
+    log_file = root_directory + name + ".log"
     logger = logging.getLogger(name)
     logger.setLevel(level)
 

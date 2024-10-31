@@ -4,7 +4,6 @@ import os
 from Blockchain.blockchain import Blockchain, Transaction, Block
 from cryptography.hazmat.primitives.asymmetric import rsa
 from dini_Settings import FileSettings
-from protocol import send_message, receive_message
 
 
 class Peer:
