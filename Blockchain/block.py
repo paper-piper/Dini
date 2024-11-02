@@ -101,7 +101,7 @@ def assertion_check():
     logger.info("Starting assertions check for Block class...")
 
     # Create sample Transaction objects
-    test_block = create_sample_block(2, [10,20])
+    test_block = create_sample_block()
 
     # Verify the hash calculation before mining
     initial_hash = test_block.calculate_hash()
@@ -111,7 +111,9 @@ def assertion_check():
     logger.info("All assertions passed for Block class.")
 
 
-def create_sample_block(transactions_num, transactions_amounts, previews_hash="0" * 64):
+def create_sample_block(transactions_num=2, transactions_amounts=None, previews_hash="0" * 64):
+    if transactions_amounts is None:
+        transactions_amounts = [10, 20]
     if len(transactions_amounts) != transactions_num:
         raise "transaction num does not much the transaction amounts"
     transactions = []

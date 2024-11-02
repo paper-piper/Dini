@@ -1,7 +1,7 @@
 from Blockchain.block import Block, create_sample_block
 from Blockchain.transaction import Transaction, get_sk_pk_pair
 from logging_utils import setup_logger
-
+from dini_Settings import MinerSettings
 # Setup logger for file
 logger = setup_logger("blockchain_module")
 
@@ -17,7 +17,7 @@ class Blockchain:
     methods to add new blocks, validate the chain, and retrieve the latest block.
     """
 
-    def __init__(self, difficulty=4):
+    def __init__(self, difficulty=MinerSettings.DIFFICULTY_LEVEL):
         """
         Initialize a Blockchain instance with a specified mining difficulty and create the genesis block.
 
