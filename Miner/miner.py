@@ -5,6 +5,8 @@ from Blockchain.blockchain import Blockchain, Block, Transaction
 from mempool import Mempool
 from logging_utils import setup_logger
 from dini_Settings import BlockSettings
+from mining_process import start_mining_processes, terminate_processes
+
 # Setup logger for file
 logger = setup_logger("miner_module")
 
@@ -93,40 +95,30 @@ class Miner:
 
     def mine(self, block):
         """
-        Mines the given block by finding a valid hash that meets the required difficulty.
-
-        :param block: The Block object to be mined.
-        :return: The mined Block object with a valid hash.
+        Initiates the mining process using multiple processes to increase efficiency.
         """
-        target = "0" * self.difficulty
-        best_hash = None
-        max_trailing_zeros = 0
+        processes, result_queue = start_mining_processes(
+            block, difficulty=self.difficulty, new_block_event=self.new_block_event
+        )
 
-        logger.info("Starting mining with difficulty %d...", self.difficulty)
+        mined_block = None
+        try:
+            # Wait for a result or new block detection
+            while mined_block is None and not self.new_block_event.is_set():
+                try:
+                    mined_block = result_queue.get(timeout=1)  # Check queue for mined block
+                except queue.Empty:
+                    continue
 
-        while block.hash is None or block.hash[:self.difficulty] != target:
-            block.nonce += 1
-            block.hash = block.calculate_hash()
+            if mined_block:
+                logger.info("Block mined successfully.")
+            else:
+                logger.info("Mining aborted due to new block.")
 
-            # Count trailing zeros in the current hash
-            trailing_zeros = len(block.hash) - len(block.hash.rstrip("0"))
+        finally:
+            terminate_processes(processes)
 
-            # Update the best hash if the current hash has more trailing zeros
-            if trailing_zeros > max_trailing_zeros:
-                max_trailing_zeros = trailing_zeros
-                best_hash = block.hash
-
-            # Log the best hash every 100,000 attempts
-            if block.nonce % 100000 == 0:
-                logger.debug("Mining attempt %d, Best hash so far: %s (Trailing zeros: %d)",
-                             block.nonce, best_hash, max_trailing_zeros)
-
-                # Check if a new block has arrived
-                if self.new_block_event.is_set():
-                    logger.info("New block detected, aborting current mining process")
-                    break
-
-        return block
+        return mined_block if mined_block else block  # Return mined block or the original if aborted
 
     def broadcast_block(self, block):
         pass
