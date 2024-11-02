@@ -34,3 +34,8 @@ class ProtocolSettings:
     # Message side parameters
     DONT_PASS = False
     PASS = True
+
+
+class MinerSettings:
+    PROCESSES_NUMBER = 10
+    PROCESS_RANGE = 1000000
