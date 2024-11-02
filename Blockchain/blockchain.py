@@ -1,4 +1,4 @@
-from Blockchain.block import Block
+from Blockchain.block import Block, create_sample_block
 from Blockchain.transaction import Transaction, get_sk_pk_pair
 from logging_utils import setup_logger
 
@@ -119,42 +119,43 @@ class Blockchain:
 def assertion_check():
     """
     Performs various assertions to verify the functionality of the Blockchain class.
-
     :return: None
     """
-    # Generate keys for testing
-    sender_private_key, sender_public_key = get_sk_pk_pair()
-    _, recipient_public_key = get_sk_pk_pair()
-
-    # Create sample Transaction objects
-    transaction1 = Transaction(sender_public_key, recipient_public_key, 10)
-    transaction1.sign_transaction(sender_private_key)
-    transaction2 = Transaction(sender_public_key, recipient_public_key, 20)
-    transaction2.sign_transaction(sender_private_key)
-
-    # Initialize blockchain with default difficulty
-    blockchain = Blockchain(difficulty=4)
-
-    # Check genesis block
-    assert blockchain.chain[0].transactions[0].amount == 0, GENESIS_BLOCK_ERROR
-
-    # Create a new block with transactions
-    new_block = Block(blockchain.get_latest_block().hash, [transaction1, transaction2])
-
-    # Manually mine the block by finding a valid nonce and hash
-    target = "0" * blockchain.difficulty
-    while new_block.hash is None or new_block.hash[:blockchain.difficulty] != target:
-        new_block.nonce += 1
-        new_block.hash = new_block.calculate_hash()
-
-    # Verify that the mined block meets the difficulty requirements
-    assert new_block.hash[:blockchain.difficulty] == target, "Mining failed"
+    blockchain = create_sample_blockchain()
 
     # Add mined block to the blockchain and validate the chain's integrity
-    blockchain.add_block(new_block)
     assert blockchain.is_chain_valid(), BLOCKCHAIN_VALIDITY_ERROR
 
     logger.info("All assertions passed for Blockchain class.")
+
+
+def create_sample_blockchain(difficulty=2, blocks_num=2, transactions_nums=None, transactions_ranges=None):
+    if transactions_ranges is None:
+        transactions_ranges = [[10, 20], [15, 10, 30]]
+    if transactions_nums is None:
+        transactions_nums = [2, 3]
+
+    if len(transactions_nums) != blocks_num:
+        raise "transactions nums does not much the blocks num"
+
+    blockchain = Blockchain(difficulty)
+    previews_hash = blockchain.get_latest_block().calculate_hash()
+    for i in range(blocks_num):
+        block = create_sample_block(transactions_nums[i], transactions_ranges[i], previews_hash)
+
+        # Manually mine the block by finding a valid nonce and hash
+        target = "0" * blockchain.difficulty
+        while block.hash is None or block.hash[:blockchain.difficulty] != target:
+            block.nonce += 1
+            block.hash = block.calculate_hash()
+
+        # Verify that the mined block meets the difficulty requirements
+        assert block.hash[:blockchain.difficulty] == target, "Mining failed"
+
+        previews_hash = block.calculate_hash()
+        blockchain.add_block(block)
+
+    return blockchain
 
 
 if __name__ == "__main__":

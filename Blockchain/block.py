@@ -1,6 +1,6 @@
 import hashlib
 import time
-from Blockchain.transaction import Transaction, get_sk_pk_pair
+from Blockchain.transaction import Transaction, get_sk_pk_pair, create_sample_transaction
 from logging_utils import setup_logger
 
 # Setup logger for file
@@ -101,17 +101,7 @@ def assertion_check():
     logger.info("Starting assertions check for Block class...")
 
     # Create sample Transaction objects
-    sender_private_key, sender_public_key = get_sk_pk_pair()
-    _, recipient_public_key = get_sk_pk_pair()
-
-    transaction1 = Transaction(sender_public_key, recipient_public_key, 10)
-    transaction1.sign_transaction(sender_private_key)
-
-    transaction2 = Transaction(sender_public_key, recipient_public_key, 20)
-    transaction2.sign_transaction(sender_private_key)
-
-    # Create a test block with transactions
-    test_block = Block("0" * 64, [transaction1, transaction2])
+    test_block = create_sample_block(2, [10,20])
 
     # Verify the hash calculation before mining
     initial_hash = test_block.calculate_hash()
@@ -119,6 +109,18 @@ def assertion_check():
     assert initial_hash == test_block.calculate_hash(), HASH_VALIDATION_ERROR
 
     logger.info("All assertions passed for Block class.")
+
+
+def create_sample_block(transactions_num, transactions_amounts, previews_hash="0" * 64):
+    if len(transactions_amounts) != transactions_num:
+        raise "transaction num does not much the transaction amounts"
+    transactions = []
+    for i in range(transactions_num):
+        transaction = create_sample_transaction(transactions_amounts[i])
+        transactions.append(transaction)
+
+    block = Block(previews_hash, transactions)
+    return block
 
 
 if __name__ == "__main__":

@@ -130,7 +130,7 @@ def get_sk_pk_pair():
     return ps, ps.public_key()
 
 
-def assertion_check():
+def assert_transaction():
     """
     Performs various assertions to verify the functionality of the Transaction class using actual PK-SK signing.
     :return: None
@@ -138,17 +138,12 @@ def assertion_check():
     logger.info("Starting assertions check for Transaction class...")
 
     # Generate a test private and public key for signing and verification
-    sender_private_key, sender_public_key = get_sk_pk_pair()
-    _, recipient_public_key = get_sk_pk_pair()
-
-    # Create a test transaction
-    transaction = Transaction(sender_public_key, recipient_public_key, 10)
+    transaction = create_sample_transaction(10)
 
     # Calculate hash and verify expected hash structure
     assert len(transaction.calculate_hash()) == 64, HASH_LENGTH_ERROR
 
     # Sign transaction and verify signature is created
-    transaction.sign_transaction(sender_private_key)
     assert transaction.signature is not None, SIGNATURE_CREATION_ERROR
 
     # Verify the signature - should return True with correct public key
@@ -161,5 +156,19 @@ def assertion_check():
     logger.info("All assertions passed for Transaction class.")
 
 
+def create_sample_transaction(amount):
+    """
+    create a simple demo transaction for assertion purpose
+    """
+    sender_private_key, sender_public_key = get_sk_pk_pair()
+    _, recipient_public_key = get_sk_pk_pair()
+
+    # Create a test transaction
+    transaction = Transaction(sender_public_key, recipient_public_key, amount)
+    transaction.sign_transaction(sender_private_key)
+
+    return transaction
+
+
 if __name__ == "__main__":
-    assertion_check()
+    assert_transaction()
