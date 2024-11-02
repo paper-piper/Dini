@@ -39,3 +39,4 @@ class ProtocolSettings:
 class MinerSettings:
     PROCESSES_NUMBER = 10
     PROCESS_RANGE = 1000000
+    DIFFICULTY_LEVEL = 2
