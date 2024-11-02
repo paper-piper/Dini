@@ -1,26 +1,37 @@
 import json
 import os
+import threading
+from queue import Queue
+
 from Blockchain.blockchain import Blockchain, Transaction, Block
 from cryptography.hazmat.primitives.asymmetric import rsa
 from dini_Settings import FileSettings, ProtocolSettings
 from logging_utils import setup_logger
 from Protocol.protocol import receive_message, send_message
+import socket
 
-# Setup logger for receiver file
-logger = setup_logger("receiver_module")
+# Setup logger for peer file
+logger = setup_logger("peer_module")
 
 
 class Peer:
-    def __init__(self, blockchain, peer_type):
-        # TODO: add socket to peer (with to dict and from dict)
-        self.blockchain = blockchain
+    def __init__(self, peer_type, blockchain=None):
+        # TODO: add socket to peer (and update to dict and from dict functions)
         self.peer_type = peer_type
         self.filename = FileSettings.BLOCKCHAIN_FILE_NAME
+        # Load blockchain if provided or initialize from file
+        self.blockchain = blockchain if blockchain else self.load_blockchain()
+
+        # Initialize a socket for peer connections
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.peers = []  # List of connected peers
+        self.messages_queue = Queue()
+        self.receive_messages_thread = threading.Thread(target=self.receive_messages, daemon=True)
+        self.handle_messages_thread = threading.Thread(target=self.handle_messages, daemon=True)
 
-        # TODO: make thread for incoming messages
-        # TODO: make thread dealing with incoming messages
-
+    def __del__(self):
+        self.save_blockchain()
+    
     def to_dict(self):
         """
         Converts the Peer object into a dictionary, including the blockchain and peer information.
@@ -44,6 +55,12 @@ class Peer:
         peer_instance = cls(blockchain, peer_type)
         peer_instance.peers = data["peers"]
         return peer_instance
+
+    def receive_messages(self):
+        pass
+
+    def handle_messages(self):
+        pass
 
     def save_blockchain(self):
         """Saves the current blockchain to a file in JSON format."""
@@ -71,6 +88,7 @@ class Peer:
     def validate_block(self):
         # bonus
         pass
+
     def pass_block(self, block):
         """Pass the mined or received block to other peers."""
         # Network broadcast logic to be implemented
@@ -80,6 +98,10 @@ class Peer:
         """Adds a new peer to the network list."""
         self.peers.append(peer_info)
         logger.info("New peer added: %s", peer_info)
+
+    def add_block_to_blockchain(self, block):
+        self.blockchain.add_block(block)
+        self.save_blockchain()
 
 
 def create_sample_blockchain():
