@@ -32,29 +32,33 @@ def receive_message(sock):
     """
     Receives and decrypts an encrypted message from the socket.
     :param sock: The socket from which the message is received.
-    :return: A tuple of message type, sub-type, and the decoded message object
+    :return: A tuple of message type, subtype, and the decoded message object
     """
     try:
         encrypted_msg_type, encrypted_msg_sub_type, encrypted_params = receive_encrypted_message(sock)
         msg_type = decrypt_object(encrypted_msg_type)
         msg_sub_type = decrypt_object(encrypted_msg_sub_type)
+
+        # if request object, the params are empty
+        if msg_type == ProtocolSettings.REQUEST_OBJECT:
+            return msg_type, msg_sub_type, None
+
         params_bytes = decrypt_object(encrypted_params)
         params = pickle.loads(params_bytes)
         # Handle specific message types with object conversion if needed
-        if msg_type == ProtocolSettings.SEND_OBJECT:
-            main_param = params[0]
+        main_param = params[0]
 
-            match msg_sub_type:
-                case ProtocolSettings.TRANSACTION:
-                    main_param = Transaction.from_dict(main_param)
-                case ProtocolSettings.BLOCK:
-                    main_param = Block.from_dict(main_param)
-                case ProtocolSettings.BLOCKCHAIN:
-                    main_param = Blockchain.from_dict(main_param)
-                case ProtocolSettings.PEER:
-                    main_param = Peer.from_dict(main_param)
+        match msg_sub_type:
+            case ProtocolSettings.TRANSACTION:
+                main_param = Transaction.from_dict(main_param)
+            case ProtocolSettings.BLOCK:
+                main_param = Block.from_dict(main_param)
+            case ProtocolSettings.BLOCKCHAIN:
+                main_param = Blockchain.from_dict(main_param)
+            case ProtocolSettings.PEER:
+                main_param = Peer.from_dict(main_param)
 
-            params[0] = main_param
+        params[0] = main_param
 
         return msg_type, msg_sub_type, params
     except (pickle.PickleError, ValueError, ConnectionError) as e:
@@ -77,6 +81,8 @@ def decrypt_object(message_object):
     :param message_object: The encrypted message object to decrypt.
     :return: The decrypted message
     """
+    if message_object is None:
+        return None
     return message_object
 
 

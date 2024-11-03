@@ -16,7 +16,6 @@ logger = setup_logger("peer_module")
 
 class Peer:
     def __init__(self, peer_type, blockchain=None):
-        # TODO: add socket to peer (and update to dict and from dict functions)
         self.peer_type = peer_type
         self.filename = FileSettings.BLOCKCHAIN_FILE_NAME
         # Load blockchain if provided or initialize from file
@@ -57,10 +56,36 @@ class Peer:
         return peer_instance
 
     def receive_messages(self):
-        pass
+        while True:
+            msg_type, msg_sub_type, msg_params = receive_message(self.sock)
+            self.messages_queue.put((msg_type, msg_sub_type, msg_params))
 
     def handle_messages(self):
-        pass
+        while True:
+            if not self.messages_queue.empty():
+                msg_type, msg_sub_type, msg_params = self.messages_queue.get()
+                if msg_type == ProtocolSettings.REQUEST_OBJECT:
+                    self.handle_request_message(msg_sub_type)
+                elif msg_type == ProtocolSettings.SEND_OBJECT:
+                    self.handle_send_message(msg_sub_type, msg_params)
+                else:
+                    raise "Received invalid message type"
+
+    def handle_request_message(self, object_type):
+        match object_type:
+            case ProtocolSettings.BLOCK:
+                pass
+            case ProtocolSettings.PEER:
+                pass
+            # No one can request transaction
+
+    def handle_send_message(self, object_type, params):
+        match object_type:
+            case ProtocolSettings.BLOCK:
+                pass
+            case ProtocolSettings.PEER:
+                pass
+            case ProtocolSettings.TRANSACTION:
 
     def save_blockchain(self):
         """Saves the current blockchain to a file in JSON format."""
