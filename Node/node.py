@@ -2,7 +2,7 @@ import json
 import os
 import threading
 from queue import Queue
-
+from abc import ABC, abstractmethod
 from Blockchain.blockchain import Blockchain, Transaction, Block
 from cryptography.hazmat.primitives.asymmetric import rsa
 from dini_Settings import FileSettings, ProtocolSettings
@@ -74,19 +74,38 @@ class Node:
     def handle_request_message(self, object_type):
         match object_type:
             case ProtocolSettings.BLOCK:
-                pass
+                self.handle_block_request()
             case ProtocolSettings.PEER:
-                pass
+                self.handle_peer_request()
             # No one can request transaction
 
     def handle_send_message(self, object_type, params):
         match object_type:
             case ProtocolSettings.BLOCK:
-                pass
+                self.handle_block_send(params)
             case ProtocolSettings.PEER:
-                pass
+                self.handle_peer_send(params)
             case ProtocolSettings.TRANSACTION:
-                pass
+                self.handle_transaction_send(params)
+
+    def handle_block_request(self):
+        pass
+
+    @abstractmethod
+    def handle_peer_request(self):
+        pass
+
+    @abstractmethod
+    def handle_block_send(self, params):
+        pass
+
+    @abstractmethod
+    def handle_peer_send(self, params):
+        pass
+
+    @abstractmethod
+    def handle_transaction_send(self, params):
+        pass
 
     def save_blockchain(self):
         """Saves the current blockchain to a file in JSON format."""

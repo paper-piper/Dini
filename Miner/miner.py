@@ -6,12 +6,14 @@ from mempool import Mempool
 from logging_utils import setup_logger
 from dini_Settings import BlockSettings
 from mining_process import start_mining_processes, terminate_processes
-
+from User.user import User
+from Blockchain.transaction import get_sk_pk_pair
+from Blockchain.blockchain import create_sample_blockchain
 # Setup logger for file
 logger = setup_logger("miner_module")
 
 
-class Miner:
+class Miner(User):
     """
     Represents a miner responsible for mining blocks, receiving new blocks, and syncing with other miners.
     """
@@ -39,6 +41,12 @@ class Miner:
         # Start block processing and receiving threads
         threading.Thread(target=self.get_blocks, daemon=True).start()
         threading.Thread(target=self.process_blocks, daemon=True).start()
+
+    def handle_transaction_send(self, params):
+        print("miner handling transaction send")
+
+    def receive_block(self):
+        pass
 
     def get_blocks(self):
         """
@@ -126,3 +134,10 @@ class Miner:
     def add_bonus_transaction(self, transactions):
         bonus_transaction = Transaction(BlockSettings.BONUS_PK, self.public_key, BlockSettings.BONUS_AMOUNT)
         transactions.insert(0, bonus_transaction)
+
+if __name__ == "__main__":
+    sk, pk = get_sk_pk_pair()
+    miner = Miner(pk,sk,create_sample_blockchain(),None)
+    miner.handle_block_request()
+    miner.handle_transaction_send(None)
+    miner.handle_peer_request()
