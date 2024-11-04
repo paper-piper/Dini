@@ -11,10 +11,10 @@ from Protocol.protocol import receive_message, send_message
 import socket
 
 # Setup logger for peer file
-logger = setup_logger("peer_module")
+logger = setup_logger("node_module")
 
 
-class Peer:
+class Node:
     def __init__(self, peer_type, blockchain=None):
         self.peer_type = peer_type
         self.filename = FileSettings.BLOCKCHAIN_FILE_NAME
@@ -33,8 +33,8 @@ class Peer:
     
     def to_dict(self):
         """
-        Converts the Peer object into a dictionary, including the blockchain and peer information.
-        :return: Dictionary representation of the Peer object.
+        Converts the Node object into a dictionary, including the blockchain and peer information.
+        :return: Dictionary representation of the Node object.
         """
         return {
             "blockchain": self.blockchain.to_dict(),  # Convert blockchain using its to_dict method
@@ -45,9 +45,9 @@ class Peer:
     @classmethod
     def from_dict(cls, data):
         """
-        Creates a Peer object from a dictionary, reconstructing the blockchain and peer information.
+        Creates a Node object from a dictionary, reconstructing the blockchain and peer information.
         :param data: Dictionary containing peer information.
-        :return: Peer object.
+        :return: Node object.
         """
         blockchain = Blockchain.from_dict(data["blockchain"])  # Reconstruct blockchain using from_dict
         peer_type = data["peer_type"]
@@ -86,6 +86,7 @@ class Peer:
             case ProtocolSettings.PEER:
                 pass
             case ProtocolSettings.TRANSACTION:
+                pass
 
     def save_blockchain(self):
         """Saves the current blockchain to a file in JSON format."""
@@ -157,28 +158,28 @@ def create_sample_blockchain():
 
 
 def save_blockchain_with_peer(filename="sample_blockchain.json"):
-    """Creates a Peer instance with a sample blockchain and saves it to a file."""
+    """Creates a Node instance with a sample blockchain and saves it to a file."""
     # Create sample blockchain
     sample_blockchain = create_sample_blockchain()
 
-    # Create Peer with blockchain and save to file
-    peer = Peer(blockchain=sample_blockchain, peer_type="test_peer")
+    # Create Node with blockchain and save to file
+    peer = Node(blockchain=sample_blockchain, peer_type="test_peer")
     peer.save_blockchain()
 
-    print(f"Blockchain saved to {filename} using Peer class.")
+    print(f"Blockchain saved to {filename} using Node class.")
 
 
 def load_and_resave_with_peer(input_filename="sample_blockchain.json", output_filename="resaved_blockchain.json"):
-    """Loads blockchain from a file with a Peer instance and resaves it to another file."""
-    # Load the blockchain with Peer
-    peer = Peer(blockchain=Blockchain(difficulty=2), peer_type="test_peer")
+    """Loads blockchain from a file with a Node instance and resaves it to another file."""
+    # Load the blockchain with Node
+    peer = Node(blockchain=Blockchain(difficulty=2), peer_type="test_peer")
     peer.load_blockchain()
 
     # Resave the loaded blockchain to a new file
     with open(output_filename, "w") as f:
         json.dump(peer.blockchain.to_dict(), f, indent=4)
 
-    print(f"Blockchain loaded from {input_filename} and resaved to {output_filename} using Peer class.")
+    print(f"Blockchain loaded from {input_filename} and resaved to {output_filename} using Node class.")
 
 
 def main():

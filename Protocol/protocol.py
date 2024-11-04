@@ -5,7 +5,7 @@ from logging_utils import setup_logger
 from Blockchain.transaction import Transaction, get_sk_pk_pair
 from Blockchain.blockchain import Blockchain
 from Blockchain.block import Block
-from Peer.peer import Peer
+from Node.node import Node
 # Setup logger for file
 logger = setup_logger("protocol_module")
 
@@ -56,7 +56,7 @@ def receive_message(sock):
             case ProtocolSettings.BLOCKCHAIN:
                 main_param = Blockchain.from_dict(main_param)
             case ProtocolSettings.PEER:
-                main_param = Peer.from_dict(main_param)
+                main_param = Node.from_dict(main_param)
 
         params[0] = main_param
 
