@@ -4,3 +4,4 @@
 2024-11-05 16:08:32,011 - INFO - Blockchain loaded from test_blockchain.json
 2024-11-05 16:08:32,089 - INFO - File save and load tests passed.
 2024-11-05 16:08:32,119 - INFO - All assertion checks passed.
+2024-11-05 16:25:34,586 - ERROR - Failed to connect to peer 127.0.0.1:8000 - [WinError 10061] No connection could be made because the target machine actively refused it

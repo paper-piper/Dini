@@ -165,3 +165,10 @@
 2024-11-05 16:08:30,921 - INFO - Blockchain created with initial difficulty: 2
 2024-11-05 16:08:31,638 - INFO - Genesis block created: Block(Previous Hash: 0..., Hash: 0b0d8f..., Nonce: 0, Transactions: [Transaction(Sender: 210..., Recipient: 221..., Amount: 0)])
 2024-11-05 16:08:31,699 - INFO - Blockchain created with initial difficulty: 2
+2024-11-05 16:25:32,014 - INFO - Genesis block created: Block(Previous Hash: 0..., Hash: 627dea..., Nonce: 0, Transactions: [Transaction(Sender: 183..., Recipient: 246..., Amount: 0)])
+2024-11-05 16:25:32,015 - INFO - Blockchain created with initial difficulty: 2
+2024-11-05 16:25:32,015 - DEBUG - Retrieved latest block: Block(Previous Hash: 0..., Hash: 627dea..., Nonce: 0, Transactions: [Transaction(Sender: 183..., Recipient: 246..., Amount: 0)])
+2024-11-05 16:25:32,170 - DEBUG - Retrieved latest block: Block(Previous Hash: 0..., Hash: 627dea..., Nonce: 0, Transactions: [Transaction(Sender: 183..., Recipient: 246..., Amount: 0)])
+2024-11-05 16:25:32,170 - INFO - New block added: Block(Previous Hash: 627dea..., Hash: 00e212..., Nonce: 85, Transactions: [Transaction(Sender: 273..., Recipient: 212..., Amount: 10), Transaction(Sender: 234..., Recipient: 207..., Amount: 20)])
+2024-11-05 16:25:32,377 - DEBUG - Retrieved latest block: Block(Previous Hash: 627dea..., Hash: 00e212..., Nonce: 85, Transactions: [Transaction(Sender: 273..., Recipient: 212..., Amount: 10), Transaction(Sender: 234..., Recipient: 207..., Amount: 20)])
+2024-11-05 16:25:32,378 - INFO - New block added: Block(Previous Hash: 00e212..., Hash: 00acc8..., Nonce: 159, Transactions: [Transaction(Sender: 253..., Recipient: 215..., Amount: 15), Transaction(Sender: 256..., Recipient: 245..., Amount: 10), Transaction(Sender: 194..., Recipient: 198..., Amount: 30)])
