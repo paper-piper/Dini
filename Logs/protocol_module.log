@@ -70,3 +70,13 @@
 2024-11-05 16:06:02,923 - ERROR - Failed to receive encrypted message: [WinError 10057] A request to send or receive data was disallowed because the socket is not connected and (when sending on a datagram socket using a sendto call) no address was supplied
 2024-11-05 16:06:03,078 - ERROR - Failed to receive encrypted message: [WinError 10057] A request to send or receive data was disallowed because the socket is not connected and (when sending on a datagram socket using a sendto call) no address was supplied
 2024-11-05 16:06:03,235 - ERROR - Failed to receive encrypted message: [WinError 10057] A request to send or receive data was disallowed because the socket is not connected and (when sending on a datagram socket using a sendto call) no address was supplied
+2024-11-05 22:18:09,810 - ERROR - Failed to receive encrypted message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:18:09,825 - ERROR - Failed to receive and decode message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:18:44,274 - ERROR - Failed to receive encrypted message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:18:44,289 - ERROR - Failed to receive and decode message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:19:13,507 - ERROR - Failed to receive encrypted message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:19:13,523 - ERROR - Failed to receive and decode message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:19:42,258 - ERROR - Failed to receive encrypted message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:19:42,273 - ERROR - Failed to receive and decode message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:21:14,158 - ERROR - Failed to receive encrypted message: [WinError 10054] An existing connection was forcibly closed by the remote host
+2024-11-05 22:21:14,173 - ERROR - Failed to receive and decode message: [WinError 10054] An existing connection was forcibly closed by the remote host

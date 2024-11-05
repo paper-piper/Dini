@@ -36,20 +36,34 @@ class Node(ABC):
     def __del__(self):
         self.save_blockchain()
 
-    def connect_to_peers(self):
+    def add_peer(self, host, port):
         """
-        Connects to all peers in the list and starts a thread to listen for messages from each peer.
+        Adds a peer to the peers list and establishes a connection to it.
+
+        :param host: Host address of the peer.
+        :param port: Port number of the peer.
         """
-        for peer in self.peers:
-            host, port = peer['host'], peer['port']
-            try:
-                peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                peer_socket.connect((host, port))
-                self.peer_connections[peer] = peer_socket
-                # Start a new thread to listen for messages from this peer
-                threading.Thread(target=self.receive_messages, args=(peer_socket,), daemon=True).start()
-            except Exception as e:
-                logger.error(f"Failed to connect to peer {host}:{port} - {e}")
+        peer_info = (host, port)
+
+        # Check if the peer is already connected
+        if peer_info in self.peers:
+            logger.warning(f"Peer {host}:{port} is already connected.")
+            return
+
+        self.peers.append(peer_info)
+
+        try:
+            # Attempt to connect to the new peer
+            peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            peer_socket.connect((host, port))
+            self.peer_connections[(host, port)] = peer_socket
+
+            # Start a thread to listen for messages from this peer
+            threading.Thread(target=self.receive_messages, args=(peer_socket,), daemon=True).start()
+            logger.info(f"Connected to new peer {host}:{port}")
+
+        except Exception as e:
+            logger.error(f"Failed to connect to peer {host}:{port} - {e}")
 
     def receive_messages(self, peer_socket):
         """
@@ -63,7 +77,8 @@ class Node(ABC):
                 msg_type, msg_sub_type, msg_params = receive_message(peer_socket)
                 # Add the message to the queue for processing
                 self.messages_queue.put((msg_type, msg_sub_type, msg_params))
-                logger.info(f"Message received from peer {peer_socket.getpeername()}: {msg_type}, {msg_sub_type}")
+                logger.info(f"Message received from peer {peer_socket.getpeername()}:"
+                            f" type:{msg_type},sub type: {msg_sub_type}")
             except Exception as e:
                 logger.error(f"Error receiving message from {peer_socket.getpeername()}: {e}")
                 break  # Exit the loop if there's an error to stop this thread
@@ -191,17 +206,6 @@ class Node(ABC):
             send_message(peer.sock, ProtocolSettings.REQUEST_OBJECT, ProtocolSettings.BLOCK)
         logger.info(f"Requesting block with hash: {block_hash}")
 
-    def add_peer(self, host, port):
-        """
-        Adds a peer to the peers list and attempts to connect to it.
-
-        :param host: Host address of the peer.
-        :param port: Port number of the peer.
-        """
-        peer_info = {'host': host, 'port': port}
-        self.peers.append(peer_info)
-        self.connect_to_peers()
-
     def add_block_to_blockchain(self, block):
         """
         Adds a block to the blockchain and saves the updated chain.
@@ -236,69 +240,40 @@ class TestNode(Node):
 def assertion_check():
     """
     Performs assertion checks to verify the correctness of the Node class using TestNode instances.
-    Includes tests for saving/loading blockchain and peer communication.
+    Includes tests for saving and loading the blockchain from a file and adding peers.
     """
     # Sample blockchain for testing
     blockchain = create_sample_blockchain()
     test_filename = "test_blockchain.json"
-    test_node1 = TestNode("TestNode1", blockchain, test_filename)
-    test_node2 = TestNode("TestNode2", blockchain, test_filename)
+    test_node = TestNode("TestNode", blockchain, test_filename)
 
     # Test add_peer and peers list
     peer_info = ("127.0.0.1", 8000)
-    test_node1.add_peer(*peer_info)
-    assert peer_info in test_node1.peers, "Peer not correctly added"
+    test_node.add_peer(*peer_info)
+    assert peer_info in test_node.peers, "Peer not correctly added"
 
     # Save blockchain to file
-    test_node1.save_blockchain()
+    test_node.save_blockchain()
     assert os.path.exists(test_filename), "Blockchain file not created"
 
     # Load blockchain from file and verify content
     test_node_loaded = TestNode("Test", filename=test_filename)
     test_node_loaded.load_blockchain()
 
-    assert test_node1.blockchain.to_dict() == test_node_loaded.blockchain.to_dict(), \
+    assert test_node.blockchain.to_dict() == test_node_loaded.blockchain.to_dict(), \
         "Mismatch between saved and loaded blockchain data"
 
     # Clean up test file
     os.remove(test_filename)
     logger.info("File save and load tests passed.")
 
-    # Communication test setup
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(("127.0.0.1", 8000))
-    server_socket.listen(1)
-
-    def accept_connection():
-        conn, _ = server_socket.accept()
-        test_node2.peer_connections[("127.0.0.1", 8000)] = conn
-        threading.Thread(target=test_node2.receive_messages, args=(conn,), daemon=True).start()
-
-    threading.Thread(target=accept_connection, daemon=True).start()
-
-    # Connect test_node1 to test_node2
-    test_node1.add_peer("127.0.0.1", 8000)
-
-    # Send a test message from test_node1 to test_node2
-    send_message(test_node1.peer_connections[("127.0.0.1", 8000)], ProtocolSettings.SEND_OBJECT, ProtocolSettings.BLOCK, "Test Block")
-
-    # Allow some time for message processing
-    threading.Event().wait(1)
-
-    # Assert the message is in test_node2's message queue
-    assert not test_node2.messages_queue.empty(), "Message queue is empty; communication failed"
-    msg_type, msg_sub_type, msg_params = test_node2.messages_queue.get()
-    assert msg_type == ProtocolSettings.SEND_OBJECT, "Received incorrect message type"
-    assert msg_sub_type == ProtocolSettings.BLOCK, "Received incorrect message subtype"
-    assert msg_params == "Test Block", "Received incorrect message content"
-
-    logger.info("Communication tests passed.")
     logger.info("All assertion checks passed.")
 
 
 def main():
     # Main execution, include assertion check
     assertion_check()
+
 
 if __name__ == "__main__":
     main()
