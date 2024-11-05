@@ -1,0 +1,6 @@
+2024-11-05 16:08:30,607 - INFO - New peer added: {'host': '127.0.0.1', 'port': 8000}
+2024-11-05 16:08:30,700 - INFO - Blockchain saved to test_blockchain.json
+2024-11-05 16:08:31,092 - INFO - Blockchain loaded from test_blockchain.json
+2024-11-05 16:08:32,011 - INFO - Blockchain loaded from test_blockchain.json
+2024-11-05 16:08:32,089 - INFO - File save and load tests passed.
+2024-11-05 16:08:32,119 - INFO - All assertion checks passed.

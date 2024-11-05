@@ -9,7 +9,7 @@ class TransactionSettings:
 
 
 class FileSettings:
-    BLOCKCHAIN_FILE_NAME = "filename"
+    BLOCKCHAIN_FILE_NAME = "Blockchain.txt"
 
 
 class ProtocolSettings:
