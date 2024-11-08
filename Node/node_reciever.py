@@ -31,7 +31,7 @@ def main():
 
     # Add the connection to peer connections and start a thread to handle it
     receiver_node.peer_connections[("127.0.0.1", 8000)] = conn
-    threading.Thread(target=handle_connection, args=(receiver_node, conn), daemon=False).start()
+    threading.Thread(target=handle_connection, args=(receiver_node, conn)).start()
 
 
 if __name__ == "__main__":

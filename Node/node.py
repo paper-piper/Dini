@@ -96,7 +96,7 @@ class Node(ABC):
                     elif msg_type == ProtocolSettings.SEND_OBJECT:
                         self.handle_send_message(msg_sub_type, msg_params)
                     else:
-                        logger.warning("Received invalid message type")
+                        logger.warning(f"Received invalid message type ({msg_type})")
                 except Exception as e:
                     logger.error(f"Error handling message: {e}")
 

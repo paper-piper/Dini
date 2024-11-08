@@ -26,6 +26,7 @@ class ProtocolSettings:
     REQUEST_OBJECT = "reqt"
 
     # Message sub types
+    TEST_TYPE = "test"
     PEER = "peer"
     BLOCK = "blok"
     BLOCKCHAIN = 'blkc'
