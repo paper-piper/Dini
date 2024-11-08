@@ -4,7 +4,7 @@ from Blockchain.transaction import Transaction, get_sk_pk_pair, create_sample_tr
 from logging_utils import setup_logger
 
 # Setup logger for file
-logger = setup_logger("block_module")
+logger = setup_logger("block")
 
 # Constants for assertion error messages
 HASH_VALIDATION_ERROR = "Calculated hash should match the expected hash"

@@ -3,7 +3,7 @@ from Blockchain.transaction import Transaction, get_sk_pk_pair
 from logging_utils import setup_logger
 from dini_settings import MinerSettings
 # Setup logger for file
-logger = setup_logger("blockchain_module")
+logger = setup_logger("blockchain")
 
 # Constants for assertion error messages
 GENESIS_BLOCK_ERROR = "Genesis block should be the first block in the chain"
@@ -66,7 +66,7 @@ class Blockchain:
         logger.debug("Retrieved latest block: %s", latest_block)
         return latest_block
 
-    def add_block(self, new_block):
+    def validate_add_block(self, new_block):
         """
         Add a new block to the chain after mining it with the specified difficulty.
         :param new_block: The block to be added to the blockchain.
@@ -153,7 +153,7 @@ def create_sample_blockchain(difficulty=2, blocks_num=2, transactions_nums=None,
         assert block.hash[:blockchain.difficulty] == target, "Mining failed"
 
         previews_hash = block.calculate_hash()
-        blockchain.add_block(block)
+        blockchain.validate_add_block(block)
 
     return blockchain
 

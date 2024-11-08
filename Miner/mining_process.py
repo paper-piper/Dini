@@ -5,7 +5,7 @@ from dini_settings import MinerSettings
 from Blockchain.block import Block, create_sample_block, MINE_SUCCESS_ERROR
 
 # Setup logger for file
-logger = setup_logger("mining_module")
+logger = setup_logger("mining")
 
 HASH_VALIDATION_ERROR = "Calculated hash should match the expected hash"
 
@@ -143,6 +143,9 @@ def assertion_check():
 
     logger.info("All assertions passed for mining functions.")
 
+    def add_bonus_transaction(self, transactions):
+        bonus_transaction = Transaction(BlockSettings.BONUS_PK, self.public_key, BlockSettings.BONUS_AMOUNT)
+        transactions.insert(0, bonus_transaction)
 
 def check_straight_hash(string):
     """

@@ -100,9 +100,9 @@ class Node(ABC):
         :param object_type: Type of object requested (e.g., BLOCK, PEER).
         """
         match object_type:
-            case Protocol.BLOCK:
+            case MsgSubTypes.BLOCK:
                 self.handle_block_request()
-            case Protocol.PEER:
+            case MsgSubTypes.PEER:
                 self.handle_peer_request()
 
     def handle_send_message(self, object_type, params):
@@ -113,11 +113,11 @@ class Node(ABC):
         :param params: Additional parameters for message processing.
         """
         match object_type:
-            case Protocol.BLOCK:
+            case MsgSubTypes.BLOCK:
                 self.handle_block_send(params)
-            case Protocol.PEER:
+            case MsgSubTypes.PEER:
                 self.handle_peer_send(params)
-            case Protocol.TRANSACTION:
+            case MsgSubTypes.TRANSACTION:
                 self.handle_transaction_send(params)
 
     @abstractmethod
@@ -159,7 +159,6 @@ class Node(ABC):
 
         :param params: Parameters for transaction sending.
         """
-
 
 
 class TestNode(Node):
