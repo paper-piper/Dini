@@ -45,23 +45,8 @@ def receive_message(sock):
 
         params_bytes = decrypt_object(encrypted_params)
         params = pickle.loads(params_bytes)
-        # Handle specific message types with object conversion if needed
-        main_param = params[0]
 
-        match msg_sub_type:
-            case ProtocolSettings.TRANSACTION:
-                main_param = Transaction.from_dict(main_param)
-            case ProtocolSettings.BLOCK:
-                main_param = Block.from_dict(main_param)
-            case ProtocolSettings.BLOCKCHAIN:
-                main_param = Blockchain.from_dict(main_param)
-            case ProtocolSettings.PEER:
-                # need to be peer info and not peer object
-                raise NotImplementedError
-
-        params[0] = main_param
-
-        return msg_type, msg_sub_type, params
+        return msg_type.decode(), msg_sub_type.decode(), params
     except (pickle.PickleError, ValueError, ConnectionError) as e:
         logger.error(f"Failed to receive and decode message: {e}")
         raise

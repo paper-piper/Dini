@@ -4,7 +4,7 @@ from dini_Settings import ProtocolSettings
 from logging_utils import setup_logger
 
 # Setup logger for receiver file
-logger = setup_logger("receiver_module", "..\\..\\Logs\\")
+logger = setup_logger("protocol_receiver_module")
 
 
 def main():
@@ -37,5 +37,4 @@ def main():
 
 
 if __name__ == "__main__":
-    logger.info("hallo")
-    #main()
+    main()
