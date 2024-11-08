@@ -2,6 +2,16 @@ from Node.node import Node
 
 
 class Bootstrap(Node):
+
+    def __init__(self, is_bootstrap):
+        super().__init__()
+        if is_bootstrap:
+            self.set_global_address()
+
+    def set_global_address(self):
+        # a function to set the bootstrap address globally
+        pass
+
     def handle_block_request(self):
         raise NotImplementedError("Bootstrap does not handle block requests")
 
@@ -9,14 +19,12 @@ class Bootstrap(Node):
         # Implementation for Bootstrap
         print("Bootstrap handling peer request")
 
-    def handle_block_send(self, params):
-        raise NotImplementedError("Bootstrap does not handle block sending")
-
     def handle_peer_send(self, params):
         # Implementation for Bootstrap
         print("Bootstrap handling peer send")
 
+    def handle_block_send(self, params):
+        raise NotImplementedError("Bootstrap does not handle block sending")
+
     def handle_transaction_send(self, params):
         raise NotImplementedError("Bootstrap does not handle transactions")
-
-

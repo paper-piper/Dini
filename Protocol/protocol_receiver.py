@@ -1,10 +1,10 @@
 import socket
 from Protocol.protocol import receive_message
-from dini_Settings import ProtocolSettings
+from dini_settings import Protocol
 from logging_utils import setup_logger
 
 # Setup logger for receiver file
-logger = setup_logger("protocol_receiver_module")
+logger = setup_logger("protocol_receiver")
 
 
 def main():

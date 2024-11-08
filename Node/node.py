@@ -3,9 +3,7 @@ import os
 import threading
 from queue import Queue
 from abc import ABC, abstractmethod
-from Blockchain.blockchain import Blockchain, create_sample_blockchain
-from cryptography.hazmat.primitives.asymmetric import rsa
-from dini_Settings import FileSettings, ProtocolSettings
+from dini_settings import File, MsgTypes, MsgSubTypes
 from logging_utils import setup_logger
 from Protocol.protocol import receive_message, send_message
 import socket
@@ -16,25 +14,17 @@ logger = setup_logger("node_module")
 
 class Node(ABC):
     """
-    Represents a network node responsible for handling peer communication, blockchain management,
-    and message processing.
-
-    :param peer_type: Type of the peer (e.g., User, Miner).
-    :param blockchain: Optional blockchain instance; if not provided, loads from file.
+    basic communication tools;
+    receiving and sending messages and implementing a queue which will handle all of those messages.
+    Essentially handling all communication and threading.
     """
 
-    def __init__(self, peer_type, blockchain=None, filename=None):
-        self.peer_type = peer_type
-        self.filename = FileSettings.BLOCKCHAIN_FILE_NAME if filename is None else filename
-        self.blockchain = blockchain if blockchain else self.load_blockchain()
+    def __init__(self):
         self.peers = []
         self.messages_queue = Queue()
-        self.peer_connections = {}  # Dictionary to hold peer sockets
+        self.peer_connections = {}  # Dictionary to hold peer addresses
         self.handle_messages_thread = threading.Thread(target=self.handle_messages, daemon=True)
         self.handle_messages_thread.start()
-
-    def __del__(self):
-        self.save_blockchain()
 
     def add_peer(self, host, port):
         """
@@ -65,6 +55,9 @@ class Node(ABC):
         except Exception as e:
             logger.error(f"Failed to connect to peer {host}:{port} - {e}")
 
+    def send_distributed_message(self, msg_type, msg_sub_type, *msg_params):
+        pass
+
     def receive_messages(self, peer_socket):
         """
         Continuously receives messages from a specific peer and puts them in the message queue.
@@ -91,9 +84,9 @@ class Node(ABC):
             if not self.messages_queue.empty():
                 msg_type, msg_sub_type, msg_params = self.messages_queue.get()
                 try:
-                    if msg_type == ProtocolSettings.REQUEST_OBJECT:
+                    if msg_type == Protocol.REQUEST_OBJECT:
                         self.handle_request_message(msg_sub_type)
-                    elif msg_type == ProtocolSettings.SEND_OBJECT:
+                    elif msg_type == Protocol.SEND_OBJECT:
                         self.handle_send_message(msg_sub_type, msg_params)
                     else:
                         logger.warning(f"Received invalid message type ({msg_type})")
@@ -107,9 +100,9 @@ class Node(ABC):
         :param object_type: Type of object requested (e.g., BLOCK, PEER).
         """
         match object_type:
-            case ProtocolSettings.BLOCK:
+            case Protocol.BLOCK:
                 self.handle_block_request()
-            case ProtocolSettings.PEER:
+            case Protocol.PEER:
                 self.handle_peer_request()
 
     def handle_send_message(self, object_type, params):
@@ -120,18 +113,19 @@ class Node(ABC):
         :param params: Additional parameters for message processing.
         """
         match object_type:
-            case ProtocolSettings.BLOCK:
+            case Protocol.BLOCK:
                 self.handle_block_send(params)
-            case ProtocolSettings.PEER:
+            case Protocol.PEER:
                 self.handle_peer_send(params)
-            case ProtocolSettings.TRANSACTION:
+            case Protocol.TRANSACTION:
                 self.handle_transaction_send(params)
 
+    @abstractmethod
     def handle_block_request(self):
         """
         Handles requests for a specific block (abstract method to be implemented in subclasses).
         """
-        raise NotImplementedError("Block request handling must be implemented in subclass.")
+        pass
 
     @abstractmethod
     def handle_peer_request(self):
@@ -165,55 +159,7 @@ class Node(ABC):
 
         :param params: Parameters for transaction sending.
         """
-        pass
 
-    def save_blockchain(self):
-        """
-        Saves the current blockchain to a file in JSON format.
-        """
-        try:
-            with open(self.filename, "w") as f:
-                json.dump(self.blockchain.to_dict(), f, indent=4)
-            logger.info(f"Blockchain saved to {self.filename}")
-        except Exception as e:
-            logger.error(f"Error saving blockchain: {e}")
-
-    def load_blockchain(self):
-        """
-        Loads the blockchain from a file if it exists, otherwise initializes a new blockchain.
-
-        :return: Loaded or newly created blockchain object.
-        """
-        if os.path.exists(self.filename):
-            try:
-                with open(self.filename, "r") as f:
-                    blockchain_data = json.load(f)
-                    self.blockchain = Blockchain.from_dict(blockchain_data)
-                logger.info(f"Blockchain loaded from {self.filename}")
-            except Exception as e:
-                logger.error(f"Error loading blockchain: {e}")
-        else:
-            logger.warning(f"No blockchain file found at {self.filename}, initializing new blockchain.")
-            self.blockchain = create_sample_blockchain()
-
-    def request_block(self, block_hash):
-        """
-        Requests a specific block from peers.
-
-        :param block_hash: The hash of the block being requested.
-        """
-        for peer in self.peers:
-            send_message(peer.sock, ProtocolSettings.REQUEST_OBJECT, ProtocolSettings.BLOCK)
-        logger.info(f"Requesting block with hash: {block_hash}")
-
-    def add_block_to_blockchain(self, block):
-        """
-        Adds a block to the blockchain and saves the updated chain.
-
-        :param block: Block to add.
-        """
-        self.blockchain.add_block(block)
-        self.save_blockchain()
 
 
 class TestNode(Node):

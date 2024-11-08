@@ -1,11 +1,11 @@
 import socket
 from Protocol.protocol import send_message
 from Blockchain.transaction import create_sample_transaction
-from dini_Settings import ProtocolSettings
+from dini_settings import MsgTypes, MsgSubTypes
 from logging_utils import setup_logger
 
 # Setup logger for sender file
-logger = setup_logger("protocol_sender_module")
+logger = setup_logger("protocol_sender")
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
         # Connect to the receiver on localhost
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect(('127.0.0.1', 65432))  # Port 65432 for local testing
-            send_message(sock, ProtocolSettings.SEND_OBJECT, ProtocolSettings.TRANSACTION, transaction, "Pass")
+            send_message(sock, MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction, "Pass")
             logger.info("Transaction message sent successfully!")
 
     except (OSError, ConnectionError) as e:

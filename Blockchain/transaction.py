@@ -66,7 +66,6 @@ class Transaction:
         recipient_id = str(self.recipient_pk.public_numbers().n)[:3]
         return f"Transaction(Sender: {sender_id}..., Recipient: {recipient_id}..., Amount: {self.amount})"
 
-
     def calculate_hash(self):
         """
         Calculate a SHA-256 hash of the transaction contents.

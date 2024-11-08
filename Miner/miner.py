@@ -4,7 +4,7 @@ import time
 from Blockchain.blockchain import Blockchain, Block, Transaction
 from mempool import Mempool
 from logging_utils import setup_logger
-from dini_Settings import BlockSettings
+from dini_settings import BlockSettings
 from mining_process import start_mining_processes, terminate_processes
 from User.user import User
 from Blockchain.transaction import get_sk_pk_pair

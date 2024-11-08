@@ -1,13 +1,17 @@
+"""
+Implements a very simple looking “Send Message” and “Receive Message”.
+A functions which takes message type, message subtype and message parameters.
+"""
+
 import pickle
-from dini_Settings import ProtocolSettings
 import struct
 from logging_utils import setup_logger
-from Blockchain.transaction import Transaction, get_sk_pk_pair
-from Blockchain.blockchain import Blockchain
-from Blockchain.block import Block
+from Blockchain.transaction import create_sample_transaction
+from dini_settings import MsgTypes, MsgSubTypes
+
 
 # Setup logger for file
-logger = setup_logger("protocol_module")
+logger = setup_logger("protocol")
 
 
 def send_message(sock, msg_type, msg_sub_type, *msg_params):
@@ -40,7 +44,7 @@ def receive_message(sock):
         msg_sub_type = decrypt_object(encrypted_msg_sub_type)
 
         # if request object, the params are empty
-        if msg_type == ProtocolSettings.REQUEST_OBJECT:
+        if msg_type == MsgTypes.REQUEST_OBJECT:
             return msg_type, msg_sub_type, None
 
         params_bytes = decrypt_object(encrypted_params)
@@ -74,9 +78,9 @@ def decrypt_object(message_object):
 
 def receive_encrypted_message(sock) -> tuple:
     """
-    Receives an encrypted message, extracting message length, type, sub-type, and parameters.
+    Receives an encrypted message, extracting message length, type, subtype, and parameters.
     :param sock: The socket from which the message is received.
-    :return: A tuple of encrypted message type, sub-type, and parameters
+    :return: A tuple of encrypted message type, subtype, and parameters
     """
     try:
         # Step 1: Read and decrypt the message length field
@@ -101,9 +105,9 @@ def receive_encrypted_message(sock) -> tuple:
 
         encrypted_message_type = bytes(message_type_bytes)
 
-        # Step 3: Read the message sub-type field
+        # Step 3: Read the message subtype field
         message_sub_type_bytes = bytearray()
-        while len(message_sub_type_bytes) < 4:  # Message sub-type is always 4 bytes
+        while len(message_sub_type_bytes) < 4:  # Message subtype is always 4 bytes
             byte = sock.recv(1)
             if not byte:
                 raise ConnectionError("Socket connection closed unexpectedly")
@@ -164,11 +168,9 @@ def assertion_check():
     """
     Tests core functions to validate expected functionality.
     """
-    test_sock = None  # Placeholder for actual socket testing if implemented
-    _, pk = get_sk_pk_pair()
-    _, recvpk = get_sk_pk_pair()
-    transaction = Transaction(pk, recvpk, 100)
-    assert construct_message(ProtocolSettings.SEND_OBJECT, ProtocolSettings.TRANSACTION, transaction)  # Check construct_message
+
+    transaction = create_sample_transaction(100)
+    assert construct_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)  # Check construct_message
 
     test_object = b"sample_object"
     encrypted = encrypt_object(test_object)

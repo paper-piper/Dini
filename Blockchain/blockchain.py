@@ -1,7 +1,7 @@
 from Blockchain.block import Block, create_sample_block
 from Blockchain.transaction import Transaction, get_sk_pk_pair
 from logging_utils import setup_logger
-from dini_Settings import MinerSettings
+from dini_settings import MinerSettings
 # Setup logger for file
 logger = setup_logger("blockchain_module")
 

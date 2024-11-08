@@ -4,7 +4,7 @@ import time
 
 from Protocol.protocol import send_message
 from node import TestNode
-from dini_Settings import ProtocolSettings
+from dini_settings import Protocol
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
     # Send a test message to the receiver
     if (receiver_host, receiver_port) in sender_node.peer_connections:
         peer_socket = sender_node.peer_connections[(receiver_host, receiver_port)]
-        send_message(peer_socket, ProtocolSettings.SEND_OBJECT, ProtocolSettings.TEST_TYPE, "Test Command")
+        send_message(peer_socket, Protocol.SEND_OBJECT, Protocol.TEST_TYPE, "Test Command")
         print("Test command sent to receiver")
         time.sleep(2)
 

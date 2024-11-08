@@ -1,7 +1,7 @@
 import hashlib
 import multiprocessing
 from logging_utils import setup_logger
-from dini_Settings import MinerSettings
+from dini_settings import MinerSettings
 from Blockchain.block import Block, create_sample_block, MINE_SUCCESS_ERROR
 
 # Setup logger for file
