@@ -59,6 +59,24 @@ def mine_worker(block_data, start_nonce, end_nonce, difficulty, new_block_event,
             logger.error("Error occurred in mine_worker: %s", e)
 
 
+
+def terminate_processes(processes):
+    """
+    Terminates all active mining processes gracefully and waits for them to exit.
+
+    :param processes: List of active mining processes.
+    :return: None
+    """
+    for process in processes:
+        try:
+            process.terminate()
+            process.join()  # Wait for the process to fully terminate
+            logger.info("Terminated process %s", process.name)
+        except Exception as e:
+            logger.error("Error terminating process %s: %s", process.name, e)
+    logger.info("All mining processes terminated.")
+
+
 def start_mining_processes(block_data, difficulty, new_block_event):
     """
     Starts multiple processes to mine the block. Each process mines within a unique nonce range
@@ -88,21 +106,6 @@ def start_mining_processes(block_data, difficulty, new_block_event):
     return processes, result_queue
 
 
-def terminate_processes(processes):
-    """
-    Terminates all active mining processes gracefully and waits for them to exit.
-
-    :param processes: List of active mining processes.
-    :return: None
-    """
-    for process in processes:
-        try:
-            process.terminate()
-            process.join()  # Wait for the process to fully terminate
-            logger.info("Terminated process %s", process.name)
-        except Exception as e:
-            logger.error("Error terminating process %s: %s", process.name, e)
-    logger.info("All mining processes terminated.")
 
 
 def assertion_check():
