@@ -1,13 +1,10 @@
 import threading
 import queue
 from dini_settings import MsgTypes, MsgSubTypes
-from Blockchain.blockchain import Block, Transaction
+from Blockchain.blockchain import Block
 from logging_utils import setup_logger
-from dini_settings import BlockSettings
-from mining_process import start_mining_processes, terminate_processes
+import multiprocess_mining
 from User.user import User
-from Blockchain.transaction import get_sk_pk_pair
-from Blockchain.blockchain import create_sample_blockchain
 # Setup logger for file
 logger = setup_logger("miner")
 
@@ -55,9 +52,10 @@ class Miner(User):
         while self.currently_mining.is_set():
             self.new_block_event.clear()  # Reset the event since we're about to start mining
 
-            # sets the currently mined block to a new block
-            # TODO: handle where there's no transaction to create a block from
-            self.create_block()
+            # check for available transaction until a block is made
+            has_pending_transactions = False
+            while not has_pending_transactions:
+                has_pending_transactions = self.create_block()  # sets the currently mined block to a new block
 
             # Begin mining with the given difficulty
             mined_block = self.mine_block(self.currently_mined_block)
@@ -76,8 +74,11 @@ class Miner(User):
         with self.mempool_lock:
             # build new block
             transactions = self.mempool.select_transactions()
+            if transactions is None:
+                return False
             previous_hash = self.blockchain.get_latest_block().hash
             self.currently_mined_block = Block(previous_hash, transactions)
+            return True
 
     def start_mining(self):
         if self.currently_mining.is_set():
@@ -92,7 +93,7 @@ class Miner(User):
         """
         Initiates the mining process using multiple processes to increase efficiency.
         """
-        processes, result_queue = start_mining_processes(
+        processes, result_queue = multiprocess_mining.start_mining_processes(
             block, difficulty=self.blockchain.difficulty, new_block_event=self.new_block_event
         )
 
@@ -111,7 +112,7 @@ class Miner(User):
                 logger.info("Mining aborted due to new block.")
 
         finally:
-            terminate_processes(processes)
+            multiprocess_mining.terminate_processes(processes)
 
         return mined_block if mined_block else block  # Return mined block or the original if aborted
 
