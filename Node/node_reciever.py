@@ -1,8 +1,6 @@
 # NodeReceiver.py
 import socket
 import threading
-import time
-
 from node import TestNode
 
 
@@ -15,7 +13,7 @@ def handle_connection(node, conn):
 
 def main():
     # Create a TestNode instance for the receiver
-    receiver_node = TestNode("Receiver")
+    receiver_node = TestNode()
 
     # Start a server socket to listen for connections
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

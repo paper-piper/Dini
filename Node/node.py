@@ -1,9 +1,7 @@
-import json
-import os
 import threading
 from queue import Queue
 from abc import ABC, abstractmethod
-from dini_settings import File, MsgTypes, MsgSubTypes
+from dini_settings import MsgTypes, MsgSubTypes
 from logging_utils import setup_logger
 from Protocol.protocol import receive_message, send_message
 import socket
@@ -20,7 +18,6 @@ class Node(ABC):
     """
 
     def __init__(self):
-        self.peers = []
         self.messages_queue = Queue()
         self.peer_connections = {}  # Dictionary to hold peer addresses
         self.handle_messages_thread = threading.Thread(target=self.handle_messages, daemon=True)
@@ -36,11 +33,9 @@ class Node(ABC):
         peer_info = (host, port)
 
         # Check if the peer is already connected
-        if peer_info in self.peers:
+        if peer_info in self.peer_connections.keys():
             logger.warning(f"Peer {host}:{port} is already connected.")
             return
-
-        self.peers.append(peer_info)
 
         try:
             # Attempt to connect to the new peer
@@ -55,8 +50,12 @@ class Node(ABC):
         except Exception as e:
             logger.error(f"Failed to connect to peer {host}:{port} - {e}")
 
-    def send_distributed_message(self, msg_type, msg_sub_type, *msg_params):
-        pass
+    def send_distributed_message(self, msg_type, msg_sub_type, *msg_params, excluded_peers=None):
+        for peer_info, peer_socket in self.peer_connections.items():
+            if not excluded_peers:
+                send_message(peer_socket, msg_type, msg_sub_type, *msg_params)
+            elif peer_info not in excluded_peers:
+                send_message(peer_socket, msg_type, msg_sub_type, *msg_params)
 
     def receive_messages(self, peer_socket):
         """
@@ -84,9 +83,9 @@ class Node(ABC):
             if not self.messages_queue.empty():
                 msg_type, msg_sub_type, msg_params = self.messages_queue.get()
                 try:
-                    if msg_type == Protocol.REQUEST_OBJECT:
+                    if msg_type == MsgTypes.REQUEST_OBJECT:
                         self.handle_request_message(msg_sub_type)
-                    elif msg_type == Protocol.SEND_OBJECT:
+                    elif msg_type == MsgTypes.SEND_OBJECT:
                         self.handle_send_message(msg_sub_type, msg_params)
                     else:
                         logger.warning(f"Received invalid message type ({msg_type})")
@@ -181,44 +180,4 @@ class TestNode(Node):
     def handle_transaction_send(self, params):
         logger.info("TestNode handling transaction send")
 
-
-def assertion_check():
-    """
-    Performs assertion checks to verify the correctness of the Node class using TestNode instances.
-    Includes tests for saving and loading the blockchain from a file and adding peers.
-    """
-    # Sample blockchain for testing
-    blockchain = create_sample_blockchain()
-    test_filename = "test_blockchain.json"
-    test_node = TestNode("TestNode", blockchain, test_filename)
-
-    # Test add_peer and peers list
-    peer_info = ("127.0.0.1", 8000)
-    test_node.add_peer(*peer_info)
-    assert peer_info in test_node.peers, "Peer not correctly added"
-
-    # Save blockchain to file
-    test_node.save_blockchain()
-    assert os.path.exists(test_filename), "Blockchain file not created"
-
-    # Load blockchain from file and verify content
-    test_node_loaded = TestNode("Test", filename=test_filename)
-    test_node_loaded.load_blockchain()
-
-    assert test_node.blockchain.to_dict() == test_node_loaded.blockchain.to_dict(), \
-        "Mismatch between saved and loaded blockchain data"
-
-    # Clean up test file
-    os.remove(test_filename)
-    logger.info("File save and load tests passed.")
-
-    logger.info("All assertion checks passed.")
-
-
-def main():
-    # Main execution, include assertion check
-    assertion_check()
-
-
-if __name__ == "__main__":
-    main()
+# File has no assertion checks, since communication needs to be check using multiple files
