@@ -1,8 +1,8 @@
 import hashlib
 import multiprocessing
 from logging_utils import setup_logger
-from dini_settings import MinerSettings
-from Blockchain.block import Block, create_sample_block, MINE_SUCCESS_ERROR
+from dini_settings import MinerSettings, BlockSettings
+from Blockchain.block import Transaction, create_sample_block, MINE_SUCCESS_ERROR
 
 # Setup logger for file
 logger = setup_logger("mining")
@@ -59,7 +59,6 @@ def mine_worker(block_data, start_nonce, end_nonce, difficulty, new_block_event,
             logger.error("Error occurred in mine_worker: %s", e)
 
 
-
 def terminate_processes(processes):
     """
     Terminates all active mining processes gracefully and waits for them to exit.
@@ -106,6 +105,19 @@ def start_mining_processes(block_data, difficulty, new_block_event):
     return processes, result_queue
 
 
+def check_straight_hash(string):
+    """
+    Calculates the SHA-256 hash of a given string.
+
+    :param string: The string to hash.
+    :return: The SHA-256 hash as a hex string.
+    """
+    block_hash = hashlib.sha256(string.encode()).hexdigest()
+    return block_hash
+
+
+def get_block_str(block):
+    pass
 
 
 def assertion_check():
@@ -135,7 +147,7 @@ def assertion_check():
     assert mined_result is not None, "Mined block should be present in the result queue."
     mined_hash, mined_nonce = mined_result
     assert mined_hash[:local_difficulty] == "0" * local_difficulty, MINE_SUCCESS_ERROR
-    logger.info("Checking da big ones")
+    logger.info("Checking Multiple processes")
 
     # Test start_mining_processes and terminate_processes
     processes, _ = start_mining_processes(block_data, difficulty, new_block_event)
@@ -149,16 +161,6 @@ def assertion_check():
     def add_bonus_transaction(self, transactions):
         bonus_transaction = Transaction(BlockSettings.BONUS_PK, self.public_key, BlockSettings.BONUS_AMOUNT)
         transactions.insert(0, bonus_transaction)
-
-def check_straight_hash(string):
-    """
-    Calculates the SHA-256 hash of a given string.
-
-    :param string: The string to hash.
-    :return: The SHA-256 hash as a hex string.
-    """
-    block_hash = hashlib.sha256(string.encode()).hexdigest()
-    return block_hash
 
 
 # Run assertion checks if this file is executed as main

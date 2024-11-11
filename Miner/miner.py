@@ -58,7 +58,7 @@ class Miner(User):
                 has_pending_transactions = self.create_block()  # sets the currently mined block to a new block
 
             # Begin mining with the given difficulty
-            mined_block = self.mine_block(self.currently_mined_block)
+            mined_block = self.mine_block(self.currently_mined_block, self.blockchain.difficulty)
 
             # if the mining was interrupted, the mined block is None
             if not mined_block:
@@ -89,7 +89,38 @@ class Miner(User):
     def stop_mining(self):
         self.currently_mining.clear()
 
-    def mine_block(self, block):
+    def mine_block(self, block, difficulty):
+        """
+        Mines the given block by finding a valid hash that meets the required difficulty.
+        :param block: The Block object to be mined.
+        :param difficulty: the difficulty
+        :return: The mined Block object with a valid hash.
+        """
+        target = "0" * difficulty
+        best_hash = None
+        max_trailing_zeros = 0
+        logger.info("Starting mining with difficulty %d...", difficulty)
+        while block.hash[:difficulty] != target:
+            block.nonce += 1
+            block.hash = block.calculate_hash()
+            # Count trailing zeros in the current hash
+            trailing_zeros = len(block.hash) - len(block.hash.rstrip("0"))
+            # Update the best hash if the current hash has more trailing zeros
+            if trailing_zeros > max_trailing_zeros:
+                max_trailing_zeros = trailing_zeros
+                best_hash = block.hash
+            # Log the best hash every 100,000 attempts
+            if block.nonce % 100000 == 0:
+                logger.debug("Mining attempt %d, Best hash so far: %s (Trailing zeros: %d)",
+                             block.nonce, best_hash,  max_trailing_zeros)
+            # Check if a new block has arrived
+            if self.new_block_event.is_set():
+                logger.info("New block detected, aborting current mining process")
+                return None
+
+        return block
+
+    def mine_block_multiprocess(self, block):
         """
         Initiates the mining process using multiple processes to increase efficiency.
         """
