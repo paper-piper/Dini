@@ -43,5 +43,6 @@ class MinerSettings:
     DIFFICULTY_LEVEL = 2
 
 
-class Bootstrap:
-    addresses = [('192.168.1.100', 5000)]  # replace with actual addresses
+class BootSettings:
+    CONFIG_PATH = r"Bootstrap/config.json"
+    BOOTSTRAP_ADDRESS = "bootstrap_addresses"
