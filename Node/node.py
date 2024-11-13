@@ -9,6 +9,9 @@ import socket
 # Setup logger for peer file
 logger = setup_logger("node_module")
 
+QUEUE_LEN = 1
+SERVER_ADDRESS = ("127.123.123", 1900)
+
 
 class Node(ABC):
     """
@@ -17,11 +20,23 @@ class Node(ABC):
     Essentially handling all communication and threading.
     """
 
-    def __init__(self):
+    def __init__(self, address):
         self.messages_queue = Queue()
         self.peer_connections = {}  # Dictionary to hold peer addresses
         self.handle_messages_thread = threading.Thread(target=self.handle_messages, daemon=True)
         self.handle_messages_thread.start()
+
+        self.address = address
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
+        self.accept_connections_thread.start()
+
+    def accept_connections(self):
+        self.socket.bind(self.address)
+        self.socket.listen(QUEUE_LEN)
+        while True:
+            node_address, node_socket = self.socket.accept()
+            self.peer_connections[node_socket] = node_socket
 
     def add_peer(self, host, port):
         """
