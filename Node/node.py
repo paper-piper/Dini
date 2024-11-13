@@ -20,23 +20,30 @@ class Node(ABC):
     Essentially handling all communication and threading.
     """
 
-    def __init__(self, address):
+    def __init__(self, port=8080):
         self.messages_queue = Queue()
         self.peer_connections = {}  # Dictionary to hold peer addresses
         self.handle_messages_thread = threading.Thread(target=self.handle_messages, daemon=True)
         self.handle_messages_thread.start()
 
-        self.address = address
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ip = socket.gethostbyname(socket.gethostname())
+        self.port = port
+        self.address = (self.ip, self.port)
+        self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
         self.accept_connections_thread.start()
 
     def accept_connections(self):
-        self.socket.bind(self.address)
-        self.socket.listen(QUEUE_LEN)
+        self.accept_socket.bind(self.address)
+        self.accept_socket.listen(QUEUE_LEN)
         while True:
-            node_address, node_socket = self.socket.accept()
+            node_address, node_socket = self.accept_socket.accept()
             self.peer_connections[node_socket] = node_socket
+
+    def connect_to_node(self, address):
+        node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        node_socket.connect(address)
+        self.peer_connections[address[0]] = node_socket
 
     def add_peer(self, host, port):
         """

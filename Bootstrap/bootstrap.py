@@ -9,19 +9,19 @@ logger = setup_logger("bootstrap")
 class Bootstrap(Node):
 
     def __init__(self, is_bootstrap, port=8000, peers_address=None):
-        super().__init__()
+        super().__init__(port)
         if is_bootstrap:
             self.add_bootstrap_address()
-
-        self.ip = socket.gethostbyname(socket.gethostname())
-        self.port = port
-        self.address = f"{self.ip}:{self.port}"  # Combine IP and port for full address
 
         if not peers_address:
             self.discover_peers()
 
     def discover_peers(self):
         bootstrap_addresses = self.get_bootstrap_addresses()
+        for address in bootstrap_addresses:
+            self.connect_to_node()
+
+    def connect_to_bootstrap(self, address):
 
     def get_bootstrap_addresses(self):
         """Retrieves the list of bootstrap server addresses from the config file."""
