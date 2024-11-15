@@ -1,6 +1,6 @@
 from Node.node import Node
 import json
-from dini_settings import BootSettings
+from dini_settings import BootSettings, MsgTypes, MsgSubTypes
 from logging_utils import setup_logger
 import socket
 logger = setup_logger("bootstrap")
@@ -19,9 +19,10 @@ class Bootstrap(Node):
     def discover_peers(self):
         bootstrap_addresses = self.get_bootstrap_addresses()
         for address in bootstrap_addresses:
-            self.connect_to_node()
+            self.connect_to_node(address)
 
-    def connect_to_bootstrap(self, address):
+        # after connecting to all available bootstrap addresses, send a distributed request peer msg
+        self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.PEER)
 
     def get_bootstrap_addresses(self):
         """Retrieves the list of bootstrap server addresses from the config file."""
@@ -71,11 +72,13 @@ class Bootstrap(Node):
 
     def handle_peer_request(self):
         # Implementation for Bootstrap
-        print("Bootstrap handling peer request")
+        peer_addresses = self.peer_connections.keys()
+        return peer_addresses
 
-    def handle_peer_send(self, params):
+    def handle_peer_send(self, peer_addresses):
         # Implementation for Bootstrap
-        print("Bootstrap handling peer send")
+        for address in peer_addresses:
+            self.connect_to_node(address)
 
     def handle_block_send(self, params):
         raise NotImplementedError("Bootstrap does not handle block sending")
