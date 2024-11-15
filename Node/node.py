@@ -52,18 +52,18 @@ class Node(ABC):
         :param host: Host address of the peer.
         :param port: Port number of the peer.
         """
-        peer_info = (host, port)
+        peer_address = (host, port)
 
         # Check if the peer is already connected
-        if peer_info in self.peer_connections.keys():
+        if peer_address in self.peer_connections.keys():
             logger.warning(f"Peer {host}:{port} is already connected.")
             return
 
         try:
             # Attempt to connect to the new peer
             peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            peer_socket.connect((host, port))
-            self.peer_connections[(host, port)] = peer_socket
+            peer_socket.connect(peer_address)
+            self.peer_connections[peer_address] = peer_socket
 
             # Start a thread to listen for messages from this peer
             threading.Thread(target=self.receive_messages, args=(peer_socket,), daemon=True).start()
@@ -105,12 +105,18 @@ class Node(ABC):
             if not self.messages_queue.empty():
                 msg_type, msg_sub_type, msg_params = self.messages_queue.get()
                 try:
-                    if msg_type == MsgTypes.REQUEST_OBJECT:
-                        self.handle_request_message(msg_sub_type)
-                    elif msg_type == MsgTypes.SEND_OBJECT:
-                        self.handle_send_message(msg_sub_type, msg_params)
-                    else:
-                        logger.warning(f"Received invalid message type ({msg_type})")
+                    match msg_type:
+                        case MsgTypes.REQUEST_OBJECT:
+                            requested_object = self.handle_request_message(msg_sub_type)
+                            # Bonus: send the message only to the sender
+                            self.send_distributed_message(MsgTypes.SEND_OBJECT, msg_sub_type, requested_object)
+
+                        case MsgTypes.SEND_OBJECT:
+                            self.handle_send_message(msg_sub_type, msg_params)
+                            # forward the message
+                            self.send_distributed_message(msg_type, msg_sub_type, *msg_params)
+                        case _:
+                            logger.warning(f"Received invalid message type ({msg_type})")
                 except Exception as e:
                     logger.error(f"Error handling message: {e}")
 
@@ -120,11 +126,16 @@ class Node(ABC):
 
         :param object_type: Type of object requested (e.g., BLOCK, PEER).
         """
+        results = None
         match object_type:
             case MsgSubTypes.BLOCK:
-                self.handle_block_request()
+                results = self.handle_block_request()
             case MsgSubTypes.PEER:
-                self.handle_peer_request()
+                results = self.handle_peer_request()
+            case _:
+                logger.error("Received invalid message subtype")
+
+        return results
 
     def handle_send_message(self, object_type, params):
         """
