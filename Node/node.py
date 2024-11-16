@@ -79,6 +79,13 @@ class Node(ABC):
             elif peer_info not in excluded_peers:
                 send_message(peer_socket, msg_type, msg_sub_type, *msg_params)
 
+    def send_focused_message(self, address, msg_type, msg_subtype, *msg_params):
+        if address not in self.peer_connections.keys():
+            return False  # error return value
+
+        send_message(self.peer_connections[address], msg_type, msg_subtype, *msg_params)
+        return True
+
     def receive_messages(self, peer_socket):
         """
         Continuously receives messages from a specific peer and puts them in the message queue.
@@ -103,24 +110,44 @@ class Node(ABC):
         """
         while True:
             if not self.messages_queue.empty():
-                msg_type, msg_sub_type, msg_params = self.messages_queue.get()
+                msg_type, msg_subtype, msg_params = self.messages_queue.get()
                 try:
-                    match msg_type:
-                        case MsgTypes.REQUEST_OBJECT:
-                            requested_object = self.handle_request_message(msg_sub_type)
-                            # Bonus: send the message only to the sender
-                            self.send_distributed_message(MsgTypes.SEND_OBJECT, msg_sub_type, requested_object)
-
-                        case MsgTypes.SEND_OBJECT:
-                            self.handle_send_message(msg_sub_type, msg_params)
-                            # forward the message
-                            self.send_distributed_message(msg_type, msg_sub_type, *msg_params)
-                        case _:
-                            logger.warning(f"Received invalid message type ({msg_type})")
+                    self.process_message(msg_type, msg_subtype, msg_params)
                 except Exception as e:
                     logger.error(f"Error handling message: {e}")
 
-    def handle_request_message(self, object_type):
+    def process_message(self, msg_type, msg_subtype, msg_params):
+        match msg_type:
+            case MsgTypes.REQUEST_OBJECT:
+                requested_object = self.get_requested_object(msg_subtype)
+                # Bonus: send the message only to the sender
+                return_address = msg_params[0]
+                forward_object = False
+                self.send_focused_message(
+                    return_address,
+                    MsgTypes.SEND_OBJECT,
+                    msg_subtype,
+                    requested_object,
+                    forward_object
+                )
+
+            case MsgTypes.SEND_OBJECT:
+                # check if message needs to be ignored
+                if self.already_seen_message():
+                    return
+                self.handle_send_message(msg_subtype, msg_params)
+                # check if the message is needed to be forwarded
+
+                forward_object = msg_params[1]
+                if forward_object:
+                    self.send_distributed_message(msg_type, msg_subtype, *msg_params)
+            case _:
+                logger.warning(f"Received invalid message type ({msg_type})")
+
+    def already_seen_message(self):
+        return False  # placeholder
+
+    def get_requested_object(self, object_type):
         """
         Routes request messages to specific handlers based on object type.
 
