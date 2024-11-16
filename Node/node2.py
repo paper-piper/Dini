@@ -48,8 +48,7 @@ if __name__ == "__main__":
         logger.info(f"Node2 successfully connected to Node1 at {node1_ip}:8080.")
 
         # Test communication: Send a message to Node1
-        node2.send_focused_message(
-            ("127.0.0.1", 8080),
+        node2.send_distributed_message(
             MsgTypes.SEND_OBJECT,
             MsgSubTypes.TRANSACTION,
             create_sample_transaction(10),
