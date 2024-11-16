@@ -1,8 +1,6 @@
 from node import Node
-import time
 from threading import Event
 from logging_utils import setup_logger
-import socket
 logger = setup_logger("node1")
 
 
@@ -32,8 +30,8 @@ class Node1(Node):
 
 
 if __name__ == "__main__":
-    # Get IP address dynamically
-    node_ip = socket.gethostbyname(socket.gethostname())
+    # Use localhost for same-computer testing
+    node_ip = "127.0.0.1"
 
     # Initialize Node1 on port 8080
     node1 = Node1(port=8080, ip=node_ip)

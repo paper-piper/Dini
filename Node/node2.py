@@ -1,10 +1,8 @@
 from node import Node
-import time
 from threading import Event
 from logging_utils import setup_logger
 from dini_settings import MsgTypes, MsgSubTypes
 from Blockchain.transaction import create_sample_transaction
-import socket
 logger = setup_logger("node2")
 
 
@@ -34,18 +32,16 @@ class Node2(Node):
 
 
 if __name__ == "__main__":
-    # Get IP address dynamically
-    node_ip = socket.gethostbyname(socket.gethostname())
+    # Use localhost for same-computer testing
+    node_ip = "127.0.0.1"
 
     # Initialize Node2 on port 9090
     node2 = Node2(port=9090, ip=node_ip)
 
     # Connect to Node1 (ensure Node1 is running)
-    time.sleep(2)  # Wait for Node1 to start
     try:
-        node1_ip = socket.gethostbyname(socket.gethostname())  # Get Node1 IP dynamically
-        node2.connect_to_node((node1_ip, 8080))
-        logger.info(f"Node2 successfully connected to Node1 at {node1_ip}:8080.")
+        node2.connect_to_node((node_ip, 8080))
+        logger.info(f"Node2 successfully connected to Node1 at {node_ip}:8080.")
 
         # Test communication: Send a message to Node1
         node2.send_distributed_message(
