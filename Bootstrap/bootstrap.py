@@ -8,12 +8,12 @@ logger = setup_logger("bootstrap")
 
 class Bootstrap(Node):
 
-    def __init__(self, is_bootstrap, port=8000, peers_address=None):
-        super().__init__(port)
+    def __init__(self, is_bootstrap, port=8000, peer_connections=None):
+        super().__init__(port, peer_connections=peer_connections)
         if is_bootstrap:
             self.add_bootstrap_address()
 
-        if not peers_address:
+        if not self.peer_connections:
             self.discover_peers()
 
     def discover_peers(self):
@@ -34,8 +34,8 @@ class Bootstrap(Node):
             # Return the list if it exists, otherwise return an empty list
             return config.get('bootstrap_addresses', [])
 
-        except (FileNotFoundError, json.JSONDecodeError):
-            logger.error("Config file not found or is corrupted.")
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error(f"Config file not found or is corrupted. error: {e}")
             raise "Config file not found or is corrupted."
         except Exception as e:
             logger.error(f"An error occurred while discovering bootstrap addresses: {e}")
@@ -44,6 +44,9 @@ class Bootstrap(Node):
     def add_bootstrap_address(self):
         """Adds a new bootstrap server address to the config file."""
         try:
+            # make file if doesn't exist
+            with open(BootSettings.CONFIG_PATH, 'a'):
+                pass
             # Load current config
             with open(BootSettings.CONFIG_PATH, 'r') as config_file:
                 config = json.load(config_file)
@@ -62,8 +65,8 @@ class Bootstrap(Node):
 
             logger.info(f"Added new bootstrap address: {self.address}")
 
-        except (FileNotFoundError, json.JSONDecodeError):
-            logger.error("Config file not found or is corrupted.")
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error(f"Config file not found or is corrupted. {e}")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
 
