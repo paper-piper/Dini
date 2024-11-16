@@ -1,49 +1,73 @@
 import threading
 from queue import Queue
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dini_settings import MsgTypes, MsgSubTypes
 from logging_utils import setup_logger
 from Protocol.protocol import receive_message, send_message
 import socket
 
 # Setup logger for peer file
-logger = setup_logger("node_module")
-
-QUEUE_LEN = 1
-SERVER_ADDRESS = ("127.123.123", 1900)
+logger = setup_logger("node")
 
 
-class Node(ABC):
+class Node:
     """
     basic communication tools;
     receiving and sending messages and implementing a queue which will handle all of those messages.
     Essentially handling all communication and threading.
     """
 
-    def __init__(self, port=8080):
-        self.messages_queue = Queue()
-        self.peer_connections = {}  # Dictionary to hold peer addresses
-        self.handle_messages_thread = threading.Thread(target=self.handle_messages, daemon=True)
-        self.handle_messages_thread.start()
-
-        self.ip = socket.gethostbyname(socket.gethostname())
+    def __init__(self, port=8080, ip=None, peer_connections=None):
+        """
+        :param port: Port number for the node's socket.
+        :param ip: IP address of the node (defaults to the local machine's IP).
+        :param peer_connections: Dictionary of existing peer connections.
+        :return: None
+        """
+        self.peer_connections = {} if not peer_connections else peer_connections
+        self.ip = socket.gethostbyname(socket.gethostname()) if not ip else ip
         self.port = port
+
         self.address = (self.ip, self.port)
         self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.messages_queue = Queue()
+
+        self.handle_messages_thread = threading.Thread(target=self.handle_messages, daemon=True)
+        self.handle_messages_thread.start()
         self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
         self.accept_connections_thread.start()
 
     def accept_connections(self):
-        self.accept_socket.bind(self.address)
-        self.accept_socket.listen(QUEUE_LEN)
-        while True:
-            node_address, node_socket = self.accept_socket.accept()
-            self.peer_connections[node_socket] = node_socket
+        """
+        Accepts incoming connections from other peers and adds them to peer connections.
+        Logs any connection errors.
+        :return: None
+        """
+        try:
+            self.accept_socket.bind(self.address)
+            self.accept_socket.listen()
+            logger.info(f"Node listening for connections at {self.address}")
+            while True:
+                node_socket, node_address = self.accept_socket.accept()
+                self.peer_connections[node_address] = node_socket
+                logger.info(f"Accepted connection from {node_address}")
+        except Exception as e:
+            logger.error(f"Error in accept_connections: {e}")
 
     def connect_to_node(self, address):
-        node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        node_socket.connect(address)
-        self.peer_connections[address[0]] = node_socket
+        """
+        Connects to a peer node at the specified address.
+
+        :param address: Tuple containing the IP and port of the peer.
+        :return: None
+        """
+        try:
+            node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            node_socket.connect(address)
+            self.peer_connections[address] = node_socket
+            logger.info(f"Connected to node at {address}")
+        except Exception as e:
+            logger.error(f"Failed to connect to node at {address}: {e}")
 
     def add_peer(self, host, port):
         """
@@ -73,18 +97,42 @@ class Node(ABC):
             logger.error(f"Failed to connect to peer {host}:{port} - {e}")
 
     def send_distributed_message(self, msg_type, msg_sub_type, *msg_params, excluded_peers=None):
+        """
+        Sends a message to all connected peers except excluded ones.
+        :param msg_type: Type of the message.
+        :param msg_sub_type: Subtype of the message.
+        :param msg_params: Parameters for the message.
+        :param excluded_peers: List of peers to exclude from the message.
+        :return: None
+        """
         for peer_info, peer_socket in self.peer_connections.items():
-            if not excluded_peers:
-                send_message(peer_socket, msg_type, msg_sub_type, *msg_params)
-            elif peer_info not in excluded_peers:
-                send_message(peer_socket, msg_type, msg_sub_type, *msg_params)
+            try:
+                if not excluded_peers or peer_info not in excluded_peers:
+                    send_message(peer_socket, msg_type, msg_sub_type, *msg_params)
+                    logger.info(f"Distributed message sent to {peer_info}: {msg_type}, {msg_sub_type}")
+            except Exception as e:
+                logger.error(f"Failed to send message to {peer_info}: {e}")
 
     def send_focused_message(self, address, msg_type, msg_subtype, *msg_params):
-        if address not in self.peer_connections.keys():
-            return False  # error return value
+        """
+        Sends a focused message to a specific peer.
 
-        send_message(self.peer_connections[address], msg_type, msg_subtype, *msg_params)
-        return True
+        :param address: Address of the peer to send the message to.
+        :param msg_type: Type of the message.
+        :param msg_subtype: Subtype of the message.
+        :param msg_params: Parameters for the message.
+        :return: True if successful, False otherwise.
+        """
+        if address not in self.peer_connections:
+            logger.warning(f"Peer at {address} not found.")
+            return False
+        try:
+            send_message(self.peer_connections[address], msg_type, msg_subtype, *msg_params)
+            logger.info(f"Focused message sent to {address}: {msg_type}, {msg_subtype}")
+            return True
+        except Exception as e:
+            logger.error(f"Error sending focused message to {address}: {e}")
+            return False
 
     def receive_messages(self, peer_socket):
         """
@@ -132,20 +180,19 @@ class Node(ABC):
                 )
 
             case MsgTypes.SEND_OBJECT:
-                # check if message needs to be ignored
-                if self.already_seen_message():
-                    return
-                self.handle_send_message(msg_subtype, msg_params)
-                # check if the message is needed to be forwarded
-
+                msg_object = msg_params[0]
                 forward_object = msg_params[1]
+
+                already_seen = self.handle_send_message(msg_subtype, msg_object)
+                # check if message needs to be ignored
+                if already_seen:
+                    return
+
+                # check if the message is needed to be forwarded
                 if forward_object:
                     self.send_distributed_message(msg_type, msg_subtype, *msg_params)
             case _:
                 logger.warning(f"Received invalid message type ({msg_type})")
-
-    def already_seen_message(self):
-        return False  # placeholder
 
     def get_requested_object(self, object_type):
         """
@@ -164,20 +211,25 @@ class Node(ABC):
 
         return results
 
-    def handle_send_message(self, object_type, params):
+    def handle_send_message(self, object_type, msg_object):
         """
         Routes send messages to specific handlers based on object type.
-
         :param object_type: Type of object sent (e.g., BLOCK, PEER, TRANSACTION).
-        :param params: Additional parameters for message processing.
+        :param msg_object: Additional parameters for message processing.
         """
+        already_seen = False
         match object_type:
             case MsgSubTypes.BLOCK:
-                self.handle_block_send(params)
+                already_seen = self.handle_block_send(msg_object)
             case MsgSubTypes.PEER:
-                self.handle_peer_send(params)
+                # peer is only request-send pair message, so it always needs new
+                self.handle_peer_send(msg_object)
             case MsgSubTypes.TRANSACTION:
-                self.handle_transaction_send(params)
+                already_seen = self.handle_transaction_send(msg_object)
+            case _:
+                logger.error(f"invalid object type: '{object_type}'")
+
+        return already_seen
 
     @abstractmethod
     def handle_block_request(self):
@@ -218,26 +270,3 @@ class Node(ABC):
 
         :param params: Parameters for transaction sending.
         """
-
-
-class TestNode(Node):
-    """
-    A concrete subclass of Node for testing purposes, implementing abstract methods minimally.
-    """
-
-    def handle_peer_request(self):
-        logger.info("TestNode handling peer request")
-
-    def handle_block_request(self):
-        logger.info("TestNode handling block request")
-
-    def handle_block_send(self, params):
-        logger.info("TestNode handling block send")
-
-    def handle_peer_send(self, params):
-        logger.info("TestNode handling peer send")
-
-    def handle_transaction_send(self, params):
-        logger.info("TestNode handling transaction send")
-
-# File has no assertion checks, since communication needs to be check using multiple files
