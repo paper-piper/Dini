@@ -1,5 +1,6 @@
 import logging
 import os
+from dini_settings import LoggingSettings
 ROOT_DIRECTORY = "..\\Logs\\"
 
 
@@ -19,6 +20,11 @@ def setup_logger(name, root_directory=None, level=logging.DEBUG):
     log_file = root_directory + name + ".log"
     logger = logging.getLogger(name)
     logger.setLevel(level)
+
+    if LoggingSettings.REWRITE:
+        # Clear the log file content by opening it in write mode
+        with open(log_file, 'w'):
+            pass
 
     # Check if the logger already has handlers to prevent duplicate handlers
     if not logger.hasHandlers():
