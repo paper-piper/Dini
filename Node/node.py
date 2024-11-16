@@ -8,6 +8,7 @@ import socket
 
 # Setup logger for peer file
 logger = setup_logger("node")
+QUEUE_SIZE = 10
 
 
 class Node:
@@ -32,7 +33,7 @@ class Node:
         self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.messages_queue = Queue()
 
-        self.handle_messages_thread = threading.Thread(target=self.handle_messages, daemon=True)
+        self.handle_messages_thread = threading.Thread(target=self.process_incoming_messages, daemon=True)
         self.handle_messages_thread.start()
         self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
         self.accept_connections_thread.start()
@@ -45,56 +46,39 @@ class Node:
         """
         try:
             self.accept_socket.bind(self.address)
-            self.accept_socket.listen()
+            self.accept_socket.listen(QUEUE_SIZE)
             logger.info(f"Node listening for connections at {self.address}")
             while True:
                 node_socket, node_address = self.accept_socket.accept()
                 self.peer_connections[node_address] = node_socket
+                threading.Thread(target=self.receive_messages, args=(node_socket,), daemon=True).start()
                 logger.info(f"Accepted connection from {node_address}")
         except Exception as e:
             logger.error(f"Error in accept_connections: {e}")
 
     def connect_to_node(self, address):
         """
-        Connects to a peer node at the specified address.
-
-        :param address: Tuple containing the IP and port of the peer.
-        :return: None
-        """
-        try:
-            node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            node_socket.connect(address)
-            self.peer_connections[address] = node_socket
-            logger.info(f"Connected to node at {address}")
-        except Exception as e:
-            logger.error(f"Failed to connect to node at {address}: {e}")
-
-    def add_peer(self, host, port):
-        """
         Adds a peer to the peers list and establishes a connection to it.
-
-        :param host: Host address of the peer.
-        :param port: Port number of the peer.
+        :param address: the node address
         """
-        peer_address = (host, port)
 
         # Check if the peer is already connected
-        if peer_address in self.peer_connections.keys():
-            logger.warning(f"Peer {host}:{port} is already connected.")
+        if address in self.peer_connections.keys():
+            logger.warning(f"Peer {address} is already connected.")
             return
 
         try:
             # Attempt to connect to the new peer
-            peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            peer_socket.connect(peer_address)
-            self.peer_connections[peer_address] = peer_socket
+            node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            node_socket.connect(address)
+            self.peer_connections[address] = node_socket
 
             # Start a thread to listen for messages from this peer
-            threading.Thread(target=self.receive_messages, args=(peer_socket,), daemon=True).start()
-            logger.info(f"Connected to new peer {host}:{port}")
+            threading.Thread(target=self.receive_messages, args=(node_socket,), daemon=True).start()
+            logger.info(f"Connected to new peer {address}")
 
         except Exception as e:
-            logger.error(f"Failed to connect to peer {host}:{port} - {e}")
+            logger.error(f"Failed to connect to peer {address} - {e}")
 
     def send_distributed_message(self, msg_type, msg_sub_type, *msg_params, excluded_peers=None):
         """
@@ -152,7 +136,7 @@ class Node:
                 logger.error(f"Error receiving message from {peer_socket.getpeername()}: {e}")
                 break  # Exit the loop if there's an error to stop this thread
 
-    def handle_messages(self):
+    def process_incoming_messages(self):
         """
         Processes messages from the message queue and directs them to appropriate handlers.
         """
