@@ -1,6 +1,6 @@
 import threading
 from queue import Queue
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from dini_settings import MsgTypes, MsgSubTypes
 from logging_utils import setup_logger
 from Protocol.protocol import receive_message, send_message
@@ -11,7 +11,7 @@ logger = setup_logger("node")
 QUEUE_SIZE = 10
 
 
-class Node:
+class Node(ABC):
     """
     basic communication tools;
     receiving and sending messages and implementing a queue which will handle all of those messages.
