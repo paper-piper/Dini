@@ -45,7 +45,7 @@ class MinerSettings:
 
 class BootSettings:
     CONFIG_PATH = r"config.json"
-    BOOTSTRAP_ADDRESS = "bootstrap_addresses"
+    ADDRESSES_LIST = "bootstrap_addresses"
 
 class LoggingSettings:
     REWRITE = True
