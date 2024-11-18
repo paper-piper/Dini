@@ -1,3 +1,5 @@
+import time
+
 from node import Node
 from threading import Event
 from logging_utils import setup_logger
@@ -36,12 +38,12 @@ if __name__ == "__main__":
     node_ip = "127.0.0.1"
 
     # Initialize Node2 on port 9090
-    node2 = Node2(port=9090, ip=node_ip)
+    node2 = Node2(port=9090)
 
     # Connect to Node1 (ensure Node1 is running)
     try:
         node2.connect_to_node((node_ip, 8080))
-        logger.info(f"Node2 successfully connected to Node1 at {node_ip}:8080.")
+        logger.info(f"Node2 tried to connect to node1, got the address: {node2.peer_connections.keys()}")
 
         # Test communication: Send a message to Node1
         node2.send_distributed_message(
@@ -59,6 +61,6 @@ if __name__ == "__main__":
 
     try:
         logger.info(f"Node2 is running at {node_ip}:9090. Waiting for communication...")
-        stop_event.wait()  # Keep the program running
+        # stop_event.wait()  # Keep the program running
     except KeyboardInterrupt:
         logger.info("Node2 shutting down...")

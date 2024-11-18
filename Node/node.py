@@ -33,8 +33,8 @@ class Node(ABC):
         self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.messages_queue = Queue()
 
-        self.handle_messages_thread = threading.Thread(target=self.process_incoming_messages, daemon=True)
-        self.handle_messages_thread.start()
+        self.process_incoming_messages = threading.Thread(target=self.process_incoming_messages, daemon=True)
+        self.process_incoming_messages.start()
         self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
         self.accept_connections_thread.start()
 
