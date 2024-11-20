@@ -17,6 +17,7 @@ class MsgStructure:
     ENCRYPTION_KEY = b'A_cyjLQL7Fa2331XceidKn0F7NtgGVG-NAzNmPWnKVM='
     LENGTH_FIELD_SIZE = 4
     MSG_TYPE_LENGTH = 4
+    DIVIDER = ':'.encode()
 
 
 class MsgTypes:
@@ -25,10 +26,9 @@ class MsgTypes:
 
 
 class MsgSubTypes:
-    TEST_TYPE = "test"
-    PEER = "peer"
+    TEST = "test"
+    PEER_ADDRESS = "peer"
     BLOCK = "blok"
-    BLOCKCHAIN = 'blkc'
     TRANSACTION = "trsn"
 
 
@@ -46,6 +46,7 @@ class MinerSettings:
 class BootSettings:
     CONFIG_PATH = r"config.json"
     ADDRESSES_LIST = "bootstrap_addresses"
+
 
 class LoggingSettings:
     REWRITE = True
