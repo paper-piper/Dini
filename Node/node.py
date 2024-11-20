@@ -268,9 +268,9 @@ class Node(ABC):
 
         :param params: Parameters for transaction sending.
         """
-    @abstractmethod
     def handle_test_send(self, params):
         """
         Handles sending test information (abstract method).
         :param params: Parameters for test sending.
         """
+        logger.info(f"received test message! ({params})")
