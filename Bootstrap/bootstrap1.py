@@ -24,7 +24,7 @@ if __name__ == "__main__":
     stop_event = Event()
 
     try:
-        print("Bootstrap1 is running. Waiting for communication...")
+        logger.info("Bootstrap1 is running. Waiting for communication...")
         stop_event.wait()
     except KeyboardInterrupt:
-        print("Bootstrap1 shutting down...")
+        logger.info("Bootstrap1 shutting down...")
