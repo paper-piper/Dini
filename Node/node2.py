@@ -7,6 +7,11 @@ from dini_settings import MsgTypes, MsgSubTypes
 from Blockchain.transaction import create_sample_transaction
 logger = setup_logger("node2")
 
+NODE2_IP = "127.0.0.1"
+NODE2_PORT = 9090
+NODE1_IP = "127.0.0.1"
+NODE1_PORT = 8080
+
 
 class Node2(Node):
     """
@@ -32,25 +37,26 @@ class Node2(Node):
         logger.info(f"Node2 received a transaction: {params}")
         return False
 
+    def handle_test_send(self, params):
+        logger.info(f"received test message! ({params})")
+
 
 if __name__ == "__main__":
     # Use localhost for same-computer testing
-    node_ip = "127.0.0.1"
-
     # Initialize Node2 on port 9090
-    node2 = Node2(port=9090)
+    node2 = Node2(port=NODE2_PORT, ip=NODE2_IP)
 
     # Connect to Node1 (ensure Node1 is running)
     try:
-        node2.connect_to_node((node_ip, 8080))
+        node2.connect_to_node((NODE1_IP, NODE1_PORT))
         logger.info(f"Node2 tried to connect to node1, got the address: {node2.peer_connections.keys()}")
 
         # Test communication: Send a message to Node1
         node2.send_distributed_message(
             MsgTypes.SEND_OBJECT,
-            MsgSubTypes.TRANSACTION,
-            create_sample_transaction(10),
-            False
+            MsgSubTypes.TEST,
+            'testing actual addresses',
+            True
         )
         logger.info("Message sent to Node1 from Node2.")
     except Exception as e:
@@ -60,7 +66,7 @@ if __name__ == "__main__":
     stop_event = Event()
 
     try:
-        logger.info(f"Node2 is running at {node_ip}:9090. Waiting for communication...")
-        # stop_event.wait()  # Keep the program running
+        logger.info(f"Node2 is running at {NODE2_IP}:{NODE1_PORT}. Waiting for communication...")
+        stop_event.wait()  # Keep the program running
     except KeyboardInterrupt:
         logger.info("Node2 shutting down...")

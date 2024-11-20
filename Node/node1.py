@@ -4,6 +4,10 @@ from logging_utils import setup_logger
 logger = setup_logger("node1")
 
 
+NODE1_IP = "127.0.0.1"
+NODE1_PORT = 8080
+
+
 class Node1(Node):
     """
     A specialized Node class for testing Node-to-Node communication.
@@ -28,19 +32,21 @@ class Node1(Node):
         logger.info(f"Node1 received a transaction: {params}")
         return False
 
+    def handle_test_send(self, params):
+        logger.info(f"received test message! ({params})")
+
 
 if __name__ == "__main__":
     # Use localhost for same-computer testing
-    node_ip = "127.0.0.1"
 
     # Initialize Node1 on port 8080
-    node1 = Node1(port=8080, ip=node_ip)
+    node1 = Node1(port=NODE1_PORT, ip=NODE1_IP)
 
     # Event to keep the script alive
     stop_event = Event()
 
     try:
-        logger.info(f"Node1 is running at {node_ip}:8080. Waiting for communication...")
+        logger.info(f"Node1 is running at {NODE1_IP}:{NODE1_PORT}. Waiting for communication...")
         stop_event.wait()  # Keep the program running
     except KeyboardInterrupt:
         logger.info("Node1 shutting down...")
