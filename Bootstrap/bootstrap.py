@@ -29,7 +29,7 @@ class Bootstrap(Node):
             self.connect_to_node(address)
 
         # after connecting to all available bootstrap addresses, send a distributed request peer msg
-        self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.PEER)
+        self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.PEER_ADDRESS)
 
     def get_bootstrap_addresses(self):
         """

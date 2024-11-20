@@ -1,6 +1,5 @@
 import socket
 from Protocol.protocol import receive_message
-from dini_settings import Protocol
 from logging_utils import setup_logger
 
 # Setup logger for receiver file
@@ -16,7 +15,7 @@ def main():
     try:
         # Set up a socket to listen for connections on localhost
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.bind(('127.0.0.1', 65432))  # Port 65432 for local testing
+            sock.bind(('0.0.0.0', 8080))  # Port 8080 for local testing
             sock.listen(1)
             logger.info("Receiver is ready and waiting for connection...")
 

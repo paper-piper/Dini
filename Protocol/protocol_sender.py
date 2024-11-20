@@ -15,13 +15,13 @@ def main():
     :return: None
     """
     try:
-        # Initialize a test Transaction object
-        transaction = create_sample_transaction(100)
+        # Initialize a test object
+        test_string = "Hello!"
 
         # Connect to the receiver on localhost
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect(('127.0.0.1', 65432))  # Port 65432 for local testing
-            send_message(sock, MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction, "Pass")
+            sock.connect(('127.0.0.1', 8080))  # Port 65432 for local testing
+            send_message(sock, MsgTypes.SEND_OBJECT, MsgSubTypes.TEST, test_string, "My friend")
             logger.info("Transaction message sent successfully!")
 
     except (OSError, ConnectionError) as e:
