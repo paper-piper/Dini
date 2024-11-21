@@ -81,7 +81,7 @@ class Bootstrap(Node):
         else:
             logger.warning(f"Bootstrap address {self.address} not found.")
 
-    def handle_block_request(self):
+    def handle_block_request(self, latest_hash):
         raise NotImplementedError("Bootstrap does not handle block requests")
 
     def handle_peer_request(self):

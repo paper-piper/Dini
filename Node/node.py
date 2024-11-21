@@ -161,7 +161,7 @@ class Node(ABC):
     def process_message(self, node_address, msg_type, msg_subtype, msg_params):
         match msg_type:
             case MsgTypes.REQUEST_OBJECT:
-                requested_object = self.get_requested_object(msg_subtype)
+                requested_object = self.get_requested_object(msg_subtype, msg_params)
                 # Bonus: send the message only to the sender
                 return_address = msg_params[0]
                 forward_object = False
@@ -189,16 +189,17 @@ class Node(ABC):
             case _:
                 logger.warning(f"Received invalid message type ({msg_type})")
 
-    def get_requested_object(self, object_type):
+    def get_requested_object(self, object_type, params):
         """
         Routes request messages to specific handlers based on object type.
 
         :param object_type: Type of object requested (e.g., BLOCK, PEER).
+        :param params: additional parameters (not always required)
         """
         results = None
         match object_type:
             case MsgSubTypes.BLOCK:
-                results = self.handle_block_request()
+                results = self.handle_block_request(params)
             case MsgSubTypes.PEER_ADDRESS:
                 results = self.handle_peer_request()
             case _:
@@ -230,7 +231,7 @@ class Node(ABC):
         return already_seen
 
     @abstractmethod
-    def handle_block_request(self):
+    def handle_block_request(self, latest_hash):
         """
         Handles requests for a specific block (abstract method to be implemented in subclasses).
         """

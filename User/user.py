@@ -31,10 +31,17 @@ class User(Bootstrap):
     def __del__(self):
         self.save_blockchain()
 
-    def handle_block_request(self):
+    def handle_block_request(self, latest_hash):
         """
         Handles requests from peers to update the blockchain.
         """
+        found = False
+        blocks = []
+        for block in self.blockchain.chain:
+            if found:
+                blocks.append(block)
+            if block.hash == latest_hash:
+                found = True
         logger.info("User handling peer request")
 
     def handle_block_send(self, params):
