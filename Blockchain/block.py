@@ -61,6 +61,9 @@ class Block:
         """
         if len(self.transactions) < 5:
             transaction_reprs = ", ".join(repr(tx) for tx in self.transactions)
+            if self.previous_hash is None:
+                return (f"Block(Previous Hash: None..., Hash: {self.hash[:6]}...,"
+                        f" Nonce: {self.nonce}, Transactions: [{transaction_reprs}])")
             return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
                     f" Nonce: {self.nonce}, Transactions: [{transaction_reprs}])")
         else:
