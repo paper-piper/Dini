@@ -31,13 +31,6 @@ class User(Bootstrap):
     def __del__(self):
         self.save_blockchain()
 
-    def serve_blockchain_request(self, latest_hash):
-        """
-        Handles requests from peers to update the blockchain.
-        """
-        blockchain = self.blockchain.create_sub_blockchain(latest_hash)
-        return blockchain
-
     def process_block_data(self, block):
         """
         Adds a block to the blockchain and saves the updated chain.
@@ -58,6 +51,13 @@ class User(Bootstrap):
         relevant_blocks = blockchain.get_blocks_after()
         for block in relevant_blocks:
             self.process_block_data(block)
+
+    def serve_blockchain_request(self, latest_hash):
+        """
+        Handles requests from peers to update the blockchain.
+        """
+        logger.error("User does not handle blockchain updates")
+        raise NotImplementedError("user does not handle blockchain updates")
 
     def process_transaction_data(self, params):
         """
