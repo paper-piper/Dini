@@ -1,7 +1,8 @@
 import hashlib
 import time
-from Blockchain.transaction import Transaction, get_sk_pk_pair, create_sample_transaction
+from Blockchain.transaction import Transaction, create_sample_transaction
 from logging_utils import setup_logger
+from dini_settings import MinerSettings
 
 # Setup logger for file
 logger = setup_logger("block")
@@ -18,7 +19,15 @@ class Block:
     a reference to the previous block's hash, a timestamp, a nonce for Proof of Work, and a hash.
     """
 
-    def __init__(self, previous_hash, transactions, timestamp=None, nonce=0, block_hash=None):
+    def __init__(
+            self,
+            previous_hash,
+            transactions,
+            difficulty=MinerSettings.DIFFICULTY_LEVEL,
+            timestamp=None,
+            nonce=0,
+            block_hash=None
+    ):
         """
         Initialize a Block instance with a previous block's hash, a list of transactions,
         and an optional timestamp.
@@ -28,6 +37,7 @@ class Block:
         """
         self.previous_hash = previous_hash
         self.transactions = transactions
+        self.difficulty = difficulty
         self.timestamp = timestamp or time.time()
         self.nonce = nonce
         self.hash = block_hash  # Initially None to avoid confusion before mining
@@ -37,6 +47,7 @@ class Block:
         return {
             "previous_hash": self.previous_hash,
             "transactions": [tx.to_dict() for tx in self.transactions],
+            "difficulty": self.difficulty,
             "timestamp": self.timestamp,
             "nonce": self.nonce,
             "hash": self.hash,
@@ -48,6 +59,7 @@ class Block:
         return cls(
             previous_hash=data["previous_hash"],
             transactions=transactions,
+            difficulty=data["difficulty"],
             timestamp=data["timestamp"],
             nonce=data["nonce"],
             block_hash=data["hash"],
@@ -59,16 +71,13 @@ class Block:
 
         :return: A string representation of the block.
         """
-        if len(self.transactions) < 5:
-            transaction_reprs = ", ".join(repr(tx) for tx in self.transactions)
-            if self.previous_hash is None:
-                return (f"Block(Previous Hash: None..., Hash: {self.hash[:6]}...,"
-                        f" Nonce: {self.nonce}, Transactions: [{transaction_reprs}])")
-            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
-                    f" Nonce: {self.nonce}, Transactions: [{transaction_reprs}])")
-        else:
-            return (f"Block(Previous Hash: {self.previous_hash[:6]}..., Hash: {self.hash[:6]}...,"
-                    f" Nonce: {self.nonce}, Transactions: {len(self.transactions)})")
+        transaction_reprs = ", ".join(repr(tx) for tx in self.transactions)
+        str_value = (f"Block(Previous Hash: {self.previous_hash[:6] if self.previous_hash else 'None'}..., "
+                     f"Hash: {self.hash[:6]}..., "
+                     f"Nonce: {self.nonce}, "
+                     f"Difficulty: {self.difficulty}, "
+                     f"Transactions: [{transaction_reprs if len(transaction_reprs) < 5 else len(self.transactions)}])")
+        return str_value
 
     def calculate_hash(self):
         """
@@ -78,7 +87,7 @@ class Block:
         """
         # Serialize transactions to strings using repr
         serialized_transactions = ''.join(repr(tx) for tx in self.transactions)
-        data = f"{self.previous_hash}{serialized_transactions}{self.timestamp}{self.nonce}"
+        data = f"{self.previous_hash}{serialized_transactions}{self.difficulty}{self.timestamp}{self.nonce}"
         block_hash = hashlib.sha256(data.encode()).hexdigest()
         return block_hash
 
@@ -114,7 +123,12 @@ def assertion_check():
     logger.info("All assertions passed for Block class.")
 
 
-def create_sample_block(transactions_num=2, transactions_amounts=None, previews_hash="0" * 64):
+def create_sample_block(
+        transactions_num=2,
+        transactions_amounts=None,
+        previews_hash="0" * 64,
+        difficulty=MinerSettings.DIFFICULTY_LEVEL
+):
     if transactions_amounts is None:
         transactions_amounts = [10, 20]
     if len(transactions_amounts) != transactions_num:
@@ -124,7 +138,7 @@ def create_sample_block(transactions_num=2, transactions_amounts=None, previews_
         transaction = create_sample_transaction(transactions_amounts[i])
         transactions.append(transaction)
 
-    block = Block(previews_hash, transactions)
+    block = Block(previews_hash, transactions, difficulty)
     return block
 
 

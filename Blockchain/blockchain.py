@@ -17,25 +17,21 @@ class Blockchain:
     methods to add new blocks, validate the chain, and retrieve the latest block.
     """
 
-    def __init__(self, difficulty=MinerSettings.DIFFICULTY_LEVEL):
+    def __init__(self):
         """
         Initialize a Blockchain instance with a specified mining difficulty and create the genesis block.
-
-        :param difficulty: The mining difficulty, indicating the number of leading zeros required in the block hash.
         """
         self.chain = [self.create_genesis_block()]
-        self.difficulty = difficulty
-        logger.info("Blockchain created with initial difficulty: %d", difficulty)
+        logger.info("Blockchain created")
 
     def to_dict(self):
         return {
             "chain": [block.to_dict() for block in self.chain],
-            "difficulty": self.difficulty
         }
 
     @classmethod
     def from_dict(cls, data):
-        blockchain = cls(difficulty=data["difficulty"])
+        blockchain = cls()
         blockchain.chain = [Block.from_dict(block_data) for block_data in data["chain"]]
         return blockchain
 
@@ -73,7 +69,7 @@ class Blockchain:
         :return: True if block valid and added, else False
         """
         # Check if the block has a valid hash for the difficulty level
-        if new_block.hash is None or new_block.hash[:self.difficulty] != "0" * self.difficulty:
+        if new_block.hash is None or new_block.hash[:new_block.difficulty] != "0" * new_block.difficulty:
             logger.error("Failed to add block: Block is not mined or does not meet the difficulty requirements.")
             return False
 
@@ -129,7 +125,12 @@ def assertion_check():
     logger.info("All assertions passed for Blockchain class.")
 
 
-def create_sample_blockchain(difficulty=2, blocks_num=2, transactions_nums=None, transactions_ranges=None):
+def create_sample_blockchain(
+        difficulty=MinerSettings.DIFFICULTY_LEVEL,
+        blocks_num=2,
+        transactions_nums=None,
+        transactions_ranges=None
+):
     if transactions_ranges is None:
         transactions_ranges = [[10, 20], [15, 10, 30]]
     if transactions_nums is None:
@@ -138,19 +139,19 @@ def create_sample_blockchain(difficulty=2, blocks_num=2, transactions_nums=None,
     if len(transactions_nums) != blocks_num:
         raise "transactions nums does not much the blocks num"
 
-    blockchain = Blockchain(difficulty)
+    blockchain = Blockchain()
     previews_hash = blockchain.get_latest_block().calculate_hash()
     for i in range(blocks_num):
-        block = create_sample_block(transactions_nums[i], transactions_ranges[i], previews_hash)
+        block = create_sample_block(transactions_nums[i], transactions_ranges[i], previews_hash, difficulty)
 
         # Manually mine the block by finding a valid nonce and hash
-        target = "0" * blockchain.difficulty
-        while block.hash is None or block.hash[:blockchain.difficulty] != target:
+        target = "0" * block.difficulty
+        while block.hash is None or block.hash[:block.difficulty] != target:
             block.nonce += 1
             block.hash = block.calculate_hash()
 
         # Verify that the mined block meets the difficulty requirements
-        assert block.hash[:blockchain.difficulty] == target, "Mining failed"
+        assert block.hash[:block.difficulty] == target, "Mining failed"
 
         previews_hash = block.calculate_hash()
         blockchain.validate_add_block(block)
