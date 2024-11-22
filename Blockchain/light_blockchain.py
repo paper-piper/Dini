@@ -4,6 +4,7 @@ from Blockchain.block import Block
 # Setup logger for the file
 logger = setup_logger("light_blockchain")
 
+
 class LightBlockchain:
     """
     A lightweight blockchain representation for managing a user's transactions and balance.
@@ -54,6 +55,7 @@ class LightBlockchain:
 
         logger.info(f"Block added: {block}")
 
+
 def assertion_check():
     """
     Performs assertion checks to validate the functionality of the LightBlockchain class.
@@ -80,6 +82,7 @@ def assertion_check():
 
     assert blockchain.latest_hash == "hash123", "Block hash mismatch after adding block"
     assert len(blockchain.transactions) == 4, "Transaction count mismatch after adding block"
+
 
 if __name__ == "__main__":
     assertion_check()
