@@ -1,3 +1,5 @@
+from cryptography.hazmat.primitives import serialization
+
 from logging_utils import setup_logger
 from Blockchain.transaction import Transaction, get_sk_pk_pair
 from Blockchain.block import Block
@@ -55,6 +57,25 @@ class LightBlockchain:
 
         logger.info(f"Block added: {block}")
 
+    def to_dict(self):
+        return {
+            "owner_pk": self.owner_pk.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode(),
+            "balance": self.balance,
+            "transactions": [transaction.to_dict() for transaction in self.transactions],
+            "latest_hash": self.latest_hash.hex() if self.latest_hash else None
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        owner_pk = serialization.load_pem_public_key(data["owner_pk"].encode())
+        balance = data["balance"]
+        transactions = [Transaction.from_dict(transaction_dict) for transaction_dict in data["transactions"]]
+        latest_hash = bytes.fromhex(data["latest_hash"]) if data["latest_hash"] else None
+        light_blockchain = cls(owner_pk, balance, transactions, latest_hash)
+        return light_blockchain
 
 def assertion_check():
     """
@@ -82,6 +103,12 @@ def assertion_check():
 
     assert blockchain.latest_hash == "hash123", "Block hash mismatch after adding block"
     assert len(blockchain.transactions) == 4, "Transaction count mismatch after adding block"
+
+    transaction1.sign_transaction(my_sk)
+    blockchain.latest_hash = transaction1.signature
+    blockchain_dict = blockchain.to_dict()
+    duplicate_blockchain = LightBlockchain.from_dict(blockchain_dict)
+    assert duplicate_blockchain.to_dict() == blockchain.to_dict()
 
 
 if __name__ == "__main__":
