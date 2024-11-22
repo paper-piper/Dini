@@ -177,7 +177,7 @@ class Node(ABC):
                 msg_object = msg_params[0]
                 forward_object = msg_params[1]
 
-                already_seen = self.handle_send_message(msg_subtype, msg_object)
+                already_seen = self.process_send_message(msg_subtype, msg_object)
                 # check if message needs to be ignored
                 if already_seen:
                     return
@@ -198,16 +198,16 @@ class Node(ABC):
         """
         results = None
         match object_type:
-            case MsgSubTypes.BLOCK:
-                results = self.handle_block_request(params)
+            case MsgSubTypes.BLOCKCHAIN:
+                results = self.serve_blockchain_request(params)
             case MsgSubTypes.PEER_ADDRESS:
-                results = self.handle_peer_request()
+                results = self.serve_peer_request()
             case _:
                 logger.error("Received invalid message subtype")
 
         return results
 
-    def handle_send_message(self, object_type, msg_object):
+    def process_send_message(self, object_type, msg_object):
         """
         Routes send messages to specific handlers based on object type.
         :param object_type: Type of object sent (e.g., BLOCK, PEER, TRANSACTION).
@@ -216,36 +216,44 @@ class Node(ABC):
         already_seen = False
         match object_type:
             case MsgSubTypes.BLOCK:
-                already_seen = self.handle_block_send(msg_object)
+                already_seen = self.process_block_data(msg_object)
+
+            case MsgSubTypes.BLOCKCHAIN:
+                # blockchain is only request-send pair message, so it always needs new
+                self.process_blockchain_data(msg_object)
+
             case MsgSubTypes.PEER_ADDRESS:
                 # peer is only request-send pair message, so it always needs new
-                self.handle_peer_send(msg_object)
+                self.process_peer_data(msg_object)
+
             case MsgSubTypes.TRANSACTION:
-                already_seen = self.handle_transaction_send(msg_object)
+                already_seen = self.process_transaction_data(msg_object)
+
             case MsgSubTypes.TEST:
                 # since this is a test, it is new
-                already_seen = self.handle_test_send(msg_object)
+                already_seen = self.process_test_data(msg_object)
+
             case _:
                 logger.error(f"invalid object type: '{object_type}'")
 
         return already_seen
 
     @abstractmethod
-    def handle_block_request(self, latest_hash):
+    def serve_blockchain_request(self, latest_hash):
         """
         Handles requests for a specific block (abstract method to be implemented in subclasses).
         """
         pass
 
     @abstractmethod
-    def handle_peer_request(self):
+    def serve_peer_request(self):
         """
         Handles requests for peer information (abstract method).
         """
         pass
 
     @abstractmethod
-    def handle_block_send(self, params):
+    def process_block_data(self, params):
         """
         Handles sending block information (abstract method).
 
@@ -254,7 +262,16 @@ class Node(ABC):
         pass
 
     @abstractmethod
-    def handle_peer_send(self, params):
+    def process_blockchain_data(self, params):
+        """
+        Handles sending block information (abstract method).
+
+        :param params: Parameters for block sending.
+        """
+        pass
+
+    @abstractmethod
+    def process_peer_data(self, params):
         """
         Handles sending peer information (abstract method).
 
@@ -263,13 +280,13 @@ class Node(ABC):
         pass
 
     @abstractmethod
-    def handle_transaction_send(self, params):
+    def process_transaction_data(self, params):
         """
         Handles sending transaction information (abstract method).
 
         :param params: Parameters for transaction sending.
         """
-    def handle_test_send(self, params):
+    def process_test_data(self, params):
         """
         Handles sending test information (abstract method).
         :param params: Parameters for test sending.

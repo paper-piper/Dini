@@ -18,26 +18,30 @@ class Node2(Node):
     A specialized Node class for testing Node-to-Node communication.
     """
 
-    def handle_block_request(self):
+    def serve_blockchain_request(self, latest_hash):
         logger.info("Node2 received a block request.")
         return {"block_data": "Sample block from Node2"}
 
-    def handle_peer_request(self):
+    def serve_peer_request(self):
         logger.info("Node2 received a peer request.")
         return {"peer_list": list(self.peer_connections.keys())}
 
-    def handle_block_send(self, params):
+    def process_blockchain_data(self, params):
         logger.info(f"Node2 received a block: {params}")
         return False  # Indicate the block has not been seen before.
 
-    def handle_peer_send(self, params):
+    def process_peer_data(self, params):
         logger.info(f"Node2 received a peer update: {params}")
 
-    def handle_transaction_send(self, params):
+    def process_transaction_data(self, params):
         logger.info(f"Node2 received a transaction: {params}")
         return False
 
-    def handle_test_send(self, params):
+    def process_block_data(self, params):
+        logger.info(f"Node2 received a block: {params}")
+        return False
+
+    def process_test_data(self, params):
         logger.info(f"received test message! ({params})")
 
 

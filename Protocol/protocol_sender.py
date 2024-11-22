@@ -15,8 +15,6 @@ def main():
     :return: None
     """
     try:
-        # Initialize a test object
-        test_string = "Hello!"
 
         # Connect to the receiver on localhost
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:

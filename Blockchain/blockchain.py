@@ -82,6 +82,41 @@ class Blockchain:
             logger.error("Failed to add block: Contains invalid transactions.")
         return False
 
+    def get_blocks_after(self, latest_hash):
+        """
+        Retrieve all blocks from the blockchain starting after the block with the given hash.
+        :param latest_hash: The hash of the last known block.
+        :return: A list of blocks after the specified hash.
+        """
+        blocks = []
+        found = False
+
+        for block in self.chain:
+            if found:  # Start collecting blocks after the latest_hash block
+                blocks.append(block)
+            elif block.hash == latest_hash:  # Find the block with the latest_hash
+                found = True
+
+        if not found:
+            logger.warning("Hash not found in the blockchain: %s", latest_hash)
+
+        return blocks
+
+    def create_sub_blockchain(self, latest_hash):
+        """
+        Create a new Blockchain object with all blocks following the block with the given hash.
+        :param latest_hash: The hash of the last known block.
+        :return: A new Blockchain object containing only the subsequent blocks.
+        """
+        new_blockchain = Blockchain()
+        new_blockchain.chain = [self.create_genesis_block()]  # Start with a genesis block
+        new_blockchain.chain.extend(self.get_blocks_after(latest_hash))  # Add subsequent blocks
+
+        logger.info("Created a sub-blockchain with %d blocks starting after hash: %s",
+                    len(new_blockchain.chain) - 1, latest_hash)
+
+        return new_blockchain
+
     def is_chain_valid(self):
         """
         Check the validity of the blockchain by ensuring each block's hash is correct and that each block points

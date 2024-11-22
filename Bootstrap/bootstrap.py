@@ -81,23 +81,23 @@ class Bootstrap(Node):
         else:
             logger.warning(f"Bootstrap address {self.address} not found.")
 
-    def handle_block_request(self, latest_hash):
+    def serve_blockchain_request(self, latest_hash):
         raise NotImplementedError("Bootstrap does not handle block requests")
 
-    def handle_peer_request(self):
+    def serve_peer_request(self):
         # Implementation for Bootstrap
         peer_addresses = self.peer_connections.keys()
         return peer_addresses
 
-    def handle_peer_send(self, peer_addresses):
+    def process_peer_data(self, peer_addresses):
         # Implementation for Bootstrap
         for address in peer_addresses:
             self.connect_to_node(address)
 
-    def handle_block_send(self, params):
+    def process_blockchain_data(self, params):
         raise NotImplementedError("Bootstrap does not handle block sending")
 
-    def handle_transaction_send(self, params):
+    def process_transaction_data(self, params):
         raise NotImplementedError("Bootstrap does not handle transactions")
 
 

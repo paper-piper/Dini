@@ -30,7 +30,7 @@ class Miner(User):
         self.currently_mined_block = None
         self.currently_mining = threading.Event()
 
-    def handle_transaction_send(self, params):
+    def process_transaction_data(self, params):
         # assuming the first parameter is the transaction
         transaction = params[0]
         if not transaction.verify_signature():
@@ -41,8 +41,8 @@ class Miner(User):
 
         print("miner handling transaction send")
 
-    def handle_block_send(self, params):
-        super().handle_block_send(params)
+    def process_blockchain_data(self, params):
+        super().process_blockchain_data(params)
         self.new_block_event.set()
 
     def mining_process(self):

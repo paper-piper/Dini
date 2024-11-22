@@ -4,9 +4,7 @@ A functions which takes message type, message subtype and message parameters.
 """
 
 import pickle
-import struct
 from logging_utils import setup_logger
-from Blockchain.transaction import create_sample_transaction
 from dini_settings import MsgTypes, MsgSubTypes, MsgStructure
 from Blockchain.blockchain import Transaction, Blockchain, Block
 
@@ -78,14 +76,21 @@ def decrypt_msg_params(msg_subtype, params_bytes):
     match msg_subtype:
         case MsgSubTypes.BLOCK:
             main_object = Block.from_dict(main_object_dict)
+
         case MsgSubTypes.TRANSACTION:
             main_object = Transaction.from_dict(main_object_dict)
+
+        case MsgSubTypes.BLOCKCHAIN:
+            main_object = Blockchain.from_dict(main_object_dict)
+
         case MsgSubTypes.PEER_ADDRESS:
             # address is just a tuple, no need to convert
             main_object = main_object_dict
+
         case MsgSubTypes.TEST:
             # just for testing, no need to convert
             main_object = main_object_dict
+
         case _:
             logger.error(f"Got invalid message subtype: {msg_subtype}")
 
@@ -141,23 +146,3 @@ def construct_message(msg_type: str, msg_sub_type: str, *params) -> bytes:
     except (pickle.PickleError, ValueError) as e:
         logger.error(f"Failed to construct message: {e}")
         raise
-
-
-def assertion_check():
-    """
-    Tests core functions to validate expected functionality.
-    """
-
-    transaction = create_sample_transaction(100)
-    assert construct_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)  # Check construct_message
-
-    test_object = b"sample_object"
-    encrypted = encrypt_object(test_object)
-    decrypted = decrypt_object(encrypted)
-    assert decrypted == test_object, "Encrypt/Decrypt test failed"
-
-    logger.info("All assertions passed.")
-
-
-if __name__ == "__main__":
-    assertion_check()

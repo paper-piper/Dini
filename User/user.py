@@ -31,7 +31,7 @@ class User(Bootstrap):
     def __del__(self):
         self.save_blockchain()
 
-    def handle_block_request(self, latest_hash):
+    def serve_blockchain_request(self, latest_hash):
         """
         Handles requests from peers to update the blockchain.
         """
@@ -44,7 +44,7 @@ class User(Bootstrap):
                 found = True
         logger.info("User handling peer request")
 
-    def handle_block_send(self, params):
+    def process_blockchain_data(self, params):
         """
         Handles the sending of blocks to other peers.
 
@@ -52,7 +52,7 @@ class User(Bootstrap):
         """
         logger.info("User handling block send")
 
-    def handle_transaction_send(self, params):
+    def process_transaction_data(self, params):
         """
         Raises an error as users do not handle transactions directly.
 
