@@ -109,7 +109,6 @@ class Blockchain:
         :return: A new Blockchain object containing only the subsequent blocks.
         """
         new_blockchain = Blockchain()
-        new_blockchain.chain = [self.create_genesis_block()]  # Start with a genesis block
         new_blockchain.chain.extend(self.get_blocks_after(latest_hash))  # Add subsequent blocks
 
         logger.info("Created a sub-blockchain with %d blocks starting after hash: %s",
