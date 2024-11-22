@@ -30,6 +30,7 @@ class MsgSubTypes:
     PEER_ADDRESS = "peer"
     BLOCK = "blok"
     TRANSACTION = "trsn"
+    BLOCKCHAIN = "bkcn"
 
 
 class MsgSideParameters:
