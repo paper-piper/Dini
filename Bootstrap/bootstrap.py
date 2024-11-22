@@ -4,7 +4,6 @@ from Node.node import Node
 import json
 from dini_settings import BootSettings, MsgTypes, MsgSubTypes
 from logging_utils import setup_logger
-import socket
 logger = setup_logger("bootstrap")
 
 
@@ -93,6 +92,13 @@ class Bootstrap(Node):
         # Implementation for Bootstrap
         for address in peer_addresses:
             self.connect_to_node(address)
+
+    def process_block_data(self, params):
+        """
+        Handles sending block information.
+        :param params: Parameters for block sending.
+        """
+        raise NotImplementedError("Bootstrap does not handle blocks")
 
     def process_blockchain_data(self, params):
         raise NotImplementedError("Bootstrap does not handle block sending")
