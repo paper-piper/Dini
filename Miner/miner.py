@@ -30,6 +30,13 @@ class Miner(User):
         self.currently_mined_block = None
         self.currently_mining = threading.Event()
 
+    def serve_blockchain_request(self, latest_hash):
+        """
+        Handles requests from peers to update the blockchain.
+        """
+        blockchain = self.blockchain.create_sub_blockchain(latest_hash)
+        return blockchain
+
     def process_transaction_data(self, params):
         # assuming the first parameter is the transaction
         transaction = params[0]
