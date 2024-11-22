@@ -3,6 +3,7 @@ from cryptography.hazmat.primitives import serialization
 from logging_utils import setup_logger
 from Blockchain.transaction import Transaction, get_sk_pk_pair
 from Blockchain.block import Block
+import random
 # Setup logger for the file
 logger = setup_logger("light_blockchain")
 
@@ -76,6 +77,32 @@ class LightBlockchain:
         latest_hash = bytes.fromhex(data["latest_hash"]) if data["latest_hash"] else None
         light_blockchain = cls(owner_pk, balance, transactions, latest_hash)
         return light_blockchain
+
+
+def create_sample_light_blockchain(
+        public_key,
+        secret_key,
+        other_public_key=None,
+        starting_balance=0,
+        transaction_nums=None,
+        latest_hash=None
+):
+    other_public_key = get_sk_pk_pair()[1] if not other_public_key else other_public_key
+
+    if transaction_nums is None:
+        transaction_nums = [30, 20, 10, 40]
+
+    blockchain = LightBlockchain(public_key, balance=starting_balance, latest_hash=latest_hash)
+    for i in range(len(transaction_nums)):
+        if random.randint(0, 2) == 1:
+            transaction = Transaction(public_key, other_public_key, transaction_nums[i])
+        else:
+            transaction = Transaction(other_public_key, public_key, transaction_nums[i])
+        transaction.sign_transaction(secret_key)
+        blockchain.filter_and_add_transaction(transaction)
+
+    return blockchain
+
 
 def assertion_check():
     """
