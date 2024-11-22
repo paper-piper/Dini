@@ -35,22 +35,29 @@ class User(Bootstrap):
         """
         Handles requests from peers to update the blockchain.
         """
-        found = False
-        blocks = []
-        for block in self.blockchain.chain:
-            if found:
-                blocks.append(block)
-            if block.hash == latest_hash:
-                found = True
-        logger.info("User handling peer request")
+        blockchain = self.blockchain.create_sub_blockchain(latest_hash)
+        return blockchain
 
-    def process_blockchain_data(self, params):
+    def process_block_data(self, block):
+        """
+        Adds a block to the blockchain and saves the updated chain.
+
+        :param block: Block to add.
+        :return: None
+        """
+        self.blockchain.validate_add_block(block)
+        self.save_blockchain()
+        logger.info("Block added to blockchain and saved")
+
+    def process_blockchain_data(self, blockchain):
         """
         Handles the sending of blocks to other peers.
 
-        :param params: Parameters associated with the block send.
+        :param blockchain: Parameters associated with the block send.
         """
-        logger.info("User handling block send")
+        relevant_blocks = blockchain.get_blocks_after()
+        for block in relevant_blocks:
+            self.process_block_data(block)
 
     def process_transaction_data(self, params):
         """
@@ -107,25 +114,17 @@ class User(Bootstrap):
             self.blockchain = Blockchain()  # Initialize a new blockchain if file is not found
             return False
 
-    def request_update_blockchain(self, current_block_hash):
+    def request_update_blockchain(self):
         """
         Requests a specific block update from peers.
-        :param current_block_hash: The hash of the latest block the user has.
         :return: None
         """
-        self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.BLOCK, current_block_hash)
-        logger.info(f"Requesting updates with latest hash: {current_block_hash}")
-
-    def add_block_to_blockchain(self, block):
-        """
-        Adds a block to the blockchain and saves the updated chain.
-
-        :param block: Block to add.
-        :return: None
-        """
-        self.blockchain.add_block(block)
-        self.save_blockchain()
-        logger.info("Block added to blockchain and saved")
+        self.send_distributed_message(
+            MsgTypes.REQUEST_OBJECT,
+            MsgSubTypes.BLOCKCHAIN,
+            self.blockchain.get_latest_block().hash
+        )
+        logger.info(f"Requesting updates with latest hash: {self.blockchain.get_latest_block().hash}")
 
 
 def assertion_check():
