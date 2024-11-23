@@ -34,7 +34,7 @@ class Miner(User):
         """
         Handles requests from peers to update the blockchain.
         """
-        blockchain = self.blockchain.create_sub_blockchain(latest_hash)
+        blockchain = self.l_blockchain.create_sub_blockchain(latest_hash)
         return blockchain
 
     def process_transaction_data(self, params):
@@ -65,13 +65,13 @@ class Miner(User):
                 has_pending_transactions = self.create_block()  # sets the currently mined block to a new block
 
             # Begin mining with the given difficulty
-            mined_block = self.mine_block(self.currently_mined_block, self.blockchain.difficulty)
+            mined_block = self.mine_block(self.currently_mined_block, self.l_blockchain.difficulty)
 
             # if the mining was interrupted, the mined block is None
             if not mined_block:
                 logger.info("Mining interrupted by a new block, resetting mining process")
             else:
-                self.blockchain.validate_add_block(mined_block)
+                self.l_blockchain.validate_add_block(mined_block)
                 self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.BLOCK, mined_block)
                 logger.info("Block mined and added to blockchain successfully. "
                             "Nonce: %d, Hash: %s", mined_block.nonce, mined_block.hash)
@@ -83,7 +83,7 @@ class Miner(User):
             transactions = self.mempool.select_transactions()
             if transactions is None:
                 return False
-            previous_hash = self.blockchain.get_latest_block().hash
+            previous_hash = self.l_blockchain.get_latest_block().hash
             self.currently_mined_block = Block(previous_hash, transactions)
             return True
 
@@ -132,7 +132,7 @@ class Miner(User):
         Initiates the mining process using multiple processes to increase efficiency.
         """
         processes, result_queue = multiprocess_mining.start_mining_processes(
-            block, difficulty=self.blockchain.difficulty, new_block_event=self.new_block_event
+            block, difficulty=self.l_blockchain.difficulty, new_block_event=self.new_block_event
         )
 
         mined_block = None

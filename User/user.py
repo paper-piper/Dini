@@ -1,7 +1,7 @@
 from Bootstrap.bootstrap import Bootstrap
 import json
 import os
-from Blockchain.blockchain import Blockchain, create_sample_blockchain
+from Blockchain.light_blockchain import LightBlockchain
 from Blockchain.transaction import Transaction, get_sk_pk_pair
 from dini_settings import MsgTypes, MsgSubTypes, File
 from logging_utils import setup_logger
@@ -18,15 +18,12 @@ class User(Bootstrap):
     :param filename: Name of the file where blockchain data is saved. Defaults to the standard blockchain file name.
     """
 
-    def __init__(self, sk_pk=None, blockchain=None, filename=None):
+    def __init__(self, public_key, secret_key, blockchain=None, filename=None):
         super().__init__(False)
-        if sk_pk:
-            self.private_key = sk_pk[0]
-            self.public_key = sk_pk[1]
-        else:
-            self.private_key, self.public_key = get_sk_pk_pair()
+        self.public_key = public_key
+        self.private_key = secret_key
         self.filename = File.BLOCKCHAIN_FILE_NAME if filename is None else filename
-        self.blockchain = blockchain if blockchain else self.load_blockchain()
+        self.l_blockchain = blockchain if blockchain else self.load_blockchain()
 
     def __del__(self):
         self.save_blockchain()
@@ -38,7 +35,7 @@ class User(Bootstrap):
         :param block: Block to add.
         :return: None
         """
-        self.blockchain.validate_add_block(block)
+        self.l_blockchain.filter_and_add_block(block)
         self.save_blockchain()
         logger.info("Block added to blockchain and saved")
 
@@ -88,7 +85,7 @@ class User(Bootstrap):
         """
         try:
             with open(self.filename, "w") as f:
-                json.dump(self.blockchain.to_dict(), f, indent=4)
+                json.dump(self.l_blockchain.to_dict(), f, indent=4)
             logger.info(f"Blockchain saved to {self.filename}")
         except Exception as e:
             logger.error(f"Error saving blockchain: {e}")
@@ -103,7 +100,7 @@ class User(Bootstrap):
             try:
                 with open(self.filename, "r") as f:
                     blockchain_data = json.load(f)
-                    self.blockchain = Blockchain.from_dict(blockchain_data)
+                    self.l_blockchain = LightBlockchain.from_dict(blockchain_data)
                 logger.info(f"Blockchain loaded from {self.filename}")
                 return True
             except Exception as e:
@@ -111,7 +108,7 @@ class User(Bootstrap):
                 return False
         else:
             logger.warning(f"No blockchain file found at {self.filename}, initializing new blockchain.")
-            self.blockchain = Blockchain()  # Initialize a new blockchain if file is not found
+            self.l_blockchain = LightBlockchain(self.public_key)  # Initialize a new blockchain if file is not found
             return False
 
     def request_update_blockchain(self):
@@ -122,9 +119,9 @@ class User(Bootstrap):
         self.send_distributed_message(
             MsgTypes.REQUEST_OBJECT,
             MsgSubTypes.BLOCKCHAIN,
-            self.blockchain.get_latest_block().hash
+            self.l_blockchain.latest_hash
         )
-        logger.info(f"Requesting updates with latest hash: {self.blockchain.get_latest_block().hash}")
+        logger.info(f"Requesting updates with latest hash: {self.l_blockchain.latest_hash}")
 
 
 def assertion_check():
@@ -137,7 +134,7 @@ def assertion_check():
     sk, pk = get_sk_pk_pair()
 
     # Create a sample blockchain and save it using the first User instance
-    user1 = User(sk_pk=(sk, pk), blockchain=create_sample_blockchain(), filename="sample_blockchain_1.json")
+    user1 = User(sk_pk=(sk, pk), blockchain=c(), filename="sample_blockchain_1.json")
     user1.save_blockchain()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
