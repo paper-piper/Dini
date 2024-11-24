@@ -66,17 +66,17 @@ class User(Bootstrap):
         logger.error("User does not handle transactions")
         raise NotImplementedError("user does not handle transactions")
 
-    def make_transaction(self, address, amount):
+    def make_transaction(self, address, amount, tip=0):
         """
         Creates a signed transaction and broadcasts it to peers.
 
         :param address: Recipient's address.
         :param amount: Amount to be transferred.
         """
-        transaction = Transaction(self.public_key, address, amount)
+        transaction = Transaction(self.public_key, address, amount, tip)
         transaction.sign_transaction(self.private_key)
         self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount}")
+        logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
 
     def save_blockchain(self):
         """
