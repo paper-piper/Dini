@@ -1,5 +1,6 @@
 import hashlib
 import json
+import random
 
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
@@ -182,15 +183,19 @@ def assert_transaction():
     logger.info("All assertions passed for Transaction class.")
 
 
-def create_sample_transaction(amount):
+def create_sample_transaction(amount=0, tip=0):
     """
     create a simple demo transaction for assertion purpose
     """
+    if amount == 0:
+        amount = random.randint(0, 1000)
+    if tip == 0:
+        tip = random.randint(0, 100)
     sender_private_key, sender_public_key = get_sk_pk_pair()
     _, recipient_public_key = get_sk_pk_pair()
 
     # Create a test transaction
-    transaction = Transaction(sender_public_key, recipient_public_key, amount)
+    transaction = Transaction(sender_public_key, recipient_public_key, amount, tip=tip)
     transaction.sign_transaction(sender_private_key)
 
     return transaction
