@@ -1,3 +1,4 @@
+from Blockchain.blockchain import Blockchain
 from Bootstrap.bootstrap import Bootstrap
 import json
 import os
@@ -23,7 +24,7 @@ class User(Bootstrap):
         self.public_key = public_key
         self.private_key = secret_key
         self.filename = File.BLOCKCHAIN_FILE_NAME if filename is None else filename
-        self.l_blockchain = blockchain if blockchain else self.load_blockchain()
+        self.blockchain = blockchain if blockchain else self.load_blockchain()
 
     def __del__(self):
         self.save_blockchain()
@@ -35,7 +36,7 @@ class User(Bootstrap):
         :param block: Block to add.
         :return: None
         """
-        self.l_blockchain.filter_and_add_block(block)
+        self.blockchain.filter_and_add_block(block)
         self.save_blockchain()
         logger.info("Block added to blockchain and saved")
 
@@ -85,7 +86,7 @@ class User(Bootstrap):
         """
         try:
             with open(self.filename, "w") as f:
-                json.dump(self.l_blockchain.to_dict(), f, indent=4)
+                json.dump(self.blockchain.to_dict(), f, indent=4)
             logger.info(f"Blockchain saved to {self.filename}")
         except Exception as e:
             logger.error(f"Error saving blockchain: {e}")
@@ -100,7 +101,11 @@ class User(Bootstrap):
             try:
                 with open(self.filename, "r") as f:
                     blockchain_data = json.load(f)
-                    self.l_blockchain = LightBlockchain.from_dict(blockchain_data)
+                    # Dynamically determine which blockchain type to use
+                    if isinstance(self.blockchain, LightBlockchain):
+                        self.blockchain = LightBlockchain.from_dict(blockchain_data)
+                    else:
+                        self.blockchain = Blockchain.from_dict(blockchain_data)
                 logger.info(f"Blockchain loaded from {self.filename}")
                 return True
             except Exception as e:
@@ -108,7 +113,8 @@ class User(Bootstrap):
                 return False
         else:
             logger.warning(f"No blockchain file found at {self.filename}, initializing new blockchain.")
-            self.l_blockchain = LightBlockchain(self.public_key)  # Initialize a new blockchain if file is not found
+            self.blockchain = LightBlockchain(self.public_key) if isinstance(self.blockchain,
+                                                                             LightBlockchain) else Blockchain()
             return False
 
     def request_update_blockchain(self):
@@ -116,12 +122,14 @@ class User(Bootstrap):
         Requests a specific block update from peers.
         :return: None
         """
+        latest_hash = self.blockchain.latest_hash if isinstance(self.blockchain, LightBlockchain)\
+            else self.blockchain.get_latest_block().hash
         self.send_distributed_message(
             MsgTypes.REQUEST_OBJECT,
             MsgSubTypes.BLOCKCHAIN,
-            self.l_blockchain.latest_hash
+            latest_hash
         )
-        logger.info(f"Requesting updates with latest hash: {self.l_blockchain.latest_hash}")
+        logger.info(f"Requesting updates with latest hash: {latest_hash}")
 
 
 def assertion_check():
