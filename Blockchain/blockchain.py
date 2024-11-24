@@ -62,7 +62,7 @@ class Blockchain:
         logger.debug("Retrieved latest block: %s", latest_block)
         return latest_block
 
-    def validate_add_block(self, new_block):
+    def filter_and_add_block(self, new_block):
         """
         Add a new block to the chain after mining it with the specified difficulty.
         :param new_block: The block to be added to the blockchain.
@@ -188,7 +188,7 @@ def create_sample_blockchain(
         assert block.hash[:block.difficulty] == target, "Mining failed"
 
         previews_hash = block.calculate_hash()
-        blockchain.validate_add_block(block)
+        blockchain.filter_and_add_block(block)
 
     return blockchain
 
