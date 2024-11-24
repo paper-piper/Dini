@@ -1,4 +1,6 @@
 import hashlib
+import json
+
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
@@ -60,6 +62,23 @@ class Transaction:
         signature = bytes.fromhex(data["signature"]) if data["signature"] else None
         return cls(sender_pk, recipient_pk, data["amount"], data["tip"], signature)
 
+    def __hash__(self):
+        """
+        Hash the transaction based on its dictionary representation.
+        """
+        transaction_dict = self.to_dict()
+        # Convert the dictionary to a JSON string for consistent hashing
+        transaction_json = json.dumps(transaction_dict, sort_keys=True)
+        return hash(hashlib.sha256(transaction_json.encode()).hexdigest())
+
+    def __eq__(self, other):
+        """
+        Compare transactions based on their dictionary representations.
+        """
+        if not isinstance(other, Transaction):
+            return False
+        return self.to_dict() == other.to_dict()
+
     def __repr__(self):
         """
         Provide a readable string representation of the transaction for debugging.
@@ -79,8 +98,8 @@ class Transaction:
         :return: Hash string representing the transaction.
         """
         data = (
-            f"{self.sender_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}" \
-            f"{self.recipient_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}" \
+            f"{self.sender_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}"
+            f"{self.recipient_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}"
             f"{self.amount}"
             f"{self.tip}")
         transaction_hash = hashlib.sha256(data.encode()).hexdigest()
