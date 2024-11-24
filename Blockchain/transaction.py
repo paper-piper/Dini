@@ -20,7 +20,7 @@ class Transaction:
     amount, and a digital signature for validation using an actual PK-SK system.
     """
 
-    def __init__(self, sender_pk, recipient_pk, amount, signature=None):
+    def __init__(self, sender_pk, recipient_pk, amount, tip=0, signature=None):
         """
         Initialize a Transaction instance with the sender's and recipient's public keys and the amount.
         :param sender_pk: RSA public key object representing the sender's public key.
@@ -30,11 +30,13 @@ class Transaction:
         self.sender_pk = sender_pk
         self.recipient_pk = recipient_pk
         self.amount = amount
+        self.tip = tip
         self.signature = signature
-        logger.info("Transaction created: Sender: %s, Recipient: %s, Amount: %s",
+        logger.info("Transaction created: Sender: %s, Recipient: %s, Amount: %s, Tip %s",
                     str(self.sender_pk.public_numbers().n)[:3] + "...",
                     str(self.recipient_pk.public_numbers().n)[:3] + "...",
-                    self.amount)
+                    self.amount,
+                    self.tip)
 
     def to_dict(self):
         return {
@@ -47,6 +49,7 @@ class Transaction:
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             ).decode(),
             "amount": self.amount,
+            "tip": self.tip,
             "signature": self.signature.hex() if self.signature else None,
         }
 
@@ -55,7 +58,7 @@ class Transaction:
         sender_pk = serialization.load_pem_public_key(data["sender_pk"].encode())
         recipient_pk = serialization.load_pem_public_key(data["recipient_pk"].encode())
         signature = bytes.fromhex(data["signature"]) if data["signature"] else None
-        return cls(sender_pk, recipient_pk, data["amount"], signature)
+        return cls(sender_pk, recipient_pk, data["amount"], data["tip"], signature)
 
     def __repr__(self):
         """
@@ -64,7 +67,10 @@ class Transaction:
         """
         sender_id = str(self.sender_pk.public_numbers().n)[:3]
         recipient_id = str(self.recipient_pk.public_numbers().n)[:3]
-        return f"Transaction(Sender: {sender_id}..., Recipient: {recipient_id}..., Amount: {self.amount})"
+        return (f"Transaction(Sender: {sender_id}...,"
+                f" Recipient: {recipient_id}...,"
+                f" Amount: {self.amount},"
+                f" Tip: {self.tip})")
 
     def calculate_hash(self):
         """
@@ -72,9 +78,11 @@ class Transaction:
 
         :return: Hash string representing the transaction.
         """
-        data = f"{self.sender_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}" \
-               f"{self.recipient_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}" \
-               f"{self.amount}"
+        data = (
+            f"{self.sender_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}" \
+            f"{self.recipient_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}" \
+            f"{self.amount}"
+            f"{self.tip}")
         transaction_hash = hashlib.sha256(data.encode()).hexdigest()
         logger.debug("Transaction hash calculated: %s", transaction_hash[:5] + "...")
         return transaction_hash
