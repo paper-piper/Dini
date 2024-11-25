@@ -1,10 +1,13 @@
+import json
 import threading
 from dini_settings import MsgTypes, MsgSubTypes
-from Blockchain.blockchain import Block
 from logging_utils import setup_logger
 from User.user import User
 from mempool import Mempool
 from multiprocess_mining import MultiprocessMining
+from Blockchain.transaction import get_sk_pk_pair, create_sample_transaction
+from Blockchain.block import Block
+from Blockchain.blockchain import create_sample_blockchain
 # Setup logger for file
 logger = setup_logger("miner")
 
@@ -43,7 +46,7 @@ class Miner(User):
             logger.warning("Found unverified transaction")
             return
         with self.mempool_lock:
-            self.mempool.add_transactions(transaction)
+            self.mempool.add_transactions([transaction])
 
         print("miner handling transaction send")
 
@@ -63,11 +66,11 @@ class Miner(User):
         # only if new blocks
         self.new_block_event.set()
 
-    def mining_process(self):
+    def mining_process(self, blocks_num):
         """
         Mines a block by selecting transactions and performing Proof of Work, restarting if a new block arrives.
         """
-        while self.currently_mining.is_set():
+        while self.currently_mining.is_set() and blocks_num != 0:
             self.new_block_event.clear()  # Reset the event since we're about to start mining
 
             # check for available transaction until a block is made
@@ -83,6 +86,7 @@ class Miner(User):
                 logger.info("Mining interrupted by a new block, resetting mining process")
             else:
                 self.blockchain.filter_and_add_block(mined_block)
+                blocks_num -= 1
                 self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.BLOCK, mined_block)
                 logger.info("Block mined and added to blockchain successfully. "
                             "Nonce: %d, Hash: %s", mined_block.nonce, mined_block.hash)
@@ -92,22 +96,47 @@ class Miner(User):
         with self.mempool_lock:
             # build new block
             transactions = self.mempool.select_transactions()
-            if transactions is None:
+            if len(transactions) == 0:
                 return None
             previous_hash = self.blockchain.get_latest_block().hash
             block = Block(previous_hash, transactions)
             return block
 
-    def start_mining(self):
+    def start_mining(self, blocks_num=-1):
         if self.currently_mining.is_set():
             logger.info("can't start mining again, process already mining, ")
         self.currently_mining.set()
-        threading.Thread(target=self.mining_process()).start()
+        threading.Thread(target=self.mining_process, args=(blocks_num,)).start()
 
     def stop_mining(self):
         self.currently_mining.clear()
         self.new_block_event.set()
 
 
+def assertion_checks():
+    # first, ensure that blockchain saving also works for miner with regular blockchain
+    pk, sk = get_sk_pk_pair()
+    miner1 = Miner(pk, sk, create_sample_blockchain(), filename="sample_blockchain_1.json")
+    miner1.save_blockchain()
+
+    # Load the blockchain from the saved file using a second User instance and save to a new file
+    miner2 = Miner(pk, sk, filename="sample_blockchain_1.json")
+    miner2.load_blockchain()
+    miner2.filename = "sample_blockchain_2.json"
+    miner2.save_blockchain()
+
+    # Load files and verify they are identical
+    with open("sample_blockchain_1.json", "r") as f1, open("sample_blockchain_2.json", "r") as f2:
+        blockchain_data_1 = json.load(f1)
+        blockchain_data_2 = json.load(f2)
+
+    assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
+    logger.info("Blockchain data saved and loaded successfully and files match.")
+
+    # secondly, check mine function
+    miner1.process_transaction_data([create_sample_transaction()])
+    miner1.start_mining(1)
+
+
 if __name__ == "__main__":
-    pass
+    assertion_checks()
