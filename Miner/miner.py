@@ -1,10 +1,10 @@
 import threading
-import queue
 from dini_settings import MsgTypes, MsgSubTypes
 from Blockchain.blockchain import Block
 from logging_utils import setup_logger
-import multiprocess_mining
 from User.user import User
+from mempool import Mempool
+from multiprocess_mining import MultiprocessMining
 # Setup logger for file
 logger = setup_logger("miner")
 
@@ -14,20 +14,19 @@ class Miner(User):
     adds block mining essentially , which has many complications in it but that is it.
     """
 
-    def __init__(self, sk_pk, blockchain=None, filename=None, mempool=None):
+    def __init__(self, public_key, secret_key, blockchain=None, filename=None, mempool=None):
         """
         Initialize a Miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
 
         :param blockchain: The Blockchain object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.
         """
-        super().__init__(sk_pk, blockchain, filename)
+        super().__init__(public_key, secret_key, blockchain, filename, user=False)
 
-        self.mempool = mempool
-
+        self.mempool = mempool if mempool else Mempool()
         self.mempool_lock = threading.Lock()
+        self.multi_miner = MultiprocessMining()
         self.new_block_event = threading.Event()
-        self.currently_mined_block = None
         self.currently_mining = threading.Event()
 
     def serve_blockchain_request(self, latest_hash):
@@ -50,6 +49,18 @@ class Miner(User):
 
     def process_blockchain_data(self, params):
         super().process_blockchain_data(params)
+        # only if new blocks
+        self.new_block_event.set()
+
+    def process_block_data(self, block):
+        """
+        Adds a block to the blockchain and saves the updated chain.
+
+        :param block: Block to add.
+        :return: None
+        """
+        super().process_block_data(block)
+        # only if new blocks
         self.new_block_event.set()
 
     def mining_process(self):
@@ -60,12 +71,12 @@ class Miner(User):
             self.new_block_event.clear()  # Reset the event since we're about to start mining
 
             # check for available transaction until a block is made
-            has_pending_transactions = False
-            while not has_pending_transactions:
-                has_pending_transactions = self.create_block()  # sets the currently mined block to a new block
+            current_block = self.create_block()
+            while current_block is None:
+                current_block = self.create_block()
 
             # Begin mining with the given difficulty
-            mined_block = self.mine_block(self.currently_mined_block, self.blockchain.difficulty)
+            mined_block = self.multi_miner.mine_block(current_block, current_block.difficulty)
 
             # if the mining was interrupted, the mined block is None
             if not mined_block:
@@ -82,10 +93,10 @@ class Miner(User):
             # build new block
             transactions = self.mempool.select_transactions()
             if transactions is None:
-                return False
+                return None
             previous_hash = self.blockchain.get_latest_block().hash
-            self.currently_mined_block = Block(previous_hash, transactions)
-            return True
+            block = Block(previous_hash, transactions)
+            return block
 
     def start_mining(self):
         if self.currently_mining.is_set():
@@ -95,64 +106,7 @@ class Miner(User):
 
     def stop_mining(self):
         self.currently_mining.clear()
-
-    def mine_block(self, block, difficulty):
-        """
-        Mines the given block by finding a valid hash that meets the required difficulty.
-        :param block: The Block object to be mined.
-        :param difficulty: the difficulty
-        :return: The mined Block object with a valid hash.
-        """
-        target = "0" * difficulty
-        best_hash = None
-        max_trailing_zeros = 0
-        logger.info("Starting mining with difficulty %d...", difficulty)
-        while block.hash[:difficulty] != target:
-            block.nonce += 1
-            block.hash = block.calculate_hash()
-            # Count trailing zeros in the current hash
-            trailing_zeros = len(block.hash) - len(block.hash.rstrip("0"))
-            # Update the best hash if the current hash has more trailing zeros
-            if trailing_zeros > max_trailing_zeros:
-                max_trailing_zeros = trailing_zeros
-                best_hash = block.hash
-            # Log the best hash every 100,000 attempts
-            if block.nonce % 100000 == 0:
-                logger.debug("Mining attempt %d, Best hash so far: %s (Trailing zeros: %d)",
-                             block.nonce, best_hash,  max_trailing_zeros)
-            # Check if a new block has arrived
-            if self.new_block_event.is_set():
-                logger.info("New block detected, aborting current mining process")
-                return None
-
-        return block
-
-    def mine_block_multiprocess(self, block):
-        """
-        Initiates the mining process using multiple processes to increase efficiency.
-        """
-        processes, result_queue = multiprocess_mining.start_mining_processes(
-            block, difficulty=self.blockchain.difficulty, new_block_event=self.new_block_event
-        )
-
-        mined_block = None
-        try:
-            # Wait for a result or new block detection
-            while mined_block is None and not self.new_block_event.is_set():
-                try:
-                    mined_block = result_queue.get(timeout=1)  # Check queue for mined block
-                except queue.Empty:
-                    continue
-
-            if mined_block:
-                logger.info("Block mined successfully.")
-            else:
-                logger.info("Mining aborted due to new block.")
-
-        finally:
-            multiprocess_mining.terminate_processes(processes)
-
-        return mined_block if mined_block else block  # Return mined block or the original if aborted
+        self.new_block_event.set()
 
 
 if __name__ == "__main__":
