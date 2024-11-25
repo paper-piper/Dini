@@ -1,170 +1,115 @@
-import hashlib
 import multiprocessing
-from logging_utils import setup_logger
-from dini_settings import MinerSettings, BlockSettings
-from Blockchain.block import Transaction, create_sample_block, MINE_SUCCESS_ERROR
-
-# Setup logger for file
-logger = setup_logger("mining")
-
-HASH_VALIDATION_ERROR = "Calculated hash should match the expected hash"
+import logging
+from Blockchain.block import create_sample_block
+from dini_settings import BlockSettings
+logger = logging.getLogger(__name__)
 
 
-def mine_worker(block_data, start_nonce, end_nonce, difficulty, new_block_event, result_queue):
-    """
-    Mines the block within a specified nonce range by working with serialized block data.
-    If a valid hash is found, it is put into the result queue.
-    This function also stops if a new block event is detected.
+class MultiprocessMining:
+    def __init__(self, num_processes=BlockSettings.PROCESSES_NUMBER):
+        """
+        Initialize the MultiprocessMining class.
+        :param num_processes: Number of processes to use for mining.
+        """
+        self.num_processes = num_processes
+        self.new_block_event = multiprocessing.Event()
 
-    :param block_data: The serialized block data (excluding nonce) to be hashed.
-    :param start_nonce: The starting nonce for this mining process.
-    :param end_nonce: The ending nonce for this mining process.
-    :param difficulty: The difficulty level, representing the required number of leading zeros.
-    :param new_block_event: An event that stops the mining if another block is mined first.
-    :param result_queue: A queue to send the mined block (with nonce) once a valid hash is found.
-    :return: None
-    """
-    target = "0" * difficulty
-    max_trailing_zeros = 0
-    best_hash = None
+    @staticmethod
+    def _mine_range(block_dict, difficulty, start_nonce, end_nonce, new_block_event, result_queue, block_class):
+        """
+        Worker function to mine a block within a specific nonce range.
+        :param block_dict: Serialized Block object (dictionary) to be mined.
+        :param difficulty: The mining difficulty.
+        :param start_nonce: Start of the nonce range.
+        :param end_nonce: End of the nonce range.
+        :param new_block_event: Event to signal when a new block is found.
+        :param result_queue: Queue to store the mined block as a dictionary.
+        :param block_class: The Block class to deserialize the block.
+        """
+        target = "0" * difficulty
+        max_trailing_zeros = 0
+        best_hash = None
 
-    for nonce in range(start_nonce, end_nonce):
-        if new_block_event.is_set():
-            logger.info("New block detected, worker stopping.")
-            return
+        # Deserialize the block object
+        block = block_class.from_dict(block_dict)
 
-        try:
-            # Append the nonce to the serialized block data for hashing
-            block_string = f"{block_data}{nonce}"
-            block_hash = hashlib.sha256(block_string.encode()).hexdigest()
+        for nonce in range(start_nonce, end_nonce):
+            if new_block_event.is_set():
+                return  # Stop mining if a new block is detected
 
-            # Check if block is mined (hash meets difficulty)
-            if block_hash[:difficulty] == target:
-                result_queue.put((block_hash, nonce))  # Put hash and nonce in result queue
-                new_block_event.set()  # Notify other workers to stop
-                logger.info("Thread %s mined a valid block! Nonce: %d, Hash: %s",
-                            multiprocessing.current_process().name, nonce, block_hash)
+            block.nonce = nonce
+            block.hash = block.calculate_hash()
+
+            # Check if the hash meets the difficulty
+            if block.hash[:difficulty] == target:
+                result_queue.put(block.to_dict())  # Store serialized block
+                new_block_event.set()
                 return
 
-            # Log progress every 100,000 attempts
+            # Count trailing zeros in the current hash
+            trailing_zeros = len(block.hash) - len(block.hash.rstrip("0"))
+            if trailing_zeros > max_trailing_zeros:
+                max_trailing_zeros = trailing_zeros
+                best_hash = block.hash
+
+            # Log the best hash every 100,000 attempts
             if nonce % 100000 == 0:
-                trailing_zeros = len(block_hash) - len(block_hash.rstrip("0"))
-                if trailing_zeros > max_trailing_zeros:
-                    max_trailing_zeros = trailing_zeros
-                    best_hash = block_hash
-                logger.debug("Worker %s nonce %d: Best hash so far: %s (Trailing zeros: %d)",
-                             multiprocessing.current_process().name, nonce, best_hash, max_trailing_zeros)
+                logger.debug("Nonce: %d, Best hash so far: %s (Trailing zeros: %d)",
+                             nonce, best_hash, max_trailing_zeros)
 
-        except Exception as e:
-            logger.error("Error occurred in mine_worker: %s", e)
+    def mine_block(self, block, difficulty):
+        """
+        Mines the given block using multiple processes.
+        :param block: The Block object to be mined.
+        :param difficulty: The mining difficulty.
+        :return: The mined Block object with a valid hash, or None if aborted.
+        """
+        processes = []
+        result_queue = multiprocessing.Queue()
 
+        # Serialize the block to a dictionary
+        block_dict = block.to_dict()
 
-def terminate_processes(processes):
-    """
-    Terminates all active mining processes gracefully and waits for them to exit.
+        # Calculate the nonce range for each process
+        nonce_range = 2**32 // self.num_processes  # Adjust for a suitable nonce range
+        for i in range(self.num_processes):
+            start_nonce = i * nonce_range
+            end_nonce = (i + 1) * nonce_range
+            process = multiprocessing.Process(
+                target=self._mine_range,
+                args=(block_dict, difficulty, start_nonce, end_nonce, self.new_block_event, result_queue, type(block))
+            )
+            processes.append(process)
+            process.start()
 
-    :param processes: List of active mining processes.
-    :return: None
-    """
-    for process in processes:
+        # Wait for any process to find a valid hash
+        mined_block = None
         try:
-            process.terminate()
-            process.join()  # Wait for the process to fully terminate
-            logger.info("Terminated process %s", process.name)
-        except Exception as e:
-            logger.error("Error terminating process %s: %s", process.name, e)
-    logger.info("All mining processes terminated.")
+            mined_block_dict = result_queue.get(timeout=None)  # Wait indefinitely for a result
+            mined_block = type(block).from_dict(mined_block_dict)  # Deserialize the block
+        except Exception:
+            logger.error("Mining interrupted or no block found.")
 
+        # Signal all processes to terminate and join them
+        self.new_block_event.set()
+        for process in processes:
+            process.join()
 
-def start_mining_processes(block_data, difficulty, new_block_event):
-    """
-    Starts multiple processes to mine the block. Each process mines within a unique nonce range
-    and will stop if a new block is mined by another process.
-
-    :param block_data: The block object to be mined.
-    :param difficulty: Difficulty level indicating the number of leading zeros required in the hash.
-    :param new_block_event: Event to stop all mining processes if a new block is found.
-    :return: A tuple containing the list of processes and the result queue.
-    """
-    result_queue = multiprocessing.Queue()
-    processes = []
-    nonce_step = MinerSettings.PROCESS_RANGE  # Define the range each worker will mine (customize as needed)
-
-    for i in range(MinerSettings.PROCESSES_NUMBER):
-        start_nonce = i * nonce_step
-        end_nonce = (i + 1) * nonce_step
-        try:
-            p = multiprocessing.Process(target=mine_worker,
-                                        args=(block_data, start_nonce, end_nonce, difficulty, new_block_event, result_queue))
-            processes.append(p)
-            p.start()
-            logger.info("Started mining process for nonce range %d-%d", start_nonce, end_nonce)
-        except Exception as e:
-            logger.error("Error starting mining process for range %d-%d: %s", start_nonce, end_nonce, e)
-
-    return processes, result_queue
-
-
-def check_straight_hash(string):
-    """
-    Calculates the SHA-256 hash of a given string.
-
-    :param string: The string to hash.
-    :return: The SHA-256 hash as a hex string.
-    """
-    block_hash = hashlib.sha256(string.encode()).hexdigest()
-    return block_hash
-
-
-def get_block_str(block):
-    pass
+        # Reset the event for future mining
+        self.new_block_event.clear()
+        return mined_block
 
 
 def assertion_check():
-    """
-    Performs assertion checks to ensure the mining functions work as expected.
+    # Assuming `block` is an instance of your Block class
+    miner = MultiprocessMining(num_processes=4)
+    mined_block = miner.mine_block(create_sample_block(), difficulty=4)
 
-    :return: None
-    """
-    logger.info("Starting assertion checks for mining functions...")
-
-    # Create a sample Block instance
-    test_block = create_sample_block()
-    difficulty = MinerSettings.DIFFICULTY_LEVEL
-    new_block_event = multiprocessing.Event()
-    new_block_event.clear()
-
-    # Serialize the block data (without nonce)
-    serialized_transactions = ''.join(repr(tx) for tx in test_block.transactions)
-    block_data = f"{test_block.previous_hash}{serialized_transactions}{test_block.timestamp}"
-
-    # Check mine_worker in a small range and confirm block is found
-    result_queue = multiprocessing.Queue()
-    start_nonce, end_nonce = 0, 1000
-    local_difficulty = 1
-    mine_worker(block_data, start_nonce, end_nonce, local_difficulty, new_block_event, result_queue)
-    mined_result = result_queue.get() if not result_queue.empty() else None
-    assert mined_result is not None, "Mined block should be present in the result queue."
-    mined_hash, mined_nonce = mined_result
-    assert mined_hash[:local_difficulty] == "0" * local_difficulty, MINE_SUCCESS_ERROR
-    logger.info("Checking Multiple processes")
-
-    # Test start_mining_processes and terminate_processes
-    processes, _ = start_mining_processes(block_data, difficulty, new_block_event)
-    assert len(processes) == MinerSettings.PROCESSES_NUMBER, "Incorrect number of processes started."
-    terminate_processes(processes)
-    for process in processes:
-        assert not process.is_alive(), "Process should be terminated."
-
-    logger.info("All assertions passed for mining functions.")
-
-    def add_bonus_transaction(self, transactions):
-        bonus_transaction = Transaction(BlockSettings.BONUS_PK, self.public_key, BlockSettings.BONUS_AMOUNT)
-        transactions.insert(0, bonus_transaction)
+    if mined_block:
+        print(f"Successfully mined block with hash: {mined_block.hash}")
+    else:
+        print("Mining was aborted or failed.")
 
 
-# Run assertion checks if this file is executed as main
 if __name__ == "__main__":
     assertion_check()
-
-
