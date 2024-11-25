@@ -2,7 +2,7 @@ from Blockchain.blockchain import Blockchain
 from Bootstrap.bootstrap import Bootstrap
 import json
 import os
-from Blockchain.light_blockchain import LightBlockchain
+from Blockchain.light_blockchain import LightBlockchain, create_sample_light_blockchain
 from Blockchain.transaction import Transaction, get_sk_pk_pair
 from dini_settings import MsgTypes, MsgSubTypes, File
 from logging_utils import setup_logger
@@ -13,18 +13,20 @@ logger = setup_logger("user")
 class User(Bootstrap):
     """
     Manages user operations including blockchain updating, file saving, and broadcasting transactions.
-
-    :param sk_pk: Tuple containing user's private and public keys, or None to generate new keys.
-    :param blockchain: Blockchain object, or None to load from file.
-    :param filename: Name of the file where blockchain data is saved. Defaults to the standard blockchain file name.
     """
-
-    def __init__(self, public_key, secret_key, blockchain=None, filename=None):
-        super().__init__(False)
+    def __init__(self, public_key, secret_key, blockchain=None, filename=None, user=True):
+        """
+        :param public_key: User's public key
+        :param secret_key: User's secret key
+        :param blockchain: Blockchain object, or None to load from file.
+        :param filename: Name of the file where blockchain data is saved. Defaults to the standard blockchain file name.
+        """
+        super().__init__(is_bootstrap=False)
         self.public_key = public_key
         self.private_key = secret_key
         self.filename = File.BLOCKCHAIN_FILE_NAME if filename is None else filename
         self.blockchain = blockchain if blockchain else self.load_blockchain()
+        self.user = user
 
     def __del__(self):
         self.save_blockchain()
@@ -69,9 +71,9 @@ class User(Bootstrap):
     def make_transaction(self, address, amount, tip=0):
         """
         Creates a signed transaction and broadcasts it to peers.
-
         :param address: Recipient's address.
         :param amount: Amount to be transferred.
+        :param tip: added tip (optional)
         """
         transaction = Transaction(self.public_key, address, amount, tip)
         transaction.sign_transaction(self.private_key)
@@ -81,7 +83,6 @@ class User(Bootstrap):
     def save_blockchain(self):
         """
         Saves the current blockchain to a file in JSON format.
-
         :return: None
         """
         try:
@@ -102,7 +103,7 @@ class User(Bootstrap):
                 with open(self.filename, "r") as f:
                     blockchain_data = json.load(f)
                     # Dynamically determine which blockchain type to use
-                    if isinstance(self.blockchain, LightBlockchain):
+                    if self.user:
                         self.blockchain = LightBlockchain.from_dict(blockchain_data)
                     else:
                         self.blockchain = Blockchain.from_dict(blockchain_data)
@@ -113,8 +114,10 @@ class User(Bootstrap):
                 return False
         else:
             logger.warning(f"No blockchain file found at {self.filename}, initializing new blockchain.")
-            self.blockchain = LightBlockchain(self.public_key) if isinstance(self.blockchain,
-                                                                             LightBlockchain) else Blockchain()
+            if self.user:
+                self.blockchain = LightBlockchain(self.public_key)
+            else:
+                self.blockchain = Blockchain()
             return False
 
     def request_update_blockchain(self):
@@ -122,8 +125,10 @@ class User(Bootstrap):
         Requests a specific block update from peers.
         :return: None
         """
-        latest_hash = self.blockchain.latest_hash if isinstance(self.blockchain, LightBlockchain)\
-            else self.blockchain.get_latest_block().hash
+        if self.user:
+            latest_hash = self.blockchain.latest_hash
+        else:
+            latest_hash = self.blockchain.get_latest_block().hash
         self.send_distributed_message(
             MsgTypes.REQUEST_OBJECT,
             MsgSubTypes.BLOCKCHAIN,
@@ -142,11 +147,11 @@ def assertion_check():
     sk, pk = get_sk_pk_pair()
 
     # Create a sample blockchain and save it using the first User instance
-    user1 = User(sk_pk=(sk, pk), blockchain=c(), filename="sample_blockchain_1.json")
+    user1 = User(pk, sk, create_sample_light_blockchain(pk, sk), "sample_blockchain_1.json")
     user1.save_blockchain()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    user2 = User(sk_pk=(sk, pk), filename="sample_blockchain_1.json")
+    user2 = User(pk, sk, filename="sample_blockchain_1.json")
     user2.load_blockchain()
     user2.filename = "sample_blockchain_2.json"
     user2.save_blockchain()
