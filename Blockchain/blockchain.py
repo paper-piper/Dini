@@ -73,14 +73,18 @@ class Blockchain:
             logger.error("Failed to add block: Block is not mined or does not meet the difficulty requirements.")
             return False
 
-        new_block.previous_hash = self.get_latest_block().hash
-        if new_block.validate_transactions():
-            self.chain.append(new_block)
-            logger.info("New block added: %s", new_block)
-            return True
-        else:
+        if new_block.previous_hash != self.get_latest_block().hash:
+            logger.error("Failed to add block: block previous hash does not match latest hash")
+            return False
+
+        if not new_block.validate_transactions():
             logger.error("Failed to add block: Contains invalid transactions.")
-        return False
+            return False
+
+        self.chain.append(new_block)
+        logger.info("New block added: %s", new_block)
+        return True
+
 
     def get_blocks_after(self, latest_hash):
         """
