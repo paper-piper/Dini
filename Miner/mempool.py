@@ -1,5 +1,6 @@
 from logging_utils import setup_logger
 from Blockchain.transaction import create_sample_transaction
+from dini_settings import BlockSettings
 # Setup logger for file
 logger = setup_logger("mempool")
 
@@ -51,7 +52,7 @@ class Mempool:
         logger.info(f"Fetching all transactions. Count: {len(self.transactions)}")
         return list(self.transactions)
 
-    def select_transactions(self, num_transactions):
+    def select_transactions(self, num_transactions=BlockSettings.MAX_TRANSACTIONS):
         """
         Selects the top transactions with the highest 'tip' values.
 
@@ -62,7 +63,10 @@ class Mempool:
             sorted_transactions = sorted(
                 self.transactions, key=lambda tx: tx.tip, reverse=True
             )
-            selected = sorted_transactions[:num_transactions]
+            if num_transactions > len(sorted_transactions):
+                selected = sorted_transactions
+            else:
+                selected = sorted_transactions[:num_transactions]
             logger.info(f"Selected top {num_transactions} transactions.")
             return selected
         except Exception as e:
