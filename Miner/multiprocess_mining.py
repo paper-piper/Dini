@@ -1,8 +1,9 @@
 import multiprocessing
-import logging
 from Blockchain.block import create_sample_block
 from dini_settings import BlockSettings
-logger = logging.getLogger(__name__)
+from logging_utils import setup_logger
+import time
+logger = setup_logger("multiprocess_mining")
 
 
 class MultiprocessMining:
@@ -53,10 +54,10 @@ class MultiprocessMining:
                 best_hash = block.hash
 
             # Log the best hash every 100,000 attempts
-            if nonce % 100000 == 0:
-                logger.debug("Nonce: %d, Best hash so far: %s (Trailing zeros: %d)",
-                             nonce, best_hash, max_trailing_zeros)
-
+            if nonce % 100000 == 0 and not nonce == 0:
+                #logger.debug("Nonce: %d, Best hash so far: %s (Trailing zeros: %d)",
+                #             nonce, best_hash, max_trailing_zeros)
+                pass
     def get_block_hash(self, block, difficulty):
         """
         Mines the given block using multiple processes.
@@ -111,5 +112,29 @@ def assertion_check():
         print("Mining was aborted or failed.")
 
 
+def test_processes_speeds(start, end, difficulty=5):
+    time_list = []
+    for i in range(start, end, 1):
+        start_time = time.time()
+        miner = MultiprocessMining(num_processes=i)
+        miner.get_block_hash(create_sample_block(), difficulty=difficulty)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        time_list.append(elapsed_time)
+
+    # Pair each time with its original index
+    indexed_times = list(enumerate(time_list))
+
+    # Sort the times in ascending order by the time value
+    sorted_times = sorted(indexed_times, key=lambda x: x[1])
+
+    # Print the sorted times with their original index
+    logger.info("Sorted times:")
+    for index, time_value in sorted_times:
+        logger.info(f"{index+1}: {time_value:.2f} seconds")
+
+
 if __name__ == "__main__":
-    assertion_check()
+    test_processes_speeds(7, 12)
+
+
