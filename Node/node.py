@@ -38,6 +38,9 @@ class Node(ABC):
         self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
         self.accept_connections_thread.start()
 
+    def get_connected_nodes(self):
+        return self.peer_connections.keys()
+
     def accept_connections(self):
         """
         Accepts incoming connections from other peers and adds them to peer connections.

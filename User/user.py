@@ -4,7 +4,7 @@ import json
 import os
 from Blockchain.light_blockchain import LightBlockchain, create_sample_light_blockchain
 from Blockchain.transaction import Transaction, get_sk_pk_pair
-from dini_settings import MsgTypes, MsgSubTypes, File
+from dini_settings import MsgTypes, MsgSubTypes, File, BlockSettings
 from logging_utils import setup_logger
 
 logger = setup_logger("user")
@@ -30,6 +30,31 @@ class User(Bootstrap):
 
     def __del__(self):
         self.save_blockchain()
+
+    def get_recent_transactions(self, num=5):
+        return self.blockchain.get_recent_transactions(num)
+
+    def buy_dinis(self, amount):
+        self.make_transaction(BlockSettings.LORD_PK, amount, BlockSettings.BONUS_AMOUNT)
+        logger.info(f"Bought {amount} Dini's")
+
+    def sell_dinis(self, amount):
+        transaction = Transaction(BlockSettings.LORD_PK, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
+        transaction.sign_transaction(self.private_key)
+        self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        logger.info(f"Sold {amount} Dini's")
+
+    def make_transaction(self, address, amount, tip=0):
+        """
+        Creates a signed transaction and broadcasts it to peers.
+        :param address: Recipient's address.
+        :param amount: Amount to be transferred.
+        :param tip: added tip (optional)
+        """
+        transaction = Transaction(self.public_key, address, amount, tip)
+        transaction.sign_transaction(self.private_key)
+        self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
 
     def process_block_data(self, block):
         """
@@ -67,18 +92,6 @@ class User(Bootstrap):
         """
         logger.error("User does not handle transactions")
         raise NotImplementedError("user does not handle transactions")
-
-    def make_transaction(self, address, amount, tip=0):
-        """
-        Creates a signed transaction and broadcasts it to peers.
-        :param address: Recipient's address.
-        :param amount: Amount to be transferred.
-        :param tip: added tip (optional)
-        """
-        transaction = Transaction(self.public_key, address, amount, tip)
-        transaction.sign_transaction(self.private_key)
-        self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
 
     def save_blockchain(self):
         """

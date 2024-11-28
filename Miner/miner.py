@@ -32,6 +32,16 @@ class Miner(User):
         self.new_block_event = threading.Event()
         self.currently_mining = threading.Event()
 
+    def start_mining(self, blocks_num=-1):
+        if self.currently_mining.is_set():
+            logger.info("can't start mining again, process already mining, ")
+        self.currently_mining.set()
+        threading.Thread(target=self.mine_blocks, args=(blocks_num,)).start()
+
+    def stop_mining(self):
+        self.currently_mining.clear()
+        self.new_block_event.set()
+
     def serve_blockchain_request(self, latest_hash):
         """
         Handles requests from peers to update the blockchain.
@@ -66,7 +76,7 @@ class Miner(User):
         # only if new blocks
         self.new_block_event.set()
 
-    def mining_process(self, blocks_num):
+    def mine_blocks(self, blocks_num):
         """
         Mines a block by selecting transactions and performing Proof of Work, restarting if a new block arrives.
         """
@@ -79,7 +89,7 @@ class Miner(User):
                 current_block = self.create_block()
 
             # Begin mining with the given difficulty
-            mined_block = self.multi_miner.mine_block(current_block, current_block.difficulty)
+            mined_block = self.multi_miner.get_block_hash(current_block, current_block.difficulty)
 
             # if the mining was interrupted, the mined block is None
             if not mined_block:
@@ -101,16 +111,6 @@ class Miner(User):
             previous_hash = self.blockchain.get_latest_block().hash
             block = Block(previous_hash, transactions)
             return block
-
-    def start_mining(self, blocks_num=-1):
-        if self.currently_mining.is_set():
-            logger.info("can't start mining again, process already mining, ")
-        self.currently_mining.set()
-        threading.Thread(target=self.mining_process, args=(blocks_num,)).start()
-
-    def stop_mining(self):
-        self.currently_mining.clear()
-        self.new_block_event.set()
 
 
 def assertion_checks():
