@@ -57,7 +57,7 @@ class MultiprocessMining:
                 logger.debug("Nonce: %d, Best hash so far: %s (Trailing zeros: %d)",
                              nonce, best_hash, max_trailing_zeros)
 
-    def mine_block(self, block, difficulty):
+    def get_block_hash(self, block, difficulty):
         """
         Mines the given block using multiple processes.
         :param block: The Block object to be mined.
@@ -103,7 +103,7 @@ class MultiprocessMining:
 def assertion_check():
     # Assuming `block` is an instance of your Block class
     miner = MultiprocessMining(num_processes=4)
-    mined_block = miner.mine_block(create_sample_block(), difficulty=4)
+    mined_block = miner.get_block_hash(create_sample_block(), difficulty=4)
 
     if mined_block:
         print(f"Successfully mined block with hash: {mined_block.hash}")
