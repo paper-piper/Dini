@@ -78,6 +78,12 @@ class LightBlockchain:
         light_blockchain = cls(owner_pk, balance, transactions, latest_hash)
         return light_blockchain
 
+    def get_recent_transactions(self, num):
+        if num > len(self.transactions):
+            return self.transactions
+
+        return self.transactions[-num:]
+
 
 def create_sample_light_blockchain(
         public_key,
