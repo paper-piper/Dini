@@ -2,7 +2,7 @@ from network.bootstrap import Bootstrap
 from threading import Event
 from utils.logging_utils import setup_logger
 
-logger = setup_logger("bootstrap2")
+logger = setup_logger("bootstrap_sender", test_logger=True)
 
 
 if __name__ == "__main__":

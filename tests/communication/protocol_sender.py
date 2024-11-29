@@ -5,7 +5,7 @@ from utils.config import MsgTypes, MsgSubTypes
 from utils.logging_utils import setup_logger
 
 # Setup logger for sender file
-logger = setup_logger("protocol_sender")
+logger = setup_logger("protocol_sender", test_logger=True)
 
 
 def main():

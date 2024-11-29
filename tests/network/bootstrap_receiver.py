@@ -2,7 +2,7 @@ from network.bootstrap import Bootstrap
 from threading import Event
 from utils.logging_utils import setup_logger
 
-logger = setup_logger("bootstrap1")
+logger = setup_logger("bootstrap_receiver", test_logger=True)
 
 if __name__ == "__main__":
     # Define peer connections for Bootstrap1

@@ -3,7 +3,7 @@ from threading import Event
 from utils.logging_utils import setup_logger
 from utils.config import MsgTypes, MsgSubTypes
 
-logger = setup_logger("node_sender")
+logger = setup_logger("node_sender", test_logger=True)
 
 NODE2_IP = "127.0.0.1"
 NODE2_PORT = 9090
