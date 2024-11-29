@@ -1,9 +1,9 @@
-from node import Node
+from communication.node import Node
 from threading import Event
 from utils.logging_utils import setup_logger
 from utils.config import MsgTypes, MsgSubTypes
 
-logger = setup_logger("node2")
+logger = setup_logger("node_sender")
 
 NODE2_IP = "127.0.0.1"
 NODE2_PORT = 9090

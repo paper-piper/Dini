@@ -41,7 +41,7 @@ class MsgSideParameters:
 
 
 class MinerSettings:
-    PROCESSES_NUMBER = 10
+    PROCESSES_NUMBER = 7
     PROCESS_RANGE = 10 ** 4
     DIFFICULTY_LEVEL = 2
 
