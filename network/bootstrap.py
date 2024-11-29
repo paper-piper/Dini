@@ -9,8 +9,8 @@ logger = setup_logger("bootstrap")
 
 class Bootstrap(Node):
 
-    def __init__(self, is_bootstrap, port=8000, peer_connections=None, ip=None):
-        super().__init__(port, peer_connections=peer_connections, ip=ip)
+    def __init__(self, is_bootstrap=True, port=8000, peer_connections=None, ip=None, port_manager=None):
+        super().__init__(port, peer_connections=peer_connections, ip=ip, port_manager=port_manager)
         if is_bootstrap:
             self.add_bootstrap_address()
 
@@ -18,6 +18,7 @@ class Bootstrap(Node):
             self.discover_peers()
 
     def __del__(self):
+        super().__del__()
         self.delete_bootstrap_address()
 
     def discover_peers(self):

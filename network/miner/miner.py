@@ -3,8 +3,8 @@ import threading
 from utils.config import MsgTypes, MsgSubTypes
 from utils.logging_utils import setup_logger
 from network.user import User
-from mempool import Mempool
-from multiprocess_mining import MultiprocessMining
+from network.miner.mempool import Mempool
+from network.miner.multiprocess_mining import MultiprocessMining
 from core.transaction import get_sk_pk_pair, create_sample_transaction
 from core.block import Block
 from core.blockchain import create_sample_blockchain
@@ -19,7 +19,7 @@ class Miner(User):
 
     def __init__(self, public_key, secret_key, blockchain=None, filename=None, mempool=None, port_manager=None):
         """
-        Initialize a Miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
+        Initialize a miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
 
         :param blockchain: The core object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.

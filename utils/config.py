@@ -57,5 +57,6 @@ class LoggingSettings:
 
 
 class PortSettings:
-    START_RANGE = 5000
-    END_RANGE = 6000
+    BOOTSTRAP_RANGE = (5000, 5500)
+    USER_RANGE = (5501, 5800)
+    MINER_RANGE = (5801, 6000)

@@ -25,8 +25,8 @@ class User(Bootstrap):
         self.public_key = public_key
         self.private_key = secret_key
         self.filename = File.BLOCKCHAIN_FILE_NAME if filename is None else filename
-        self.blockchain = blockchain if blockchain else self.load_blockchain()
         self.user = user
+        self.blockchain = blockchain if blockchain else self.load_blockchain()
 
     def __del__(self):
         if self.port_manager:
