@@ -1,8 +1,8 @@
 from cryptography.hazmat.primitives import serialization
 
-from logging_utils import setup_logger
-from Blockchain.transaction import Transaction, get_sk_pk_pair
-from Blockchain.block import Block
+from utils.logging_utils import setup_logger
+from core.transaction import Transaction, get_sk_pk_pair
+from core.block import Block
 import random
 # Setup logger for the file
 logger = setup_logger("light_blockchain")

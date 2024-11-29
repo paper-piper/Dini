@@ -1,9 +1,9 @@
 import threading
 from queue import Queue
 from abc import abstractmethod, ABC
-from dini_settings import MsgTypes, MsgSubTypes
-from logging_utils import setup_logger
-from Protocol.protocol import receive_message, send_message
+from utils.config import MsgTypes, MsgSubTypes
+from utils.logging_utils import setup_logger
+from communication.protocol import receive_message, send_message
 import socket
 
 # Setup logger for peer file
@@ -44,7 +44,7 @@ class Node(ABC):
     def accept_connections(self):
         """
         Accepts incoming connections from other peers and adds them to peer connections.
-        Logs any connection errors.
+        logs any connection errors.
         :return: None
         """
         try:

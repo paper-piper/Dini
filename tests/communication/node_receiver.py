@@ -1,6 +1,6 @@
 from node import Node
 from threading import Event
-from logging_utils import setup_logger
+from utils.logging_utils import setup_logger
 logger = setup_logger("node1")
 
 

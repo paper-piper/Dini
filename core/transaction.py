@@ -5,7 +5,7 @@ import random
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
-from logging_utils import setup_logger
+from utils.logging_utils import setup_logger
 
 # Setup logger for file
 logger = setup_logger("transaction")

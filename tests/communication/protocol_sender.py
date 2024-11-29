@@ -1,8 +1,8 @@
 import socket
-from Protocol.protocol import send_message
-from Blockchain.transaction import create_sample_transaction
-from dini_settings import MsgTypes, MsgSubTypes
-from logging_utils import setup_logger
+from communication.protocol import send_message
+from core.transaction import create_sample_transaction
+from utils.config import MsgTypes, MsgSubTypes
+from utils.logging_utils import setup_logger
 
 # Setup logger for sender file
 logger = setup_logger("protocol_sender")

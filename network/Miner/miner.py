@@ -1,13 +1,13 @@
 import json
 import threading
-from dini_settings import MsgTypes, MsgSubTypes
-from logging_utils import setup_logger
-from User.user import User
+from utils.config import MsgTypes, MsgSubTypes
+from utils.logging_utils import setup_logger
+from network.user import User
 from mempool import Mempool
 from multiprocess_mining import MultiprocessMining
-from Blockchain.transaction import get_sk_pk_pair, create_sample_transaction
-from Blockchain.block import Block
-from Blockchain.blockchain import create_sample_blockchain
+from core.transaction import get_sk_pk_pair, create_sample_transaction
+from core.block import Block
+from core.blockchain import create_sample_blockchain
 # Setup logger for file
 logger = setup_logger("miner")
 
@@ -21,7 +21,7 @@ class Miner(User):
         """
         Initialize a Miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
 
-        :param blockchain: The Blockchain object this miner will add mined blocks to.
+        :param blockchain: The core object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.
         """
         super().__init__(public_key, secret_key, blockchain, filename, user=False)
@@ -116,22 +116,22 @@ class Miner(User):
 def assertion_checks():
     # first, ensure that blockchain saving also works for miner with regular blockchain
     pk, sk = get_sk_pk_pair()
-    miner1 = Miner(pk, sk, create_sample_blockchain(), filename="sample_blockchain_1.json")
+    miner1 = Miner(pk, sk, create_sample_blockchain(), filename="../../data/sample_blockchain_1.json")
     miner1.save_blockchain()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    miner2 = Miner(pk, sk, filename="sample_blockchain_1.json")
+    miner2 = Miner(pk, sk, filename="../../data/sample_blockchain_1.json")
     miner2.load_blockchain()
-    miner2.filename = "sample_blockchain_2.json"
+    miner2.filename = "../../data/sample_blockchain_2.json"
     miner2.save_blockchain()
 
     # Load files and verify they are identical
-    with open("sample_blockchain_1.json", "r") as f1, open("sample_blockchain_2.json", "r") as f2:
+    with open("../../data/sample_blockchain_1.json", "r") as f1, open("../../data/sample_blockchain_2.json", "r") as f2:
         blockchain_data_1 = json.load(f1)
         blockchain_data_2 = json.load(f2)
 
     assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
-    logger.info("Blockchain data saved and loaded successfully and files match.")
+    logger.info("core data saved and loaded successfully and files match.")
 
     # secondly, check mine function
     miner1.process_transaction_data([create_sample_transaction()])

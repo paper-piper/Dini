@@ -11,7 +11,7 @@ class TransactionSettings:
 
 
 class File:
-    BLOCKCHAIN_FILE_NAME = "Blockchain.txt"
+    BLOCKCHAIN_FILE_NAME = "core.txt"
 
 
 class MsgStructure:
@@ -47,9 +47,9 @@ class MinerSettings:
 
 
 class BootSettings:
-    CONFIG_PATH = r"config.json"
+    CONFIG_PATH = r"bootstrap_config.json"
     ADDRESSES_LIST = "bootstrap_addresses"
 
 
 class LoggingSettings:
-    REWRITE = True
+    REWRITE = False

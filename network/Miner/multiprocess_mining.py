@@ -1,7 +1,7 @@
 import multiprocessing
-from Blockchain.block import create_sample_block
-from dini_settings import BlockSettings
-from logging_utils import setup_logger
+from core.block import create_sample_block
+from utils.config import BlockSettings
+from utils.logging_utils import setup_logger
 import time
 logger = setup_logger("multiprocess_mining")
 
@@ -135,6 +135,6 @@ def test_processes_speeds(start, end, difficulty=5):
 
 
 if __name__ == "__main__":
-    test_processes_speeds(7, 12)
+    test_processes_speeds(1, 20)
 
 

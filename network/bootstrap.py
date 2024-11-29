@@ -1,9 +1,9 @@
 import os
 
-from Node.node import Node
+from communication.node import Node
 import json
-from dini_settings import BootSettings, MsgTypes, MsgSubTypes
-from logging_utils import setup_logger
+from utils.config import BootSettings, MsgTypes, MsgSubTypes
+from utils.logging_utils import setup_logger
 logger = setup_logger("bootstrap")
 
 

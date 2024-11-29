@@ -1,7 +1,9 @@
 import logging
 import os
-from dini_settings import LoggingSettings
-ROOT_DIRECTORY = "..\\Logs\\"
+from utils.config import LoggingSettings
+
+# Calculate the absolute path of the logs directory based on this file's location
+ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs")
 
 
 def setup_logger(name, root_directory=None, level=logging.DEBUG):
@@ -9,7 +11,7 @@ def setup_logger(name, root_directory=None, level=logging.DEBUG):
     Configures and returns a logger.
 
     :param name: The name of the logger (typically the file name).
-    :param root_directory: optional, a specified root directory
+    :param root_directory: Optional, a specified root directory.
     :param level: The logging level (default is DEBUG).
     :return: Configured logger object.
     """
@@ -17,7 +19,7 @@ def setup_logger(name, root_directory=None, level=logging.DEBUG):
         root_directory = ROOT_DIRECTORY
     if not os.path.exists(root_directory):
         os.makedirs(root_directory)
-    log_file = root_directory + name + ".log"
+    log_file = os.path.join(root_directory, f"{name}.log")
     logger = logging.getLogger(name)
     logger.setLevel(level)
 

@@ -4,9 +4,9 @@ A functions which takes message type, message subtype and message parameters.
 """
 
 import pickle
-from logging_utils import setup_logger
-from dini_settings import MsgTypes, MsgSubTypes, MsgStructure
-from Blockchain.blockchain import Transaction, Blockchain, Block
+from utils.logging_utils import setup_logger
+from utils.config import MsgTypes, MsgSubTypes, MsgStructure
+from core.blockchain import Transaction, Blockchain, Block
 
 
 # Setup logger for file

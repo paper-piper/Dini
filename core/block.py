@@ -1,8 +1,8 @@
 import hashlib
 import time
-from Blockchain.transaction import Transaction, create_sample_transaction
-from logging_utils import setup_logger
-from dini_settings import MinerSettings
+from core.transaction import Transaction, create_sample_transaction
+from utils.logging_utils import setup_logger
+from utils.config import MinerSettings
 
 # Setup logger for file
 logger = setup_logger("block")

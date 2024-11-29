@@ -1,11 +1,11 @@
-from Blockchain.blockchain import Blockchain
-from Bootstrap.bootstrap import Bootstrap
+from core.blockchain import Blockchain
+from network.bootstrap import Bootstrap
 import json
 import os
-from Blockchain.light_blockchain import LightBlockchain, create_sample_light_blockchain
-from Blockchain.transaction import Transaction, get_sk_pk_pair
-from dini_settings import MsgTypes, MsgSubTypes, File, BlockSettings
-from logging_utils import setup_logger
+from core.light_blockchain import LightBlockchain, create_sample_light_blockchain
+from core.transaction import Transaction, get_sk_pk_pair
+from utils.config import MsgTypes, MsgSubTypes, File, BlockSettings
+from utils.logging_utils import setup_logger
 
 logger = setup_logger("user")
 
@@ -18,7 +18,7 @@ class User(Bootstrap):
         """
         :param public_key: User's public key
         :param secret_key: User's secret key
-        :param blockchain: Blockchain object, or None to load from file.
+        :param blockchain: core object, or None to load from file.
         :param filename: Name of the file where blockchain data is saved. Defaults to the standard blockchain file name.
         """
         super().__init__(is_bootstrap=False)
@@ -101,7 +101,7 @@ class User(Bootstrap):
         try:
             with open(self.filename, "w") as f:
                 json.dump(self.blockchain.to_dict(), f, indent=4)
-            logger.info(f"Blockchain saved to {self.filename}")
+            logger.info(f"core saved to {self.filename}")
         except Exception as e:
             logger.error(f"Error saving blockchain: {e}")
 
@@ -120,7 +120,7 @@ class User(Bootstrap):
                         self.blockchain = LightBlockchain.from_dict(blockchain_data)
                     else:
                         self.blockchain = Blockchain.from_dict(blockchain_data)
-                logger.info(f"Blockchain loaded from {self.filename}")
+                logger.info(f"core loaded from {self.filename}")
                 return True
             except Exception as e:
                 logger.error(f"Error loading blockchain: {e}")
@@ -160,22 +160,22 @@ def assertion_check():
     sk, pk = get_sk_pk_pair()
 
     # Create a sample blockchain and save it using the first User instance
-    user1 = User(pk, sk, create_sample_light_blockchain(pk, sk), "sample_blockchain_1.json")
+    user1 = User(pk, sk, create_sample_light_blockchain(pk, sk), "../data/sample_light_blockchain_1.json")
     user1.save_blockchain()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    user2 = User(pk, sk, filename="sample_blockchain_1.json")
+    user2 = User(pk, sk, filename="../data/sample_light_blockchain_1.json")
     user2.load_blockchain()
-    user2.filename = "sample_blockchain_2.json"
+    user2.filename = "../data/sample_light_blockchain_2.json"
     user2.save_blockchain()
 
     # Load files and verify they are identical
-    with open("sample_blockchain_1.json", "r") as f1, open("sample_blockchain_2.json", "r") as f2:
+    with open("../data/sample_light_blockchain_1.json", "r") as f1, open("../data/sample_light_blockchain_2.json", "r") as f2:
         blockchain_data_1 = json.load(f1)
         blockchain_data_2 = json.load(f2)
 
     assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
-    logger.info("Blockchain data saved and loaded successfully and files match.")
+    logger.info("core data saved and loaded successfully and files match.")
 
 
 if __name__ == "__main__":

@@ -1,10 +1,8 @@
-import time
-
 from node import Node
 from threading import Event
-from logging_utils import setup_logger
-from dini_settings import MsgTypes, MsgSubTypes
-from Blockchain.transaction import create_sample_transaction
+from utils.logging_utils import setup_logger
+from utils.config import MsgTypes, MsgSubTypes
+
 logger = setup_logger("node2")
 
 NODE2_IP = "127.0.0.1"

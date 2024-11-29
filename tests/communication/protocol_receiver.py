@@ -1,6 +1,6 @@
 import socket
-from Protocol.protocol import receive_message
-from logging_utils import setup_logger
+from communication.protocol import receive_message
+from utils.logging_utils import setup_logger
 
 # Setup logger for receiver file
 logger = setup_logger("protocol_receiver")

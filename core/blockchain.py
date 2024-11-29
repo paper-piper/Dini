@@ -1,14 +1,14 @@
-from Blockchain.block import Block, create_sample_block
-from Blockchain.transaction import Transaction, get_sk_pk_pair
-from logging_utils import setup_logger
-from dini_settings import MinerSettings
+from core.block import Block, create_sample_block
+from core.transaction import Transaction, get_sk_pk_pair
+from utils.logging_utils import setup_logger
+from utils.config import MinerSettings
 # Setup logger for file
 logger = setup_logger("blockchain")
 
 # Constants for assertion error messages
 GENESIS_BLOCK_ERROR = "Genesis block should be the first block in the chain"
 LATEST_BLOCK_ERROR = "Latest block should match the last block in the chain"
-BLOCKCHAIN_VALIDITY_ERROR = "Blockchain should be valid after adding a new block"
+BLOCKCHAIN_VALIDITY_ERROR = "core should be valid after adding a new block"
 
 
 class Blockchain:
@@ -19,10 +19,10 @@ class Blockchain:
 
     def __init__(self):
         """
-        Initialize a Blockchain instance with a specified mining difficulty and create the genesis block.
+        Initialize a core instance with a specified mining difficulty and create the genesis block.
         """
         self.chain = [self.create_genesis_block()]
-        logger.info("Blockchain created")
+        logger.info("core created")
 
     def to_dict(self):
         return {
@@ -108,9 +108,9 @@ class Blockchain:
 
     def create_sub_blockchain(self, latest_hash):
         """
-        Create a new Blockchain object with all blocks following the block with the given hash.
+        Create a new core object with all blocks following the block with the given hash.
         :param latest_hash: The hash of the last known block.
-        :return: A new Blockchain object containing only the subsequent blocks.
+        :return: A new core object containing only the subsequent blocks.
         """
         new_blockchain = Blockchain()
         new_blockchain.chain.extend(self.get_blocks_after(latest_hash))  # Add subsequent blocks
@@ -146,13 +146,13 @@ class Blockchain:
                 logger.warning("Block validation failed due to invalid transaction at index %d", i)
                 return False
 
-        logger.info("Blockchain validation succeeded.")
+        logger.info("core validation succeeded.")
         return True
 
 
 def assertion_check():
     """
-    Performs various assertions to verify the functionality of the Blockchain class.
+    Performs various assertions to verify the functionality of the core class.
     :return: None
     """
     blockchain = create_sample_blockchain()
@@ -160,7 +160,7 @@ def assertion_check():
     # Add mined block to the blockchain and validate the chain's integrity
     assert blockchain.is_chain_valid(), BLOCKCHAIN_VALIDITY_ERROR
 
-    logger.info("All assertions passed for Blockchain class.")
+    logger.info("All assertions passed for core class.")
 
 
 def create_sample_blockchain(

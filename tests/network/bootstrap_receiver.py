@@ -1,6 +1,6 @@
-from Bootstrap.bootstrap import Bootstrap
+from network.bootstrap import Bootstrap
 from threading import Event
-from logging_utils import setup_logger
+from utils.logging_utils import setup_logger
 
 logger = setup_logger("bootstrap1")
 
