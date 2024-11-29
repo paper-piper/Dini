@@ -6,17 +6,20 @@ from utils.config import LoggingSettings
 ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs")
 
 
-def setup_logger(name, root_directory=None, level=logging.DEBUG):
+def setup_logger(name, root_directory=None, level=logging.DEBUG, test_logger=False):
     """
     Configures and returns a logger.
 
     :param name: The name of the logger (typically the file name).
     :param root_directory: Optional, a specified root directory.
     :param level: The logging level (default is DEBUG).
+    :param test_logger: is the logger from a test file (should be in another directory)
     :return: Configured logger object.
     """
     if root_directory is None:
         root_directory = ROOT_DIRECTORY
+    if test_logger:
+        root_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..\\tests", "logs")
     if not os.path.exists(root_directory):
         os.makedirs(root_directory)
     log_file = os.path.join(root_directory, f"{name}.log")
