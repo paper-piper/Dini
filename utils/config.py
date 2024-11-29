@@ -54,3 +54,8 @@ class BootSettings:
 
 class LoggingSettings:
     REWRITE = False
+
+
+class PortSettings:
+    START_RANGE = 5000
+    END_RANGE = 6000

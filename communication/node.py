@@ -18,7 +18,7 @@ class Node(ABC):
     Essentially handling all communication and threading.
     """
 
-    def __init__(self, port=8080, ip=None, peer_connections=None):
+    def __init__(self, port=8080, ip=None, peer_connections=None, port_manager=None):
         """
         :param port: Port number for the node's socket.
         :param ip: IP address of the node (defaults to the local machine's IP).
@@ -27,7 +27,11 @@ class Node(ABC):
         """
         self.peer_connections = {} if not peer_connections else peer_connections
         self.ip = socket.gethostbyname(socket.gethostname()) if not ip else ip
-        self.port = port
+        self.port_manager = port_manager
+        if port_manager:
+            self.port = port_manager.allocate_port()
+        else:
+            self.port = port
 
         self.address = (self.ip, self.port)
         self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,6 +41,10 @@ class Node(ABC):
         self.process_incoming_messages.start()
         self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
         self.accept_connections_thread.start()
+
+    def __del__(self):
+        if self.port_manager:
+            self.port_manager.release_port(self.port)
 
     def get_connected_nodes(self):
         return self.peer_connections.keys()

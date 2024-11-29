@@ -14,14 +14,14 @@ class User(Bootstrap):
     """
     Manages user operations including blockchain updating, file saving, and broadcasting transactions.
     """
-    def __init__(self, public_key, secret_key, blockchain=None, filename=None, user=True):
+    def __init__(self, public_key, secret_key, blockchain=None, filename=None, user=True, port_manager=None):
         """
         :param public_key: User's public key
         :param secret_key: User's secret key
         :param blockchain: core object, or None to load from file.
         :param filename: Name of the file where blockchain data is saved. Defaults to the standard blockchain file name.
         """
-        super().__init__(is_bootstrap=False)
+        super().__init__(is_bootstrap=False, port_manager=port_manager)
         self.public_key = public_key
         self.private_key = secret_key
         self.filename = File.BLOCKCHAIN_FILE_NAME if filename is None else filename
@@ -29,6 +29,8 @@ class User(Bootstrap):
         self.user = user
 
     def __del__(self):
+        if self.port_manager:
+            self.port_manager.release_port(self.port)
         self.save_blockchain()
 
     def get_recent_transactions(self, num=5):

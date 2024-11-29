@@ -17,14 +17,14 @@ class Miner(User):
     adds block mining essentially , which has many complications in it but that is it.
     """
 
-    def __init__(self, public_key, secret_key, blockchain=None, filename=None, mempool=None):
+    def __init__(self, public_key, secret_key, blockchain=None, filename=None, mempool=None, port_manager=None):
         """
         Initialize a Miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
 
         :param blockchain: The core object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.
         """
-        super().__init__(public_key, secret_key, blockchain, filename, user=False)
+        super().__init__(public_key, secret_key, blockchain, filename, user=False, port_manager=port_manager)
 
         self.mempool = mempool if mempool else Mempool()
         self.mempool_lock = threading.Lock()
