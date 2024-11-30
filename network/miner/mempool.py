@@ -2,7 +2,7 @@ from utils.logging_utils import setup_logger
 from core.transaction import create_sample_transaction
 from utils.config import BlockSettings
 # Setup logger for file
-logger = setup_logger("mempool")
+logger = setup_logger()
 
 
 class Mempool:

@@ -5,7 +5,7 @@ from utils.logging_utils import setup_logger
 from utils.config import MinerSettings
 
 # Setup logger for file
-logger = setup_logger("block")
+logger = setup_logger()
 
 # Constants for assertion error messages
 HASH_VALIDATION_ERROR = "Calculated hash should match the expected hash"

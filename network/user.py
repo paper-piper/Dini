@@ -7,7 +7,7 @@ from core.transaction import Transaction, get_sk_pk_pair
 from utils.config import MsgTypes, MsgSubTypes, File, BlockSettings
 from utils.logging_utils import setup_logger
 
-logger = setup_logger("user")
+logger = setup_logger()
 
 
 class User(Bootstrap):

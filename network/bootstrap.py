@@ -4,7 +4,7 @@ from communication.node import Node
 import json
 from utils.config import BootSettings, MsgTypes, MsgSubTypes
 from utils.logging_utils import setup_logger
-logger = setup_logger("bootstrap")
+logger = setup_logger()
 
 
 class Bootstrap(Node):

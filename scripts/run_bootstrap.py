@@ -3,7 +3,7 @@ from utils.config import PortSettings
 from network.bootstrap import Bootstrap
 from communication.port_manager import PortManager
 from threading import Event
-logger = setup_logger("bootstrap manager")
+logger = setup_logger()
 
 
 def run_bootstraps(servers_num, initial_peers=None):

@@ -9,7 +9,7 @@ from core.transaction import get_sk_pk_pair, create_sample_transaction
 from core.block import Block
 from core.blockchain import create_sample_blockchain
 # Setup logger for file
-logger = setup_logger("miner")
+logger = setup_logger()
 
 
 class Miner(User):

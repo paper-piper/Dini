@@ -6,7 +6,7 @@ from network.bootstrap import Bootstrap
 from communication.port_manager import PortManager
 from threading import Event
 
-logger = setup_logger("miner manager")
+logger = setup_logger()
 
 
 def run_miner():

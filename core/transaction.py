@@ -8,7 +8,7 @@ from cryptography.exceptions import InvalidSignature
 from utils.logging_utils import setup_logger
 
 # Setup logger for file
-logger = setup_logger("transaction")
+logger = setup_logger()
 
 # Constants for assertion error messages
 HASH_LENGTH_ERROR = "Hash length should be 64 characters"

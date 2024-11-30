@@ -3,7 +3,7 @@ from core.transaction import Transaction, get_sk_pk_pair
 from utils.logging_utils import setup_logger
 from utils.config import MinerSettings
 # Setup logger for file
-logger = setup_logger("blockchain")
+logger = setup_logger()
 
 # Constants for assertion error messages
 GENESIS_BLOCK_ERROR = "Genesis block should be the first block in the chain"

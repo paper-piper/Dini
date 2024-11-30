@@ -5,7 +5,7 @@ from core.transaction import Transaction, get_sk_pk_pair
 from core.block import Block
 import random
 # Setup logger for the file
-logger = setup_logger("light_blockchain")
+logger = setup_logger()
 
 
 class LightBlockchain:

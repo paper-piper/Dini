@@ -3,7 +3,7 @@ from core.block import create_sample_block
 from utils.config import BlockSettings
 from utils.logging_utils import setup_logger
 import time
-logger = setup_logger("multiprocess_mining")
+logger = setup_logger()
 
 
 class MultiprocessMining:
