@@ -37,7 +37,7 @@ class Node(ABC):
         self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.messages_queue = Queue()
 
-        self.process_incoming_messages = threading.Thread(target=self.process_incoming_messages, daemon=True)
+        self.process_incoming_messages = threading.Thread(target=self.process_messages_from_queue, daemon=True)
         self.process_incoming_messages.start()
         self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
         self.accept_connections_thread.start()
@@ -157,7 +157,7 @@ class Node(ABC):
             peer_socket.close()  # Ensure socket is closed
             del self.peer_connections[peer_address]
 
-    def process_incoming_messages(self):
+    def process_messages_from_queue(self):
         """
         Processes messages from the message queue and directs them to appropriate handlers.
         """
@@ -173,11 +173,12 @@ class Node(ABC):
         match msg_type:
             case MsgTypes.REQUEST_OBJECT:
                 requested_object = self.get_requested_object(msg_subtype, msg_params)
-                # Bonus: send the message only to the sender
-                return_address = msg_params[0]
+                # if the node cannot handle the request, discard it for now and trust other node to answer it
+                if not requested_object:
+                    return
                 forward_object = False
                 self.send_focused_message(
-                    return_address,
+                    node_address,
                     MsgTypes.SEND_OBJECT,
                     msg_subtype,
                     requested_object,
