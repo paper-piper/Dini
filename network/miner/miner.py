@@ -1,11 +1,11 @@
 import json
 import threading
-from utils.config import MsgTypes, MsgSubTypes
+from utils.config import MsgTypes, MsgSubTypes, BlockSettings
 from utils.logging_utils import setup_logger
 from network.user import User
 from network.miner.mempool import Mempool
 from network.miner.multiprocess_mining import MultiprocessMining
-from core.transaction import get_sk_pk_pair, create_sample_transaction
+from core.transaction import get_sk_pk_pair, create_sample_transaction, Transaction
 from core.block import Block
 from core.blockchain import create_sample_blockchain
 # Setup logger for file
@@ -109,9 +109,14 @@ class Miner(User):
             if len(transactions) == 0:
                 return None
             previous_hash = self.blockchain.get_latest_block().hash
+            # create the bonus transaction to reward the miner
+            transactions.append(self.create_bonus_transaction())
             block = Block(previous_hash, transactions)
             return block
 
+    def create_bonus_transaction(self):
+        transaction = Transaction(BlockSettings.BONUS_PK, self.public_key, BlockSettings.BONUS_AMOUNT)
+        transaction.sign_transaction(BlockSettings.BONUS_SK)
 
 def assertion_checks():
     # first, ensure that blockchain saving also works for miner with regular blockchain
