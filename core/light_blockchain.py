@@ -28,7 +28,7 @@ class LightBlockchain:
         Filters a transaction to determine if it is relevant and updates the balance accordingly.
 
         :param transaction: A transaction object containing sender, recipient, and amount details
-        :return: False if the transaction is not relevant, otherwise None
+        :return: False if the transaction is not relevant, otherwise True
         """
         if transaction.sender_pk == self.owner_pk:
             self.balance -= transaction.amount
@@ -40,13 +40,14 @@ class LightBlockchain:
 
         self.transactions.append(transaction)
         logger.info(f"Transaction added: {transaction}")
+        return True
 
     def filter_and_add_block(self, block):
         """
         Filters and adds a block to the blockchain if it is valid.
 
         :param block: A block object containing transactions and hash details
-        :return: False if the block is invalid, otherwise None
+        :return: False if the block is invalid, otherwise True
         """
         if block.previous_hash != self.latest_hash:
             logger.info(f"Block rejected due to mismatched hash: {block}")
@@ -57,6 +58,7 @@ class LightBlockchain:
             self.filter_and_add_transaction(transaction)
 
         logger.info(f"Block added: {block}")
+        return True
 
     def to_dict(self):
         return {
