@@ -1,8 +1,8 @@
 import hashlib
 import time
-from core.transaction import Transaction, create_sample_transaction
+from core.transaction import Transaction, create_sample_transaction, get_sk_pk_pair
 from utils.logging_utils import setup_logger
-from utils.config import MinerSettings
+from utils.config import MinerSettings, BlockSettings
 
 # Setup logger for file
 logger = setup_logger()
@@ -97,16 +97,32 @@ class Block:
 
         :return: True if all transactions are valid, False otherwise.
         """
-        # TODO: check for one bonus transaction
-        for transaction in self.transactions:
+        # skip the first transaction, since it is not signed
+        tips_sum = 0
+        for transaction in self.transactions[1:]:
             if transaction.amount <= 0:
                 logger.warning(f"Invalid transaction amount ({transaction.amount}) in transaction: {transaction}")
                 return False
             if not transaction.verify_signature():
                 logger.warning("Invalid transaction detected: %s", transaction)
                 return False
+            tips_sum += transaction.tip
+
+        # ensure the tips sum match the actual first transaction
+        if tips_sum != self.transactions[0].amount:
+            logger.warning(f"sum of tips does not match the tipping transaction."
+                           f" tips sum: {self.transactions[0].amount}. actual amount: {tips_sum}")
+            return False
         logger.info("All transactions validated successfully for block: %s", self)
         return True
+
+    def add_bonus_transaction(self, public_key):
+        tips_sum = 0
+        for transaction in self.transactions:
+            tips_sum += transaction.tip
+
+        bonus_transaction = Transaction(BlockSettings.TIPPING_PK, public_key, tips_sum)
+        self.transactions.insert(0, bonus_transaction)
 
 
 def assertion_check():
@@ -123,7 +139,7 @@ def assertion_check():
     initial_hash = test_block.calculate_hash()
     assert test_block.hash is None, HASH_VALIDATION_ERROR  # Ensure no hash is set initially
     assert initial_hash == test_block.calculate_hash(), HASH_VALIDATION_ERROR
-
+    assert test_block.validate_block()
     logger.info("All assertions passed for Block class.")
 
 
@@ -143,6 +159,7 @@ def create_sample_block(
         transactions.append(transaction)
 
     block = Block(previews_hash, transactions, difficulty)
+    block.add_bonus_transaction(get_sk_pk_pair()[1])
     return block
 
 
