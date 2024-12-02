@@ -38,12 +38,12 @@ class User(Bootstrap):
 
     def buy_dinis(self, amount):
         transaction = Transaction(BlockSettings.LORD_PK, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
-        transaction.sign_transaction(self.private_key)
+        transaction.sign_transaction(BlockSettings.LORD_SK)
         self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"Sold {amount} Dini's")
+        logger.info(f"bought {amount} Dini's")
 
     def sell_dinis(self, amount):
-        transaction = Transaction(BlockSettings.LORD_PK, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
+        transaction = Transaction(self.public_key, BlockSettings.LORD_PK, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
         self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         logger.info(f"Sold {amount} Dini's")
