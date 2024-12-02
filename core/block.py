@@ -98,6 +98,9 @@ class Block:
         :return: True if all transactions are valid, False otherwise.
         """
         for transaction in self.transactions:
+            if transaction.amount <= 0:
+                logger.warning(f"Invalid transaction amount ({transaction.amount}) in transaction: {transaction}")
+                return False
             if not transaction.verify_signature():
                 logger.warning("Invalid transaction detected: %s", transaction)
                 return False
