@@ -4,6 +4,7 @@ class BlockSettings:
     LORD_SK = "lord_secret_string"
     BONUS_PK = "bonus_public_string"
     BONUS_SK = "bonus_secret_string"
+    TIPPING_PK = "tipping_public_string"
     BONUS_AMOUNT = 100
     PROCESSES_NUMBER = 10
 
