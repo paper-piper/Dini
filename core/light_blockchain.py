@@ -32,6 +32,7 @@ class LightBlockchain:
         """
         if transaction.sender_pk == self.owner_pk:
             self.balance -= transaction.amount
+            self.balance -= transaction.tip
         elif transaction.recipient_pk == self.owner_pk:
             self.balance += transaction.amount
         else:
