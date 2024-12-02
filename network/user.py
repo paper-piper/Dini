@@ -37,8 +37,10 @@ class User(Bootstrap):
         return self.blockchain.get_recent_transactions(num)
 
     def buy_dinis(self, amount):
-        self.make_transaction(BlockSettings.LORD_PK, amount, BlockSettings.BONUS_AMOUNT)
-        logger.info(f"Bought {amount} Dini's")
+        transaction = Transaction(BlockSettings.LORD_PK, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
+        transaction.sign_transaction(self.private_key)
+        self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        logger.info(f"Sold {amount} Dini's")
 
     def sell_dinis(self, amount):
         transaction = Transaction(BlockSettings.LORD_PK, self.public_key, amount, BlockSettings.BONUS_AMOUNT)

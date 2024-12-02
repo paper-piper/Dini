@@ -77,7 +77,7 @@ class Blockchain:
             logger.error("Failed to add block: block previous hash does not match latest hash")
             return False
 
-        if not new_block.validate_transactions():
+        if not new_block.validate_block():
             logger.error("Failed to add block: Contains invalid transactions.")
             return False
 
@@ -142,7 +142,7 @@ class Blockchain:
                 return False
 
             # Validate transactions within the block
-            if not current_block.validate_transactions():
+            if not current_block.validate_block():
                 logger.warning("Block validation failed due to invalid transaction at index %d", i)
                 return False
 

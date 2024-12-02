@@ -91,12 +91,13 @@ class Block:
         block_hash = hashlib.sha256(data.encode()).hexdigest()
         return block_hash
 
-    def validate_transactions(self):
+    def validate_block(self):
         """
         Validates each transaction in the block to ensure integrity.
 
         :return: True if all transactions are valid, False otherwise.
         """
+        # TODO: check for one bonus transaction
         for transaction in self.transactions:
             if transaction.amount <= 0:
                 logger.warning(f"Invalid transaction amount ({transaction.amount}) in transaction: {transaction}")
