@@ -1,10 +1,16 @@
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+
+def get_sk_pk_pair():
+    # a placeholder function, need to create for actual global pk,sk
+    ps = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    return ps, ps.public_key()
+
 class BlockSettings:
     MAX_TRANSACTIONS = 1024
-    LORD_PK = "lord_public_string"
-    LORD_SK = "lord_secret_string"
-    BONUS_PK = "bonus_public_string"
-    BONUS_SK = "bonus_secret_string"
-    TIPPING_PK = "tipping_public_string"
+    LORD_SK, LORD_PK = get_sk_pk_pair()
+    BONUS_SK, BONUS_PK = get_sk_pk_pair()
+    TIPPING_SK, TIPPING_PK = get_sk_pk_pair()
     BONUS_AMOUNT = 100
     PROCESSES_NUMBER = 10
 
@@ -56,7 +62,7 @@ class BootSettings:
 
 
 class LoggingSettings:
-    REWRITE = False
+    REWRITE = True
 
 
 class PortSettings:

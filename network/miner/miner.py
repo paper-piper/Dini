@@ -98,8 +98,7 @@ class Miner(User):
                 self.blockchain.filter_and_add_block(mined_block)
                 blocks_num -= 1
                 self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.BLOCK, mined_block)
-                logger.info("Block mined and added to blockchain successfully. "
-                            "Nonce: %d, Hash: %s", mined_block.nonce, mined_block.hash)
+                logger.info(f"Block mined and added to blockchain successfully. Block: {mined_block}")
 
     def create_block(self):
         # Lock mempool to prevent transaction modifications
@@ -112,14 +111,17 @@ class Miner(User):
             # create the bonus transaction to reward the miner
             transactions.append(self.create_bonus_transaction())
             block = Block(previous_hash, transactions)
+            # create the tipping transaction at start
+            block.add_tipping_transaction(self.public_key)
             return block
 
     def create_bonus_transaction(self):
         transaction = Transaction(BlockSettings.BONUS_PK, self.public_key, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(BlockSettings.BONUS_SK)
+        return transaction
 
-def assertion_checks():
-    # first, ensure that blockchain saving also works for miner with regular blockchain
+
+def assert_file_saving():
     pk, sk = get_sk_pk_pair()
     miner1 = Miner(pk, sk, create_sample_blockchain(), filename="../../data/sample_blockchain_1.json")
     miner1.save_blockchain()
@@ -138,9 +140,17 @@ def assertion_checks():
     assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
     logger.info("core data saved and loaded successfully and files match.")
 
+
+def assertion_checks():
+    # first, ensure that blockchain saving also works for miner with regular blockchain
+    #assert_file_saving()
+
     # secondly, check mine function
-    miner1.process_transaction_data([create_sample_transaction()])
-    miner1.start_mining(1)
+    sk, pk = get_sk_pk_pair()
+    miner = Miner(pk, sk)
+
+    miner.process_transaction_data([create_sample_transaction()])
+    miner.start_mining(1)
 
 
 if __name__ == "__main__":

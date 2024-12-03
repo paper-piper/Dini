@@ -76,7 +76,7 @@ class Block:
                      f"Hash: {self.hash[:6]}..., "
                      f"Nonce: {self.nonce}, "
                      f"Difficulty: {self.difficulty}, "
-                     f"Transactions: [{transaction_reprs if len(transaction_reprs) < 5 else len(self.transactions)}])")
+                     f"Transactions: [{transaction_reprs if len(self.transactions) < 5 else len(self.transactions)}])")
         return str_value
 
     def calculate_hash(self):
@@ -113,10 +113,12 @@ class Block:
             logger.warning(f"sum of tips does not match the tipping transaction."
                            f" tips sum: {self.transactions[0].amount}. actual amount: {tips_sum}")
             return False
+
+        # TODO: check for one bonus transaction
         logger.info("All transactions validated successfully for block: %s", self)
         return True
 
-    def add_bonus_transaction(self, public_key):
+    def add_tipping_transaction(self, public_key):
         tips_sum = 0
         for transaction in self.transactions:
             tips_sum += transaction.tip
@@ -159,7 +161,7 @@ def create_sample_block(
         transactions.append(transaction)
 
     block = Block(previews_hash, transactions, difficulty)
-    block.add_bonus_transaction(get_sk_pk_pair()[1])
+    block.add_tipping_transaction(get_sk_pk_pair()[1])
     return block
 
 
