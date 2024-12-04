@@ -99,7 +99,7 @@ class Block:
         """
         # skip the first transaction, since it is not signed
         tips_sum = 0
-        for transaction in self.transactions[1:]:
+        for transaction in self.transactions:
             if transaction.amount <= 0:
                 logger.warning(f"Invalid transaction amount ({transaction.amount}) in transaction: {transaction}")
                 return False
@@ -123,8 +123,9 @@ class Block:
         for transaction in self.transactions:
             tips_sum += transaction.tip
 
-        bonus_transaction = Transaction(BlockSettings.TIPPING_PK, public_key, tips_sum)
-        self.transactions.insert(0, bonus_transaction)
+        tipping_transaction = Transaction(BlockSettings.TIPPING_PK, public_key, tips_sum)
+        tipping_transaction.sign_transaction(BlockSettings.TIPPING_SK)
+        self.transactions.insert(0, tipping_transaction)
 
 
 def assertion_check():
