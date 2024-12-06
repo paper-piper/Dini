@@ -97,9 +97,15 @@ class Block:
 
         :return: True if all transactions are valid, False otherwise.
         """
-        # skip the first transaction, since it is not signed
         tips_sum = 0
-        for transaction in self.transactions:
+        tips_transaction = self.transactions[0]
+        bonus_transaction = self.transactions[0]
+        # check every transaction except for the first and last one (tips and bonus)
+        for transaction in self.transactions[1:-1]:
+            # check for invalid pk (tipping or bonus)
+            if transaction.sender_pk == BlockSettings.BONUS_PK or transaction.sender_pk == BlockSettings.TIPPING_PK:
+                logger.warning(f"Invalid transaction: use of global pk {transaction.sender_pk}")
+                return False
             if transaction.amount <= 0:
                 logger.warning(f"Invalid transaction amount ({transaction.amount}) in transaction: {transaction}")
                 return False
@@ -108,13 +114,24 @@ class Block:
                 return False
             tips_sum += transaction.tip
 
-        # ensure the tips sum match the actual first transaction
-        if tips_sum != self.transactions[0].amount:
+        # check the tipping transaction
+        if tips_transaction.sender_pk != BlockSettings.TIPPING_PK:  # check public key
+            logger.warning(f"tipping transaction does not contain correct tipping pk. pk: {tips_transaction.sender_pk}")
+            return False
+        if tips_sum != tips_transaction.amount:  # check amount
             logger.warning(f"sum of tips does not match the tipping transaction."
                            f" tips sum: {self.transactions[0].amount}. actual amount: {tips_sum}")
             return False
 
-        # TODO: check for one bonus transaction
+        # check bonus transaction
+        if bonus_transaction.sender_pk != BlockSettings.BONUS_PK:  # check public key
+            logger.warning(f"bonus transaction does not contain correct tipping pk. pk: {bonus_transaction.sender_pk}")
+            return False
+        if bonus_transaction.amount != BlockSettings.BONUS_AMOUNT:  # check amount
+            logger.warning(f"Invalid amount in bonus transaction: expected: {BlockSettings.BONUS_AMOUNT},"
+                           f" received: {bonus_transaction.amount} ")
+            return False
+
         logger.info("All transactions validated successfully for block: %s", self)
         return True
 
