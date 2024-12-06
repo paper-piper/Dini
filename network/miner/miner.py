@@ -109,16 +109,13 @@ class Miner(User):
                 return None
             previous_hash = self.blockchain.get_latest_block().hash
             # create the bonus transaction to reward the miner
-            transactions.append(self.create_bonus_transaction())
             block = Block(previous_hash, transactions)
             # create the tipping transaction at start
             block.add_tipping_transaction(self.public_key)
+            block.add_bonus_transaction(self.public_key)
             return block
 
-    def create_bonus_transaction(self):
-        transaction = Transaction(BlockSettings.BONUS_PK, self.public_key, BlockSettings.BONUS_AMOUNT)
-        transaction.sign_transaction(BlockSettings.BONUS_SK)
-        return transaction
+
 
 
 def assert_file_saving():
