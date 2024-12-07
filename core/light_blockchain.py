@@ -1,6 +1,7 @@
 from cryptography.hazmat.primitives import serialization
 
 from utils.logging_utils import setup_logger
+from utils.config import BlockChainSettings
 from core.transaction import Transaction, get_sk_pk_pair
 from core.block import Block
 import random
@@ -21,7 +22,7 @@ class LightBlockchain:
         self.owner_pk = owner_pk
         self.balance = balance
         self.transactions = transactions if transactions is not None else []
-        self.latest_hash = latest_hash
+        self.latest_hash = latest_hash if latest_hash else BlockChainSettings.FIRST_HASH
 
     def filter_and_add_transaction(self, transaction):
         """
