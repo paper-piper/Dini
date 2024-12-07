@@ -1,10 +1,10 @@
 import logging
 import os
 import inspect
-from utils.config import LoggingSettings
+from utils.config import LoggingSettings, FilesSettings
 
 # Root directory for logs
-ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs")
+ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", FilesSettings.LOGS_FOLDER_NAME)
 
 
 def setup_logger(name=None, root_directory=None, level=logging.DEBUG):
