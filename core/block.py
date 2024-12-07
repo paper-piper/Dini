@@ -2,7 +2,8 @@ import hashlib
 import time
 from core.transaction import Transaction, create_sample_transaction, get_sk_pk_pair
 from utils.logging_utils import setup_logger
-from utils.config import MinerSettings, BlockSettings
+from utils.config import MinerSettings, BlockSettings, KeysSettings
+from utils.keys_manager import load_key
 
 # Setup logger for file
 logger = setup_logger()
@@ -97,13 +98,15 @@ class Block:
 
         :return: True if all transactions are valid, False otherwise.
         """
+        bonus_pk = load_key(KeysSettings.BONUS_PK)
+        tipping_pk = load_key(KeysSettings.TIPPING_PK)
         tips_sum = 0
         tips_transaction = self.transactions[0]
-        bonus_transaction = self.transactions[0]
+        bonus_transaction = self.transactions[-1]
         # check every transaction except for the first and last one (tips and bonus)
         for transaction in self.transactions[1:-1]:
             # check for invalid pk (tipping or bonus)
-            if transaction.sender_pk == BlockSettings.BONUS_PK or transaction.sender_pk == BlockSettings.TIPPING_PK:
+            if transaction.sender_pk == bonus_pk or transaction.sender_pk == tipping_pk:
                 logger.warning(f"Invalid transaction: use of global pk {transaction.sender_pk}")
                 return False
             if transaction.amount <= 0:
@@ -115,7 +118,7 @@ class Block:
             tips_sum += transaction.tip
 
         # check the tipping transaction
-        if tips_transaction.sender_pk != BlockSettings.TIPPING_PK:  # check public key
+        if tips_transaction.sender_pk != tipping_pk:  # check public key
             logger.warning(f"tipping transaction does not contain correct tipping pk. pk: {tips_transaction.sender_pk}")
             return False
         if tips_sum != tips_transaction.amount:  # check amount
@@ -124,25 +127,36 @@ class Block:
             return False
 
         # check bonus transaction
-        if bonus_transaction.sender_pk != BlockSettings.BONUS_PK:  # check public key
-            logger.warning(f"bonus transaction does not contain correct tipping pk. pk: {bonus_transaction.sender_pk}")
+        if bonus_transaction.sender_pk != bonus_pk:  # check public key
+            logger.warning(f"bonus transaction does not contain correct bonus pk. pk: {bonus_transaction.sender_pk}")
             return False
         if bonus_transaction.amount != BlockSettings.BONUS_AMOUNT:  # check amount
             logger.warning(f"Invalid amount in bonus transaction: expected: {BlockSettings.BONUS_AMOUNT},"
                            f" received: {bonus_transaction.amount} ")
             return False
 
-        logger.info("All transactions validated successfully for block: %s", self)
+        logger.info("All transactions validated successfully for block")
         return True
 
     def add_tipping_transaction(self, public_key):
+        tipping_pk = load_key(KeysSettings.TIPPING_PK)
+        tipping_sk = load_key(KeysSettings.TIPPING_SK)
         tips_sum = 0
+
         for transaction in self.transactions:
             tips_sum += transaction.tip
 
-        tipping_transaction = Transaction(BlockSettings.TIPPING_PK, public_key, tips_sum)
-        tipping_transaction.sign_transaction(BlockSettings.TIPPING_SK)
+        tipping_transaction = Transaction(tipping_pk, public_key, tips_sum)
+        tipping_transaction.sign_transaction(tipping_sk)
         self.transactions.insert(0, tipping_transaction)
+
+    def add_bonus_transaction(self, receiver_pk):
+        bonus_pk = load_key(KeysSettings.BONUS_PK)
+        bonus_sk = load_key(KeysSettings.BONUS_SK)
+
+        transaction = Transaction(bonus_pk, receiver_pk, BlockSettings.BONUS_AMOUNT)
+        transaction.sign_transaction(bonus_sk)
+        self.transactions.append(transaction)
 
 
 def assertion_check():
@@ -180,6 +194,7 @@ def create_sample_block(
 
     block = Block(previews_hash, transactions, difficulty)
     block.add_tipping_transaction(get_sk_pk_pair()[1])
+    block.add_bonus_transaction(get_sk_pk_pair()[1])
     return block
 
 
