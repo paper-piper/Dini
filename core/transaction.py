@@ -94,13 +94,21 @@ class Transaction:
 
     def calculate_hash(self):
         """
-        Calculate a SHA-256 hash of the transaction contents.
+        Calculate an SHA-256 hash of the transaction contents.
 
         :return: Hash string representing the transaction.
         """
+        sender_pk_str = self.sender_pk.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        recipient_pk_str = self.recipient_pk.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
         data = (
-            f"{self.sender_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}"
-            f"{self.recipient_pk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)}"
+            f"{sender_pk_str}"
+            f"{recipient_pk_str}"
             f"{self.amount}"
             f"{self.tip}")
         transaction_hash = hashlib.sha256(data.encode()).hexdigest()

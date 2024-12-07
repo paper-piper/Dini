@@ -35,7 +35,8 @@ class Blockchain:
         blockchain.chain = [Block.from_dict(block_data) for block_data in data["chain"]]
         return blockchain
 
-    def create_genesis_block(self):
+    @staticmethod
+    def create_genesis_block():
         """
         Create the first block in the blockchain with unique genesis transaction properties.
         :return: The genesis block with a predefined "Genesis Block" transaction.
@@ -84,7 +85,6 @@ class Blockchain:
         self.chain.append(new_block)
         logger.info("New block added: %s", new_block)
         return True
-
 
     def get_blocks_after(self, latest_hash):
         """
