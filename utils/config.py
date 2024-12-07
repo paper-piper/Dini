@@ -7,20 +7,24 @@ def get_sk_pk_pair():
     return ps, ps.public_key()
 
 
+class TransactionSettings:
+    MAX_AMOUNT = 10 ** 6
+
+
 class BlockSettings:
     MAX_TRANSACTIONS = 1024
     BONUS_AMOUNT = 100
     PROCESSES_NUMBER = 10
 
 
+class BlockChainSettings:
+    FIRST_HASH = b"0"
+
+
 class KeysSettings:
     LORD_SK, LORD_PK = "lord_sk", "lord_pk"
     BONUS_SK, BONUS_PK = "bonus_sk", "bonus_pk"
     TIPPING_SK, TIPPING_PK = "tipping_sk", "tipping_pk"
-
-
-class TransactionSettings:
-    MAX_AMOUNT = 10 ** 6
 
 
 class FilesSettings:

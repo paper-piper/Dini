@@ -1,7 +1,7 @@
 from core.block import Block, create_sample_block
 from core.transaction import Transaction, get_sk_pk_pair
 from utils.logging_utils import setup_logger
-from utils.config import MinerSettings
+from utils.config import MinerSettings, BlockChainSettings
 # Setup logger for file
 logger = setup_logger()
 
@@ -48,7 +48,7 @@ class Blockchain:
         # Create a unique genesis transaction
         genesis_transaction = Transaction(genesis_public_key, network_public_key, 0)
         genesis_transaction.sign_transaction(genesis_private_key)
-        genesis_block = Block("0", [genesis_transaction])
+        genesis_block = Block(BlockChainSettings.FIRST_HASH, [genesis_transaction])
         genesis_block.hash = genesis_block.calculate_hash()  # Genesis block is pre-mined
         logger.info("Genesis block created: %s", genesis_block)
         return genesis_block
