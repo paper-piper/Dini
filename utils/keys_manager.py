@@ -4,8 +4,8 @@ import os
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from config import KeysSettings, FilesSettings
-from logging_utils import setup_logger
+from utils.config import KeysSettings, FilesSettings
+from utils.logging_utils import setup_logger
 
 logger = setup_logger()
 

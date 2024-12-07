@@ -1,13 +1,14 @@
 import json
-import threading
-from utils.config import MsgTypes, MsgSubTypes, BlockSettings
+import threading    
+from utils.config import MsgTypes, MsgSubTypes
 from utils.logging_utils import setup_logger
 from network.user import User
 from network.miner.mempool import Mempool
 from network.miner.multiprocess_mining import MultiprocessMining
-from core.transaction import get_sk_pk_pair, create_sample_transaction, Transaction
+from core.transaction import get_sk_pk_pair, create_sample_transaction
 from core.block import Block
 from core.blockchain import create_sample_blockchain
+
 # Setup logger for file
 logger = setup_logger()
 
@@ -116,8 +117,6 @@ class Miner(User):
             return block
 
 
-
-
 def assert_file_saving():
     pk, sk = get_sk_pk_pair()
     miner1 = Miner(pk, sk, create_sample_blockchain(), filename="../../data/sample_blockchain_1.json")
@@ -140,7 +139,7 @@ def assert_file_saving():
 
 def assertion_checks():
     # first, ensure that blockchain saving also works for miner with regular blockchain
-    #assert_file_saving()
+    # assert_file_saving()
 
     # secondly, check mine function
     sk, pk = get_sk_pk_pair()
