@@ -23,8 +23,8 @@ class Miner(User):
             self,
             public_key,
             secret_key,
+            blockchain_filename = None,
             blockchain=None,
-            blockchain_filename=None,
             mempool=None,
             wallet=None,
             wallet_filename=None,
@@ -43,13 +43,14 @@ class Miner(User):
             wallet_filename=wallet_filename,
             port_manager=port_manager
         )
+        self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
+
         if blockchain:
             self.blockchain = blockchain
             self.save_blockchain()
         else:
             self.blockchain = self.load_blockchain()
 
-        self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
         self.mempool = mempool if mempool else Mempool()
         self.mempool_lock = threading.Lock()
         self.multi_miner = MultiprocessMining()
@@ -96,7 +97,8 @@ class Miner(User):
         """
         try:
             with open(self.blockchain_filename, "w") as f:
-                json.dump(self.blockchain.to_dict(), f, indent=4)
+                blockchain_dict = self.blockchain.to_dict()
+                json.dump(blockchain_dict, f, indent=4)
             logger.info(f"core saved to {self.blockchain_filename}")
         except Exception as e:
             logger.error(f"Error saving blockchain: {e}")
@@ -178,14 +180,14 @@ class Miner(User):
 
 def assert_file_saving():
     pk, sk = get_sk_pk_pair()
-    miner1 = Miner(pk, sk, create_sample_blockchain(), wallet_filename="../../data/sample_blockchain_1.json")
-    miner1.save_wallet()
+    miner1 = Miner(pk, sk, blockchain_filename="../../data/sample_blockchain_1.json",
+                   blockchain=create_sample_blockchain())
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    miner2 = Miner(pk, sk, wallet_filename="../../data/sample_blockchain_1.json")
-    miner2.load_wallet()
-    miner2.wallet_filename = "../../data/sample_blockchain_2.json"
-    miner2.save_wallet()
+    miner2 = Miner(pk, sk, blockchain_filename="../../data/sample_blockchain_1.json")
+    miner2.load_blockchain()
+    miner2.blockchain_filename = "../../data/sample_blockchain_2.json"
+    miner2.save_blockchain()
 
     # Load files and verify they are identical
     with open("../../data/sample_blockchain_1.json", "r") as f1, open("../../data/sample_blockchain_2.json", "r") as f2:
@@ -198,7 +200,7 @@ def assert_file_saving():
 
 def assertion_checks():
     # first, ensure that blockchain saving also works for miner with regular blockchain
-    # assert_file_saving()
+    assert_file_saving()
 
     # secondly, check mine function
     sk, pk = get_sk_pk_pair()
