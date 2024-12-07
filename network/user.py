@@ -4,7 +4,8 @@ import json
 import os
 from core.light_blockchain import LightBlockchain, create_sample_light_blockchain
 from core.transaction import Transaction, get_sk_pk_pair
-from utils.config import MsgTypes, MsgSubTypes, File, BlockSettings
+from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings
+from utils.keys_manager import load_key
 from utils.logging_utils import setup_logger
 
 logger = setup_logger()
@@ -24,7 +25,7 @@ class User(Bootstrap):
         super().__init__(is_bootstrap=False, port_manager=port_manager)
         self.public_key = public_key
         self.private_key = secret_key
-        self.filename = File.BLOCKCHAIN_FILE_NAME if filename is None else filename
+        self.filename = FilesSettings.BLOCKCHAIN_FILE_NAME if filename is None else filename
         self.user = user
         if blockchain:
             self.blockchain = blockchain
@@ -40,13 +41,16 @@ class User(Bootstrap):
         return self.blockchain.get_recent_transactions(num)
 
     def buy_dinis(self, amount):
-        transaction = Transaction(BlockSettings.LORD_PK, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
-        transaction.sign_transaction(BlockSettings.LORD_SK)
+        lord_pk = load_key(KeysSettings.LORD_PK)
+        lord_sk = load_key(KeysSettings.LORD_SK)
+        transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
+        transaction.sign_transaction(lord_sk)
         self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         logger.info(f"bought {amount} Dini's")
 
     def sell_dinis(self, amount):
-        transaction = Transaction(self.public_key, BlockSettings.LORD_PK, amount, BlockSettings.BONUS_AMOUNT)
+        lord_pk = load_key(KeysSettings.LORD_PK)
+        transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
         self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         logger.info(f"Sold {amount} Dini's")
@@ -177,7 +181,8 @@ def assertion_check():
     user2.save_blockchain()
 
     # Load files and verify they are identical
-    with open("../data/sample_light_blockchain_1.json", "r") as f1, open("../data/sample_light_blockchain_2.json", "r") as f2:
+    with (open("../data/sample_light_blockchain_1.json", "r") as f1,
+          open("../data/sample_light_blockchain_2.json", "r") as f2):
         blockchain_data_1 = json.load(f1)
         blockchain_data_2 = json.load(f2)
 
