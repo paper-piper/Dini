@@ -65,11 +65,10 @@ def generate_and_save_keys(sk_name, pk_name):
         logger.error(f"Error generating or saving keys: {e}")
 
 
-def load_key(key_name, private_key):
+def load_key(key_name):
     """
     Load a single RSA key (private or public) from the JSON file.
     :param key_name: The name of the key to load
-    :param private_key: is the key private or public
     :return: The key object (private or public), or None if the key is missing
     """
 
@@ -89,8 +88,8 @@ def load_key(key_name, private_key):
         # Decode the Base64 string and load the PEM key
         key_pem = base64.b64decode(keys_dict[key_name])
 
-        if private_key:
-            # Load private key
+        if "sk" in key_name:
+            # Load secret key
             key = serialization.load_pem_private_key(key_pem, password=None)
         else:
             # Load public key
@@ -109,9 +108,8 @@ def create_all_keys():
     generate_and_save_keys(KeysSettings.TIPPING_SK, KeysSettings.TIPPING_PK)
     generate_and_save_keys(KeysSettings.BONUS_SK, KeysSettings.BONUS_PK)
 
-    tipping = load_key(KeysSettings.TIPPING_PK, False)
-    assert load_key(KeysSettings.TIPPING_SK, True)
-    assert load_key(KeysSettings.LORD_PK, False)
+    assert load_key(KeysSettings.TIPPING_SK)
+    assert load_key(KeysSettings.LORD_PK)
 
 
 if __name__ == "__main__":
