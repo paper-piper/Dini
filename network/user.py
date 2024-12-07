@@ -1,4 +1,3 @@
-from core.blockchain import Blockchain
 from network.bootstrap import Bootstrap
 import json
 import os
@@ -15,30 +14,26 @@ class User(Bootstrap):
     """
     Manages user operations including blockchain updating, file saving, and broadcasting transactions.
     """
-    def __init__(self, public_key, secret_key, blockchain=None, filename=None, user=True, port_manager=None):
+    def __init__(self, public_key, secret_key, wallet=None, filename=None, port_manager=None):
         """
         :param public_key: User's public key
         :param secret_key: User's secret key
-        :param blockchain: core object, or None to load from file.
+        :param wallet: core object, or None to load from file.
         :param filename: Name of the file where blockchain data is saved. Defaults to the standard blockchain file name.
         """
         super().__init__(is_bootstrap=False, port_manager=port_manager)
         self.public_key = public_key
         self.private_key = secret_key
         self.filename = FilesSettings.BLOCKCHAIN_FILE_NAME if filename is None else filename
-        self.user = user
-        if blockchain:
-            self.blockchain = blockchain
-        else:
-            self.load_blockchain()
+        self.wallet = wallet if wallet else self.load_wallet()
 
     def __del__(self):
         if self.port_manager:
             self.port_manager.release_port(self.port)
-        self.save_blockchain()
+        self.save_wallet()
 
     def get_recent_transactions(self, num=5):
-        return self.blockchain.get_recent_transactions(num)
+        return self.wallet.get_recent_transactions(num)
 
     def buy_dinis(self, amount):
         lord_pk = load_key(KeysSettings.LORD_PK)
@@ -69,22 +64,21 @@ class User(Bootstrap):
 
     def process_block_data(self, block):
         """
-        Adds a block to the blockchain and saves the updated chain.
+        Adds a block to the wallet and saves the updated chain.
 
         :param block: Block to add.
         :return: None
         """
-        self.blockchain.filter_and_add_block(block)
-        self.save_blockchain()
-        logger.info("Block added to blockchain and saved")
+        self.wallet.filter_and_add_block(block)
+        self.save_wallet()
+        logger.info("Block added to wallet and saved")
 
     def process_blockchain_data(self, blockchain):
         """
         Handles the sending of blocks to other peers.
-
         :param blockchain: Parameters associated with the block send.
         """
-        relevant_blocks = blockchain.get_blocks_after()
+        relevant_blocks = blockchain.get_blocks_after(self.wallet.latest_hash)
         for block in relevant_blocks:
             self.process_block_data(block)
 
@@ -104,61 +98,48 @@ class User(Bootstrap):
         logger.error("User does not handle transactions")
         raise NotImplementedError("user does not handle transactions")
 
-    def save_blockchain(self):
+    def save_wallet(self):
         """
-        Saves the current blockchain to a file in JSON format.
+        Saves the current wallet to a file in JSON format.
         :return: None
         """
         try:
             with open(self.filename, "w") as f:
-                json.dump(self.blockchain.to_dict(), f, indent=4)
-            logger.info(f"core saved to {self.filename}")
+                json.dump(self.wallet.to_dict(), f, indent=4)
+            logger.info(f"wallet saved to {self.filename}")
         except Exception as e:
-            logger.error(f"Error saving blockchain: {e}")
+            logger.error(f"Error saving wallet: {e}")
 
-    def load_blockchain(self):
+    def load_wallet(self):
         """
-        Loads the blockchain from a file if it exists.
-
-        :return: Boolean indicating whether the blockchain was successfully loaded.
+        Loads the wallet from a file if it exists.
+        :return: the wallet if exists, else initialized wallet
         """
         if os.path.exists(self.filename):
             try:
                 with open(self.filename, "r") as f:
                     blockchain_data = json.load(f)
-                    # Dynamically determine which blockchain type to use
-                    if self.user:
-                        self.blockchain = LightBlockchain.from_dict(blockchain_data)
-                    else:
-                        self.blockchain = Blockchain.from_dict(blockchain_data)
+                    wallet = LightBlockchain.from_dict(blockchain_data)
                 logger.info(f"core loaded from {self.filename}")
-                return True
+                return wallet
             except Exception as e:
                 logger.error(f"Error loading blockchain: {e}")
-                return False
-        else:
-            logger.warning(f"No blockchain file found at {self.filename}, initializing new blockchain.")
-            if self.user:
-                self.blockchain = LightBlockchain(self.public_key)
-            else:
-                self.blockchain = Blockchain()
-            return False
+                return LightBlockchain(self.public_key)
+
+        logger.warning(f"No blockchain file found at {self.filename}, initializing new blockchain.")
+        return LightBlockchain(self.public_key)
 
     def request_update_blockchain(self):
         """
         Requests a specific block update from peers.
         :return: None
         """
-        if self.user:
-            latest_hash = self.blockchain.latest_hash
-        else:
-            latest_hash = self.blockchain.get_latest_block().hash
         self.send_distributed_message(
             MsgTypes.REQUEST_OBJECT,
             MsgSubTypes.BLOCKCHAIN,
-            latest_hash
+            self.wallet.latest_hash
         )
-        logger.info(f"Requesting updates with latest hash: {latest_hash}")
+        logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
 
 
 def assertion_check():
@@ -171,18 +152,22 @@ def assertion_check():
     sk, pk = get_sk_pk_pair()
 
     # Create a sample blockchain and save it using the first User instance
-    user1 = User(pk, sk, create_sample_light_blockchain(pk, sk), "../data/sample_light_blockchain_1.json")
-    user1.save_blockchain()
+    user1 = User(
+        pk,
+        sk,
+        wallet=create_sample_light_blockchain(pk, sk),
+        filename="../data/sample_wallet1.json")
+    user1.save_wallet()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    user2 = User(pk, sk, filename="../data/sample_light_blockchain_1.json")
-    user2.load_blockchain()
-    user2.filename = "../data/sample_light_blockchain_2.json"
-    user2.save_blockchain()
+    user2 = User(pk, sk, filename="../data/sample_wallet1.json")
+    user2.load_wallet()
+    user2.filename = "../data/sample_wallet2.json"
+    user2.save_wallet()
 
     # Load files and verify they are identical
-    with (open("../data/sample_light_blockchain_1.json", "r") as f1,
-          open("../data/sample_light_blockchain_2.json", "r") as f2):
+    with (open("../data/sample_wallet1.json", "r") as f1,
+          open("../data/sample_wallet2.json", "r") as f2):
         blockchain_data_1 = json.load(f1)
         blockchain_data_2 = json.load(f2)
 
