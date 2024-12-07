@@ -1,13 +1,14 @@
 import json
-import threading    
-from utils.config import MsgTypes, MsgSubTypes
+import os
+import threading
+from utils.config import MsgTypes, MsgSubTypes, FilesSettings
 from utils.logging_utils import setup_logger
 from network.user import User
 from network.miner.mempool import Mempool
 from network.miner.multiprocess_mining import MultiprocessMining
 from core.transaction import get_sk_pk_pair, create_sample_transaction
 from core.block import Block
-from core.blockchain import create_sample_blockchain
+from core.blockchain import create_sample_blockchain, Blockchain
 
 # Setup logger for file
 logger = setup_logger()
@@ -18,20 +19,46 @@ class Miner(User):
     adds block mining essentially , which has many complications in it but that is it.
     """
 
-    def __init__(self, public_key, secret_key, blockchain=None, filename=None, mempool=None, port_manager=None):
+    def __init__(
+            self,
+            public_key,
+            secret_key,
+            blockchain=None,
+            blockchain_filename=None,
+            mempool=None,
+            wallet=None,
+            wallet_filename=None,
+            port_manager=None
+    ):
         """
         Initialize a miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
 
         :param blockchain: The core object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.
         """
-        super().__init__(public_key, secret_key, blockchain, filename, user=False, port_manager=port_manager)
+        super().__init__(
+            public_key,
+            secret_key,
+            wallet=wallet,
+            wallet_filename=wallet_filename,
+            port_manager=port_manager
+        )
+        if blockchain:
+            self.blockchain = blockchain
+            self.save_blockchain()
+        else:
+            self.blockchain = self.load_blockchain()
 
+        self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
         self.mempool = mempool if mempool else Mempool()
         self.mempool_lock = threading.Lock()
         self.multi_miner = MultiprocessMining()
         self.new_block_event = threading.Event()
         self.currently_mining = threading.Event()
+
+    def __del__(self):
+        super().__del__()
+        self.save_blockchain()
 
     def start_mining(self, blocks_num=-1):
         if self.currently_mining.is_set():
@@ -42,6 +69,37 @@ class Miner(User):
     def stop_mining(self):
         self.currently_mining.clear()
         self.new_block_event.set()
+
+    def load_blockchain(self):
+        """
+        Loads the blockchain from a file if it exists.
+        :return: The blockchain if exists, else initialized blockchain
+        """
+        if os.path.exists(self.blockchain_filename):
+            try:
+                with open(self.blockchain_filename, "r") as f:
+                    blockchain_data = json.load(f)
+                    blockchain = Blockchain.from_dict(blockchain_data)
+                logger.info(f"core loaded from {self.blockchain_filename}")
+                return blockchain
+            except Exception as e:
+                logger.error(f"Error loading blockchain: {e}")
+                return False
+
+        logger.info(f"No blockchain file found at {self.blockchain_filename}, initializing new blockchain.")
+        return Blockchain()
+
+    def save_blockchain(self):
+        """
+        Saves the current blockchain to a file in JSON format.
+        :return: None
+        """
+        try:
+            with open(self.blockchain_filename, "w") as f:
+                json.dump(self.blockchain.to_dict(), f, indent=4)
+            logger.info(f"core saved to {self.blockchain_filename}")
+        except Exception as e:
+            logger.error(f"Error saving blockchain: {e}")
 
     def serve_blockchain_request(self, latest_hash):
         """
@@ -75,6 +133,7 @@ class Miner(User):
         """
         super().process_block_data(block)
         # only if new blocks
+        self.save_blockchain()
         self.new_block_event.set()
 
     def mine_blocks(self, blocks_num):
@@ -119,14 +178,14 @@ class Miner(User):
 
 def assert_file_saving():
     pk, sk = get_sk_pk_pair()
-    miner1 = Miner(pk, sk, create_sample_blockchain(), filename="../../data/sample_blockchain_1.json")
-    miner1.save_blockchain()
+    miner1 = Miner(pk, sk, create_sample_blockchain(), wallet_filename="../../data/sample_blockchain_1.json")
+    miner1.save_wallet()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    miner2 = Miner(pk, sk, filename="../../data/sample_blockchain_1.json")
-    miner2.load_blockchain()
-    miner2.filename = "../../data/sample_blockchain_2.json"
-    miner2.save_blockchain()
+    miner2 = Miner(pk, sk, wallet_filename="../../data/sample_blockchain_1.json")
+    miner2.load_wallet()
+    miner2.wallet_filename = "../../data/sample_blockchain_2.json"
+    miner2.save_wallet()
 
     # Load files and verify they are identical
     with open("../../data/sample_blockchain_1.json", "r") as f1, open("../../data/sample_blockchain_2.json", "r") as f2:

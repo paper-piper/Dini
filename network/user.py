@@ -14,17 +14,17 @@ class User(Bootstrap):
     """
     Manages user operations including blockchain updating, file saving, and broadcasting transactions.
     """
-    def __init__(self, public_key, secret_key, wallet=None, filename=None, port_manager=None):
+    def __init__(self, public_key, secret_key, wallet=None, wallet_filename=None, port_manager=None):
         """
         :param public_key: User's public key
         :param secret_key: User's secret key
         :param wallet: core object, or None to load from file.
-        :param filename: Name of the file where blockchain data is saved. Defaults to the standard blockchain file name.
+        :param wallet_filename: Name of the file where blockchain data is saved. Defaults to the standard blockchain file name.
         """
         super().__init__(is_bootstrap=False, port_manager=port_manager)
         self.public_key = public_key
         self.private_key = secret_key
-        self.filename = FilesSettings.BLOCKCHAIN_FILE_NAME if filename is None else filename
+        self.wallet_filename = FilesSettings.BLOCKCHAIN_FILE_NAME if wallet_filename is None else wallet_filename
         self.wallet = wallet if wallet else self.load_wallet()
 
     def __del__(self):
@@ -104,9 +104,9 @@ class User(Bootstrap):
         :return: None
         """
         try:
-            with open(self.filename, "w") as f:
+            with open(self.wallet_filename, "w") as f:
                 json.dump(self.wallet.to_dict(), f, indent=4)
-            logger.info(f"wallet saved to {self.filename}")
+            logger.info(f"wallet saved to {self.wallet_filename}")
         except Exception as e:
             logger.error(f"Error saving wallet: {e}")
 
@@ -115,18 +115,18 @@ class User(Bootstrap):
         Loads the wallet from a file if it exists.
         :return: the wallet if exists, else initialized wallet
         """
-        if os.path.exists(self.filename):
+        if os.path.exists(self.wallet_filename):
             try:
-                with open(self.filename, "r") as f:
+                with open(self.wallet_filename, "r") as f:
                     blockchain_data = json.load(f)
                     wallet = LightBlockchain.from_dict(blockchain_data)
-                logger.info(f"core loaded from {self.filename}")
+                logger.info(f"core loaded from {self.wallet_filename}")
                 return wallet
             except Exception as e:
                 logger.error(f"Error loading blockchain: {e}")
                 return LightBlockchain(self.public_key)
 
-        logger.warning(f"No blockchain file found at {self.filename}, initializing new blockchain.")
+        logger.warning(f"No blockchain file found at {self.wallet_filename}, initializing new blockchain.")
         return LightBlockchain(self.public_key)
 
     def request_update_blockchain(self):
@@ -156,13 +156,13 @@ def assertion_check():
         pk,
         sk,
         wallet=create_sample_light_blockchain(pk, sk),
-        filename="../data/sample_wallet1.json")
+        wallet_filename="../data/sample_wallet1.json")
     user1.save_wallet()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    user2 = User(pk, sk, filename="../data/sample_wallet1.json")
+    user2 = User(pk, sk, wallet_filename="../data/sample_wallet1.json")
     user2.load_wallet()
-    user2.filename = "../data/sample_wallet2.json"
+    user2.wallet_filename = "../data/sample_wallet2.json"
     user2.save_wallet()
 
     # Load files and verify they are identical
