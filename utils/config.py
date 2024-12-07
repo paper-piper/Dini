@@ -1,3 +1,5 @@
+import hashlib
+
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
@@ -18,7 +20,7 @@ class BlockSettings:
 
 
 class BlockChainSettings:
-    FIRST_HASH = b"0"
+    FIRST_HASH = hashlib.sha256('0'.encode()).hexdigest().encode()
 
 
 class KeysSettings:
