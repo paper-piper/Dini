@@ -6,20 +6,27 @@ def get_sk_pk_pair():
     ps = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     return ps, ps.public_key()
 
+
 class BlockSettings:
     MAX_TRANSACTIONS = 1024
-    LORD_SK, LORD_PK = get_sk_pk_pair()
-    BONUS_SK, BONUS_PK = get_sk_pk_pair()
-    TIPPING_SK, TIPPING_PK = get_sk_pk_pair()
     BONUS_AMOUNT = 100
     PROCESSES_NUMBER = 10
+
+
+class KeysSettings:
+    LORD_SK, LORD_PK = "lord_sk", "lord_pk"
+    BONUS_SK, BONUS_PK = "bonus_sk", "bonus_pk"
+    TIPPING_SK, TIPPING_PK = "tipping_sk", "tipping_pk"
 
 
 class TransactionSettings:
     MAX_AMOUNT = 10 ** 6
 
 
-class File:
+class FilesSettings:
+    LOGS_FOLDER_NAME = "logs"
+    DATA_FOLDER_NAME = "data"
+    KEYS_FILENAME = "keys.json"
     BLOCKCHAIN_FILE_NAME = "core.txt"
 
 
