@@ -105,7 +105,8 @@ class User(Bootstrap):
         """
         try:
             with open(self.wallet_filename, "w") as f:
-                json.dump(self.wallet.to_dict(), f, indent=4)
+                dictionary_wallet = self.wallet.to_dict()
+                json.dump(dictionary_wallet, f, indent=4)
             logger.info(f"wallet saved to {self.wallet_filename}")
         except Exception as e:
             logger.error(f"Error saving wallet: {e}")
