@@ -2,7 +2,7 @@ import os
 
 from communication.node import Node
 import json
-from utils.config import BootSettings, MsgTypes, MsgSubTypes
+from utils.config import BootSettings, MsgTypes, MsgSubTypes, FilesSettings
 from utils.logging_utils import setup_logger
 logger = setup_logger()
 
@@ -109,13 +109,14 @@ class Bootstrap(Node):
 
 
 def _load_config():
+    bootstrap_config_filepath = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, FilesSettings.BOOTSTRAP_CONFIG_FILENAME)
     """Loads the configuration file, initializing it if it doesn't exist or is empty."""
-    if not os.path.exists(BootSettings.CONFIG_PATH) or os.path.getsize(BootSettings.CONFIG_PATH) == 0:
+    if not os.path.exists(bootstrap_config_filepath) or os.path.getsize(bootstrap_config_filepath) == 0:
         # File does not exist or is empty, initialize with an empty list
         return {"bootstrap_addresses": []}
 
     try:
-        with open(BootSettings.CONFIG_PATH, 'r') as config_file:
+        with open(bootstrap_config_filepath, 'r') as config_file:
             return json.load(config_file)
     except json.JSONDecodeError as e:
         logger.error(f"Config file is corrupted. Reinitializing it. {e}")
@@ -126,9 +127,10 @@ def _load_config():
 
 
 def _save_config(config):
+    bootstrap_config_filepath = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, FilesSettings.BOOTSTRAP_CONFIG_FILENAME)
     """Saves the updated configuration to the config file."""
     try:
-        with open(BootSettings.CONFIG_PATH, 'w') as config_file:
+        with open(bootstrap_config_filepath, 'w') as config_file:
             json.dump(config, config_file, indent=4)
     except Exception as e:
         logger.error(f"An error occurred while saving the config: {e}")

@@ -34,6 +34,7 @@ class FilesSettings:
     LOGS_FOLDER_NAME = "logs"
     DATA_FOLDER_NAME = "data"
     DATA_ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", DATA_FOLDER_NAME)
+    BOOTSTRAP_CONFIG_FILENAME = "bootstrap_config.json"
     KEYS_FILENAME = "keys.json"
     WALLET_FILE_NAME = "wallet.json"
     BLOCKCHAIN_FILE_NAME = "core.json"
@@ -72,13 +73,12 @@ class MinerSettings:
 
 
 class BootSettings:
-    CONFIG_PATH = r"bootstrap_config.json"
     ADDRESSES_LIST = "bootstrap_addresses"
     BOOTSTRAP_SERVERS = 3
 
 
 class LoggingSettings:
-    REWRITE = True
+    REWRITE = False
 
 
 class PortSettings:

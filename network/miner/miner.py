@@ -28,7 +28,9 @@ class Miner(User):
             mempool=None,
             wallet=None,
             wallet_filename=None,
-            port_manager=None
+            port_manager=None,
+            ip=None,
+            port=None
     ):
         """
         Initialize a miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
@@ -41,7 +43,9 @@ class Miner(User):
             secret_key,
             wallet=wallet,
             wallet_filename=wallet_filename,
-            port_manager=port_manager
+            port_manager=port_manager,
+            ip=ip,
+            port=port
         )
         self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
 

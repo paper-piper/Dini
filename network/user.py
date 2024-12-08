@@ -14,14 +14,14 @@ class User(Bootstrap):
     """
     Manages user operations including blockchain updating, file saving, and broadcasting transactions.
     """
-    def __init__(self, public_key, secret_key, wallet=None, wallet_filename=None, port_manager=None):
+    def __init__(self, public_key, secret_key, wallet=None, wallet_filename=None, port_manager=None, ip=None, port=None):
         """
         :param public_key: User's public key
         :param secret_key: User's secret key
         :param wallet: core object, or None to load from file.
         :param wallet_filename: Name of the file where wallet data is saved.
         """
-        super().__init__(is_bootstrap=False, port_manager=port_manager)
+        super().__init__(is_bootstrap=False, port_manager=port_manager, ip=ip, port=port)
         self.public_key = public_key
         self.private_key = secret_key
         self.wallet_filename = FilesSettings.WALLET_FILE_NAME if wallet_filename is None else wallet_filename
@@ -77,7 +77,7 @@ class User(Bootstrap):
         """
         self.wallet.filter_and_add_block(block)
         self.save_wallet()
-        logger.info("Block added to wallet and saved")
+        logger.info(f"Block added to wallet and saved. block: {block}")
 
     def process_blockchain_data(self, blockchain):
         """
@@ -87,9 +87,7 @@ class User(Bootstrap):
         relevant_blocks = blockchain.get_blocks_after(self.wallet.latest_hash)
         for block in relevant_blocks:
             self.process_block_data(block)
-
-        logger.info("Blockchain added to wallet and saved")
-
+        logger.info("Blockchain added to wallet and saved.")
 
     def serve_blockchain_request(self, latest_hash):
         """
