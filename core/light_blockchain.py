@@ -70,7 +70,7 @@ class LightBlockchain:
             ).decode(),
             "balance": self.balance,
             "transactions": [transaction.to_dict() for transaction in self.transactions],
-            "latest_hash": self.latest_hash.hex() if self.latest_hash else None
+            "latest_hash": self.latest_hash if self.latest_hash else None
         }
 
     @classmethod
