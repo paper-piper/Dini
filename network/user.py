@@ -26,6 +26,12 @@ class User(Bootstrap):
         self.private_key = secret_key
         self.wallet_filename = FilesSettings.WALLET_FILE_NAME if wallet_filename is None else wallet_filename
         self.wallet = wallet if wallet else self.load_wallet()
+        # try and get updates for wallet (in case of missing out)
+        self.send_distributed_message(
+            MsgTypes.REQUEST_OBJECT,
+            MsgSubTypes.BLOCKCHAIN,
+            self.wallet.latest_hash
+        )
 
     def __del__(self):
         if self.port_manager:
