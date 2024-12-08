@@ -1,4 +1,5 @@
 import hashlib
+import os
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -32,7 +33,9 @@ class KeysSettings:
 class FilesSettings:
     LOGS_FOLDER_NAME = "logs"
     DATA_FOLDER_NAME = "data"
+    DATA_ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", DATA_FOLDER_NAME)
     KEYS_FILENAME = "keys.json"
+    WALLET_FILE_NAME = "wallet.json"
     BLOCKCHAIN_FILE_NAME = "core.txt"
 
 
