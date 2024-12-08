@@ -23,7 +23,7 @@ class Miner(User):
             self,
             public_key,
             secret_key,
-            blockchain_filename = None,
+            blockchain_filename=None,
             blockchain=None,
             mempool=None,
             wallet=None,

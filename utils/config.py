@@ -20,7 +20,7 @@ class BlockSettings:
 
 
 class BlockChainSettings:
-    FIRST_HASH = hashlib.sha256('0'.encode()).hexdigest().encode()
+    FIRST_HASH = hashlib.sha256('0'.encode()).hexdigest()
 
 
 class KeysSettings:
