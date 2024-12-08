@@ -54,7 +54,7 @@ def setup_logger(name=None, root_directory=None, level=logging.DEBUG):
         file_handler.setLevel(level)
 
         # Create a formatter and attach it to the handler
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(lineno)d - %(message)s')
         file_handler.setFormatter(formatter)
 
         # Add the file handler to the logger
