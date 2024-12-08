@@ -76,18 +76,19 @@ class Miner(User):
         Loads the blockchain from a file if it exists.
         :return: The blockchain if exists, else initialized blockchain
         """
-        if os.path.exists(self.blockchain_filename):
+        blockchain_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, self.blockchain_filename)
+        if os.path.exists(blockchain_path):
             try:
-                with open(self.blockchain_filename, "r") as f:
+                with open(blockchain_path, "r") as f:
                     blockchain_data = json.load(f)
                     blockchain = Blockchain.from_dict(blockchain_data)
-                logger.info(f"core loaded from {self.blockchain_filename}")
+                logger.info(f"core loaded from {blockchain_path}")
                 return blockchain
             except Exception as e:
                 logger.error(f"Error loading blockchain: {e}")
                 return False
 
-        logger.info(f"No blockchain file found at {self.blockchain_filename}, initializing new blockchain.")
+        logger.info(f"No blockchain file found at {blockchain_path}, initializing new blockchain.")
         return Blockchain()
 
     def save_blockchain(self):
@@ -96,10 +97,11 @@ class Miner(User):
         :return: None
         """
         try:
-            with open(self.blockchain_filename, "w") as f:
+            blockchain_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, self.blockchain_filename)
+            with open(blockchain_path, "w") as f:
                 blockchain_dict = self.blockchain.to_dict()
                 json.dump(blockchain_dict, f, indent=4)
-            logger.info(f"core saved to {self.blockchain_filename}")
+            logger.info(f"core saved to {blockchain_path}")
         except Exception as e:
             logger.error(f"Error saving blockchain: {e}")
 
@@ -180,13 +182,15 @@ class Miner(User):
 
 def assert_file_saving():
     pk, sk = get_sk_pk_pair()
-    miner1 = Miner(pk, sk, blockchain_filename="../../data/sample_blockchain_1.json",
+    first_blockchain = "sample_blockchain_1.json"
+    second_blockchain = "sample_blockchain_2.json"
+    miner1 = Miner(pk, sk, blockchain_filename=first_blockchain,
                    blockchain=create_sample_blockchain())
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    miner2 = Miner(pk, sk, blockchain_filename="../../data/sample_blockchain_1.json")
+    miner2 = Miner(pk, sk, blockchain_filename=first_blockchain)
     miner2.load_blockchain()
-    miner2.blockchain_filename = "../../data/sample_blockchain_2.json"
+    miner2.blockchain_filename = second_blockchain
     miner2.save_blockchain()
 
     # Load files and verify they are identical
@@ -211,4 +215,4 @@ def assertion_checks():
 
 
 if __name__ == "__main__":
-    assertion_checks()
+    assert_file_saving()
