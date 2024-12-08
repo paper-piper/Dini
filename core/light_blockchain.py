@@ -78,7 +78,7 @@ class LightBlockchain:
         owner_pk = serialization.load_pem_public_key(data["owner_pk"].encode())
         balance = data["balance"]
         transactions = [Transaction.from_dict(transaction_dict) for transaction_dict in data["transactions"]]
-        latest_hash = bytes.fromhex(data["latest_hash"]) if data["latest_hash"] else None
+        latest_hash = data["latest_hash"] if data["latest_hash"] else None
         light_blockchain = cls(owner_pk, balance, transactions, latest_hash)
         return light_blockchain
 
