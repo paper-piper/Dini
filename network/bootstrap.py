@@ -81,9 +81,6 @@ class Bootstrap(Node):
         else:
             logger.warning(f"Bootstrap address {self.address} not found.")
 
-    def serve_blockchain_request(self, latest_hash):
-        raise NotImplementedError("Bootstrap does not handle block requests")
-
     def serve_peer_request(self):
         # Implementation for Bootstrap
         peer_addresses = self.peer_connections.keys()
@@ -99,13 +96,16 @@ class Bootstrap(Node):
         Handles sending block information.
         :param params: Parameters for block sending.
         """
-        raise NotImplementedError("Bootstrap does not handle blocks")
+        logger.info("Bootstrap does not handle blocks")
 
     def process_blockchain_data(self, params):
-        raise NotImplementedError("Bootstrap does not handle block sending")
+        logger.info("Bootstrap does not handle block sending")
 
     def process_transaction_data(self, params):
-        raise NotImplementedError("Bootstrap does not handle transactions")
+        logger.info("Bootstrap does not handle transactions")
+
+    def serve_blockchain_request(self, latest_hash):
+        logger.info("Bootstrap does not handle block requests")
 
 
 def _load_config():

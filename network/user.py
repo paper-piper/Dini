@@ -86,8 +86,7 @@ class User(Bootstrap):
         """
         Handles requests from peers to update the blockchain.
         """
-        logger.error("User does not handle blockchain updates")
-        raise NotImplementedError("user does not handle blockchain updates")
+        logger.info("User does not handle blockchain updates")
 
     def process_transaction_data(self, params):
         """
@@ -95,8 +94,7 @@ class User(Bootstrap):
 
         :param params: Parameters associated with the transaction send.
         """
-        logger.error("User does not handle transactions")
-        raise NotImplementedError("user does not handle transactions")
+        logger.info("User does not handle transactions")
 
     def save_wallet(self):
         """
