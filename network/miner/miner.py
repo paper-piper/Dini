@@ -110,6 +110,7 @@ class Miner(User):
         Handles requests from peers to update the blockchain.
         """
         blockchain = self.blockchain.create_sub_blockchain(latest_hash)
+        logger.info(f"received blockchain request, sending blockchain: {blockchain}")
         return blockchain
 
     def process_transaction_data(self, params):

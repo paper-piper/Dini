@@ -88,6 +88,9 @@ class User(Bootstrap):
         for block in relevant_blocks:
             self.process_block_data(block)
 
+        logger.info("Blockchain added to wallet and saved")
+
+
     def serve_blockchain_request(self, latest_hash):
         """
         Handles requests from peers to update the blockchain.

@@ -36,7 +36,7 @@ class FilesSettings:
     DATA_ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", DATA_FOLDER_NAME)
     KEYS_FILENAME = "keys.json"
     WALLET_FILE_NAME = "wallet.json"
-    BLOCKCHAIN_FILE_NAME = "core.txt"
+    BLOCKCHAIN_FILE_NAME = "core.json"
 
 
 class MsgStructure:
@@ -85,3 +85,4 @@ class PortSettings:
     BOOTSTRAP_RANGE = (5000, 5500)
     USER_RANGE = (5501, 5800)
     MINER_RANGE = (5801, 6000)
+    GENERAL_RANGE = (5000, 6000)
