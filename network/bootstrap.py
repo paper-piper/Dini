@@ -84,10 +84,12 @@ class Bootstrap(Node):
     def serve_peer_request(self):
         # Implementation for Bootstrap
         peer_addresses = self.peer_connections.keys()
+        logger.info(f"Received peer request, returned the peers addresses: {peer_addresses}")
         return peer_addresses
 
     def process_peer_data(self, peer_addresses):
         # Implementation for Bootstrap
+        logger.info(f"Received peer data: {peer_addresses}")
         for address in peer_addresses:
             self.connect_to_node(address)
 
