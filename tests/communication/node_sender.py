@@ -1,4 +1,4 @@
-from communication.node import Node
+from core_communication.node import Node
 from threading import Event
 from utils.logging_utils import setup_logger
 from utils.config import MsgTypes, MsgSubTypes

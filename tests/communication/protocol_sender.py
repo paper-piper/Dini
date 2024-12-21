@@ -1,5 +1,5 @@
 import socket
-from communication.protocol import send_message
+from core_communication.protocol import send_message
 from core.transaction import create_sample_transaction
 from utils.config import MsgTypes, MsgSubTypes
 from utils.logging_utils import setup_logger

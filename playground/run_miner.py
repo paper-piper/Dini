@@ -4,7 +4,7 @@ from core.blockchain import create_sample_blockchain
 from threading import Event
 
 
-def run_miner(port_manager):
+def run_miner(port_manager=None):
     # Generate key pair for the miner
     sk, pk = get_sk_pk_pair()
     miner = Miner(pk, sk, port_manager=port_manager, blockchain=create_sample_blockchain())
@@ -17,3 +17,7 @@ def run_miner(port_manager):
         print("program shutting down...")
 
     other = miner
+
+
+if __name__ == "__main__":
+    run_miner()

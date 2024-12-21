@@ -1,5 +1,5 @@
 import socket
-from communication.protocol import receive_message
+from core_communication.protocol import receive_message
 from utils.logging_utils import setup_logger
 
 # Setup logger for receiver file

@@ -1,6 +1,6 @@
 from utils.config import PortSettings
 from network.bootstrap import Bootstrap
-from communication.port_manager import PortManager
+from core_communication.port_manager import PortManager
 from threading import Event
 
 

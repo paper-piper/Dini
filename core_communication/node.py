@@ -3,7 +3,7 @@ from queue import Queue
 from abc import abstractmethod, ABC
 from utils.config import MsgTypes, MsgSubTypes
 from utils.logging_utils import setup_logger
-from communication.protocol import receive_message, send_message
+from core_communication.protocol import receive_message, send_message
 import socket
 
 # Setup logger for peer file
