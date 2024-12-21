@@ -17,15 +17,15 @@ class Node1(Node):
         logger.info("Node1 received a block request.")
         return {"block_data": "Sample block from Node1"}
 
-    def serve_peer_request(self):
+    def serve_node_request(self):
         logger.info("Node1 received a peer request.")
-        return {"peer_list": list(self.peer_connections.keys())}
+        return {"peer_list": list(self.node_connections.keys())}
 
     def process_blockchain_data(self, params):
         logger.info(f"Node1 received a block: {params}")
         return False  # Indicate the block has not been seen before.
 
-    def process_peer_data(self, params):
+    def process_node_data(self, params):
         logger.info(f"Node1 received a peer update: {params}")
 
     def process_transaction_data(self, params):

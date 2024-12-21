@@ -20,15 +20,15 @@ class Node2(Node):
         logger.info("Node2 received a block request.")
         return {"block_data": "Sample block from Node2"}
 
-    def serve_peer_request(self):
+    def serve_node_request(self):
         logger.info("Node2 received a peer request.")
-        return {"peer_list": list(self.peer_connections.keys())}
+        return {"peer_list": list(self.node_connections.keys())}
 
     def process_blockchain_data(self, params):
         logger.info(f"Node2 received a block: {params}")
         return False  # Indicate the block has not been seen before.
 
-    def process_peer_data(self, params):
+    def process_node_data(self, params):
         logger.info(f"Node2 received a peer update: {params}")
 
     def process_transaction_data(self, params):
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # Connect to Node1 (ensure Node1 is running)
     try:
         node2.connect_to_node((NODE1_IP, NODE1_PORT))
-        logger.info(f"Node2 tried to connect to node1, got the address: {node2.peer_connections.keys()}")
+        logger.info(f"Node2 tried to connect to node1, got the address: {node2.node_connections.keys()}")
 
         # Test communication: Send a message to Node1
         node2.send_distributed_message(

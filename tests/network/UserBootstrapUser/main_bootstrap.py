@@ -16,7 +16,7 @@ if __name__ == "__main__":
         port=9090,
         ip=bootstrap_ip
     )
-    logger.info(f"tried to connect to peers, got the addresses:  {bootstrap2.peer_connections}")
+    logger.info(f"tried to connect to peers, got the addresses:  {bootstrap2.node_connections}")
     # Keep the script running
     stop_event = Event()
 

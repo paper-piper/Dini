@@ -17,7 +17,7 @@ if __name__ == "__main__":
     bootstrap1 = Bootstrap(
         is_bootstrap=True,
         port=8080,
-        peer_connections=initial_peers,
+        node_connections=initial_peers,
         ip=bootstrap_ip,
     )
     # Keep the script running

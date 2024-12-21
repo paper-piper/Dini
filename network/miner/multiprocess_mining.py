@@ -137,4 +137,3 @@ def test_processes_speeds(start, end, difficulty=5):
 if __name__ == "__main__":
     test_processes_speeds(1, 20)
 
-

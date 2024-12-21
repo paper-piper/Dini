@@ -55,7 +55,7 @@ class MsgTypes:
 
 class MsgSubTypes:
     TEST = "test"
-    PEER_ADDRESS = "peer"
+    NODE_ADDRESS = "node"
     BLOCK = "blok"
     TRANSACTION = "trsn"
     BLOCKCHAIN = "bkcn"

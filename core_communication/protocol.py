@@ -83,7 +83,7 @@ def decrypt_msg_params(msg_subtype, params_bytes):
         case MsgSubTypes.BLOCKCHAIN:
             main_object = Blockchain.from_dict(main_object_dict)
 
-        case MsgSubTypes.PEER_ADDRESS:
+        case MsgSubTypes.NODE_ADDRESS:
             # address is just a tuple, no need to convert
             main_object = main_object_dict
 

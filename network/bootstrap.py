@@ -2,19 +2,19 @@ import os
 
 from core_communication.node import Node
 import json
-from utils.config import BootSettings, MsgTypes, MsgSubTypes, FilesSettings
+from utils.config import MsgTypes, MsgSubTypes, FilesSettings
 from utils.logging_utils import setup_logger
 logger = setup_logger()
 
 
 class Bootstrap(Node):
 
-    def __init__(self, is_bootstrap=True, port=8000, peer_connections=None, ip=None, port_manager=None):
-        super().__init__(port, peer_connections=peer_connections, ip=ip, port_manager=port_manager)
+    def __init__(self, is_bootstrap=True, port=8000, node_connections=None, ip=None, port_manager=None):
+        super().__init__(port, node_connections=node_connections, ip=ip, port_manager=port_manager)
         if is_bootstrap:
             self.add_bootstrap_address()
 
-        if not self.peer_connections:
+        if not self.node_connections:
             self.discover_peers()
 
     def __del__(self):
@@ -29,7 +29,7 @@ class Bootstrap(Node):
             self.connect_to_node(address)
 
         # after connecting to all available bootstrap addresses, send a distributed request peer msg
-        self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.PEER_ADDRESS)
+        self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.NODE_ADDRESS)
 
     def get_bootstrap_addresses(self):
         """
@@ -81,13 +81,13 @@ class Bootstrap(Node):
         else:
             logger.warning(f"Bootstrap address {self.address} not found.")
 
-    def serve_peer_request(self):
+    def serve_node_request(self):
         # Implementation for Bootstrap
-        peer_addresses = self.peer_connections.keys()
+        peer_addresses = self.node_connections.keys()
         logger.info(f"Received peer request, returned the peers addresses: {peer_addresses}")
         return peer_addresses
 
-    def process_peer_data(self, peer_addresses):
+    def process_node_data(self, peer_addresses):
         # Implementation for Bootstrap
         logger.info(f"Received peer data: {peer_addresses}")
         for address in peer_addresses:

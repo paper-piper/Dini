@@ -14,7 +14,16 @@ class User(Bootstrap):
     """
     Manages user operations including blockchain updating, file saving, and broadcasting transactions.
     """
-    def __init__(self, public_key, secret_key, wallet=None, wallet_filename=None, port_manager=None, ip=None, port=None):
+    def __init__(
+            self,
+            public_key,
+            secret_key,
+            wallet=None,
+            wallet_filename=None,
+            port_manager=None,
+            ip=None,
+            port=None
+    ):
         """
         :param public_key: User's public key
         :param secret_key: User's secret key

@@ -8,7 +8,7 @@ def run_bootstraps(servers_num, initial_peers=None):
     port_manager = PortManager(*PortSettings.BOOTSTRAP_RANGE)
     bootstraps = []
     for i in range(servers_num):
-        bootstrap_server = Bootstrap(peer_connections=initial_peers, port_manager=port_manager)
+        bootstrap_server = Bootstrap(node_connections=initial_peers, port_manager=port_manager)
         # add the class to the list to avoid deletion.
         bootstraps.append(bootstrap_server)
 
