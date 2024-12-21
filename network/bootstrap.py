@@ -23,7 +23,7 @@ class Bootstrap(Node):
 
     def discover_peers(self):
         bootstrap_addresses = self.get_bootstrap_addresses()
-        logger.info(f"tried to connect to bootstrap addresses, got the address: {bootstrap_addresses}")
+        logger.info(f"Bootstrap ({self.address}): tried to connect to bootstrap addresses, got the address: {bootstrap_addresses}")
         for address in bootstrap_addresses:
             # convert the list to a tuple
             self.connect_to_node(address)
@@ -48,7 +48,7 @@ class Bootstrap(Node):
             return [tuple(address) for address in addresses]
 
         except Exception as e:
-            logger.error(f"An error occurred while retrieving bootstrap addresses: {e}")
+            logger.error(f"Bootstrap ({self.address}): An error occurred while retrieving bootstrap addresses: {e}")
             return []
 
     def add_bootstrap_address(self):
@@ -61,10 +61,10 @@ class Bootstrap(Node):
         # Add the address if it's not already in the list
         if address_as_list not in config["bootstrap_addresses"]:
             config["bootstrap_addresses"].append(address_as_list)
-            logger.info(f"Added new bootstrap address: {self.address}")
+            logger.info(f"Bootstrap ({self.address}): Added new bootstrap address: {self.address}")
             _save_config(config)
         else:
-            logger.info(f"Bootstrap address {self.address} already exists.")
+            logger.info(f"Bootstrap ({self.address}): Bootstrap address {self.address} already exists.")
 
     def delete_bootstrap_address(self):
         """Deletes the bootstrap server address from the config file."""
@@ -76,20 +76,20 @@ class Bootstrap(Node):
         # Remove the address if it exists in the list
         if address_as_list in config["bootstrap_addresses"]:
             config["bootstrap_addresses"].remove(address_as_list)
-            logger.info(f"Deleted bootstrap address: {self.address}")
+            logger.info(f"Bootstrap ({self.address}): Deleted bootstrap address: {self.address}")
             _save_config(config)
         else:
-            logger.warning(f"Bootstrap address {self.address} not found.")
+            logger.warning(f"Bootstrap ({self.address}): Bootstrap address {self.address} not found.")
 
     def serve_node_request(self):
         # Implementation for Bootstrap
         peer_addresses = self.node_connections.keys()
-        logger.info(f"Received peer request, returned the peers addresses: {peer_addresses}")
+        logger.info(f"Bootstrap ({self.address}): Received peer request, returned the peers addresses: {peer_addresses}")
         return peer_addresses
 
     def process_node_data(self, peer_addresses):
         # Implementation for Bootstrap
-        logger.info(f"Received peer data: {peer_addresses}")
+        logger.info(f"Bootstrap ({self.address}): Received peer data: {peer_addresses}")
         for address in peer_addresses:
             self.connect_to_node(address)
 
@@ -98,16 +98,16 @@ class Bootstrap(Node):
         Handles sending block information.
         :param params: Parameters for block sending.
         """
-        logger.info("Bootstrap does not handle blocks")
+        logger.debug("Bootstrap ({self.address}): Bootstrap does not handle blocks")
 
     def process_blockchain_data(self, params):
-        logger.info("Bootstrap does not handle block sending")
+        logger.debug("Bootstrap ({self.address}): Bootstrap does not handle block sending")
 
     def process_transaction_data(self, params):
-        logger.info("Bootstrap does not handle transactions")
+        logger.debug("Bootstrap ({self.address}): Bootstrap does not handle transactions")
 
     def serve_blockchain_request(self, latest_hash):
-        logger.info("Bootstrap does not handle block requests")
+        logger.debug("Bootstrap ({self.address}): Bootstrap does not handle block requests")
 
 
 def _load_config():

@@ -56,14 +56,14 @@ class User(Bootstrap):
         transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(lord_sk)
         self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"bought {amount} Dini's")
+        logger.info(f"User ({self.address}): bought {amount} Dini's")
 
     def sell_dinis(self, amount):
         lord_pk = load_key(KeysSettings.LORD_PK)
         transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
         self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"Sold {amount} Dini's")
+        logger.info(f"User ({self.address}):  {amount} Dini's")
 
     def make_transaction(self, address, amount, tip=0):
         """
@@ -75,7 +75,8 @@ class User(Bootstrap):
         transaction = Transaction(self.public_key, address, amount, tip)
         transaction.sign_transaction(self.private_key)
         self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
+        logger.info(f"User ({self.address}): "
+                    f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
 
     def process_block_data(self, block):
         """
@@ -86,7 +87,7 @@ class User(Bootstrap):
         """
         self.wallet.filter_and_add_block(block)
         self.save_wallet()
-        logger.info(f"Block added to wallet and saved. block: {block}")
+        logger.info(f"User ({self.address}):  Block added to wallet and saved. block: {block}")
 
     def process_blockchain_data(self, blockchain):
         """
@@ -96,13 +97,13 @@ class User(Bootstrap):
         relevant_blocks = blockchain.get_blocks_after(self.wallet.latest_hash)
         for block in relevant_blocks:
             self.process_block_data(block)
-        logger.info("Blockchain added to wallet and saved.")
+        logger.info(f"User ({self.address}): Blockchain added to wallet and saved.")
 
     def serve_blockchain_request(self, latest_hash):
         """
         Handles requests from peers to update the blockchain.
         """
-        logger.info("User does not handle blockchain updates")
+        logger.debug(f"User ({self.address}): User does not handle blockchain updates")
 
     def process_transaction_data(self, params):
         """
@@ -110,7 +111,7 @@ class User(Bootstrap):
 
         :param params: Parameters associated with the transaction send.
         """
-        logger.info("User does not handle transactions")
+        logger.debug(f"User ({self.address}): User does not handle transactions")
 
     def save_wallet(self):
         """
@@ -122,9 +123,9 @@ class User(Bootstrap):
             with open(wallet_path, "w") as f:
                 dictionary_wallet = self.wallet.to_dict()
                 json.dump(dictionary_wallet, f, indent=4)
-            logger.info(f"wallet saved to {wallet_path}")
+            logger.info(f"User ({self.address}): wallet saved to {wallet_path}")
         except Exception as e:
-            logger.error(f"Error saving wallet: {e}")
+            logger.error(f"User ({self.address}): Error saving wallet: {e}")
 
     def load_wallet(self):
         """
@@ -137,13 +138,13 @@ class User(Bootstrap):
                 with open(wallet_path, "r") as f:
                     blockchain_data = json.load(f)
                     wallet = LightBlockchain.from_dict(blockchain_data)
-                logger.info(f"core loaded from {wallet_path}")
+                logger.info(f"User ({self.address}): core loaded from {wallet_path}")
                 return wallet
             except Exception as e:
-                logger.error(f"Error loading blockchain: {e}")
+                logger.error(f"User ({self.address}): Error loading blockchain: {e}")
                 return LightBlockchain(self.public_key)
 
-        logger.warning(f"No blockchain file found at {self.wallet_filename}, initializing new blockchain.")
+        logger.warning(f"User ({self.address}): No blockchain file found at {self.wallet_filename}, initializing new blockchain.")
         return LightBlockchain(self.public_key)
 
     def request_update_blockchain(self):
@@ -156,7 +157,7 @@ class User(Bootstrap):
             MsgSubTypes.BLOCKCHAIN,
             self.wallet.latest_hash
         )
-        logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
+        logger.info(f"User ({self.address}): Requesting updates with latest hash: {self.wallet.latest_hash}")
 
 
 def assertion_check():
