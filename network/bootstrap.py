@@ -30,6 +30,7 @@ class Bootstrap(Node):
 
         # after connecting to all available bootstrap addresses, send a distributed request peer msg
         self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.NODE_ADDRESS)
+        logger.info(f"Bootstrap ({self.address}): Send a distributed request for nodes")
 
     def get_bootstrap_addresses(self):
         """
@@ -83,7 +84,7 @@ class Bootstrap(Node):
 
     def serve_node_request(self):
         # Implementation for Bootstrap
-        peer_addresses = self.node_connections.keys()
+        peer_addresses = list(self.node_connections.keys())
         logger.info(f"Bootstrap ({self.address}): Received peer request, returned the peers addresses: {peer_addresses}")
         return peer_addresses
 

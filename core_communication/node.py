@@ -25,7 +25,12 @@ class Node(ABC):
         :param node_connections: Dictionary of existing node connections.
         :return: None
         """
+        self.connection_readers = 0
+        self.writer_active = False
+        self.connection_lock = threading.Lock()
+        self.condition = threading.Condition(self.connection_lock)
         self.node_connections = {} if not node_connections else node_connections
+
         self.ip = socket.gethostbyname(socket.gethostname()) if not ip else ip
         self.port_manager = port_manager
         if port_manager:
@@ -49,6 +54,29 @@ class Node(ABC):
     def get_connected_nodes(self):
         return self.node_connections.keys()
 
+    def acquire_connections_read(self):
+        with self.condition:
+            while self.writer_active:
+                self.condition.wait()
+            self.connection_readers += 1
+
+    def release_connections_read(self):
+        with self.condition:
+            self.connection_readers -= 1
+            if self.connection_readers == 0:
+                self.condition.notify_all()
+
+    def acquire_connections_write(self):
+        with self.condition:
+            while self.writer_active or self.connection_readers > 0:
+                self.condition.wait()
+            self.writer_active = True
+
+    def release_connections_write(self):
+        with self.condition:
+            self.writer_active = False
+            self.condition.notify_all()
+
     def accept_connections(self):
         """
         Accepts incoming connections from other nodes and adds them to node connections.
@@ -62,7 +90,11 @@ class Node(ABC):
             logger.info(f"Node ({self.address}) listening for connections")
             while True:
                 node_socket, node_address = self.accept_socket.accept()
+
+                self.acquire_connections_write()
                 self.node_connections[node_address] = node_socket
+                self.release_connections_write()
+
                 threading.Thread(target=self.receive_messages, args=(node_address, node_socket), daemon=True).start()
                 logger.info(f"Node ({self.address}) accepted connection from {node_address}")
         except Exception as e:
@@ -73,17 +105,26 @@ class Node(ABC):
         Adds a node to the nodes list and establishes a connection to it.
         :param address: the node address
         """
-
-        # Check if the node is already connected
-        if address in self.node_connections.keys():
-            logger.warning(f"Node ({self.address}): node {address} is already connected.")
+        # check if the address is our own address
+        if self.address == address:
             return
 
+        # Check if the node is already connected
+        self.acquire_connections_read()
+        if address in self.node_connections.keys():
+            logger.warning(f"Node ({self.address}): node {address} is already connected.")
+            self.release_connections_read()
+            return
+        self.release_connections_read()
         try:
             # Attempt to connect to the new node
             node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            node_socket.bind(self.address)
             node_socket.connect(address)
+
+            self.acquire_connections_read()
             self.node_connections[address] = node_socket
+            self.release_connections_read()
 
             # Start a thread to listen for messages from this node
             threading.Thread(target=self.receive_messages, args=(address, node_socket), daemon=True).start()
@@ -102,6 +143,7 @@ class Node(ABC):
         :return: None
         """
         sent_nodes = []
+        self.acquire_connections_read()
         for node_info, node_socket in self.node_connections.items():
             try:
                 if not excluded_node or node_info is not excluded_node:
@@ -109,9 +151,10 @@ class Node(ABC):
                     sent_nodes.append(node_info)
             except Exception as e:
                 logger.error(f"Node ({self.address}): Failed to send message to {node_info}: {e}")
-
-        logger.info(f"Node ({self.address}): Distributed message: ({msg_type}), ({msg_sub_type}), ({msg_params})"
-                    f" Sent to {sent_nodes if len(sent_nodes) > 0 else 'Nobody'}")
+        if len(sent_nodes) > 0:
+            logger.info(f"Node ({self.address}): Distributed message: ({msg_type}), ({msg_sub_type}), ({msg_params})"
+                        f" Sent to {sent_nodes}")
+        self.release_connections_read()
 
     def send_focused_message(self, address, msg_type, msg_subtype, *msg_params):
         """
@@ -123,11 +166,15 @@ class Node(ABC):
         :param msg_params: Parameters for the message.
         :return: True if successful, False otherwise.
         """
+        self.acquire_connections_read()
         if address not in self.node_connections:
+            self.release_connections_read()
             logger.warning(f"Node ({self.address}): Node at {address} not found.")
             return False
         try:
+            self.acquire_connections_read()
             send_message(self.node_connections[address], msg_type, msg_subtype, *msg_params)
+            self.release_connections_read()
             logger.info(f"Node ({self.address}): Focused message sent to {address}: {msg_type}, {msg_subtype}")
             return True
         except Exception as e:
@@ -156,7 +203,9 @@ class Node(ABC):
             logger.error(f"Node ({self.address}): General error while receiving message: {e}")
         finally:
             node_socket.close()  # Ensure socket is closed
+            self.acquire_connections_write()
             del self.node_connections[node_address]
+            self.release_connections_write()
 
     def process_messages_from_queue(self):
         """

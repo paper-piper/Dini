@@ -12,7 +12,6 @@ if __name__ == "__main__":
 
     # Initialize Bootstrap2 without peer_connections
     bootstrap2 = Bootstrap(
-        is_bootstrap=False,
         port=9090,
         ip=bootstrap_ip
     )
