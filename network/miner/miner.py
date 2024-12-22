@@ -38,6 +38,12 @@ class Miner(User):
         :param blockchain: The core object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.
         """
+        self.mempool = mempool if mempool else Mempool()
+        self.mempool_lock = threading.Lock()
+        self.multi_miner = MultiprocessMining()
+        self.new_block_event = threading.Event()
+        self.currently_mining = threading.Event()
+
         super().__init__(
             public_key,
             secret_key,
@@ -47,19 +53,13 @@ class Miner(User):
             ip=ip,
             port=port
         )
-        self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
 
+        self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
         if blockchain:
             self.blockchain = blockchain
             self.save_blockchain()
         else:
             self.blockchain = self.load_blockchain()
-
-        self.mempool = mempool if mempool else Mempool()
-        self.mempool_lock = threading.Lock()
-        self.multi_miner = MultiprocessMining()
-        self.new_block_event = threading.Event()
-        self.currently_mining = threading.Event()
 
     def __del__(self):
         super().__del__()
@@ -92,7 +92,8 @@ class Miner(User):
                 logger.error(f"Miner ({self.address}): Error loading blockchain: {e}")
                 return False
 
-        logger.info(f"Miner ({self.address}): No blockchain file found at {blockchain_path}, initializing new blockchain.")
+        logger.info(f"Miner ({self.address}): No blockchain file found at path {blockchain_path}, "
+                    f"initializing new blockchain.")
         return Blockchain()
 
     def save_blockchain(self):
@@ -128,15 +129,24 @@ class Miner(User):
 
         logger.info(f"Miner ({self.address}): added transaction {transaction} to mempool")
 
-    def process_blockchain_data(self, params):
-        super().process_blockchain_data(params)
-        # only if new blocks
+    def process_blockchain_data(self, blockchain):
+        super().process_blockchain_data(blockchain)
+
+        # bonus: only if new blocks
         self.new_block_event.set()
+
+        # add blockchain to current blockchain
+        relevant_blocks = blockchain.get_blocks_after(self.blockchain.get_latest_block().hash)
+        valid_blocks = 0
+        for block in relevant_blocks:
+            if self.blockchain.filter_and_add_block(block):
+                valid_blocks += 1
+
+        logger.info(f"({self.address}): received blockchain send and added {valid_blocks} blocks")
 
     def process_block_data(self, block):
         """
         Adds a block to the blockchain and saves the updated chain.
-
         :param block: Block to add.
         :return: None
         """

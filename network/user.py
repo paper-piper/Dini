@@ -1,3 +1,5 @@
+import time
+
 from network.bootstrap import Bootstrap
 import json
 import os
@@ -37,6 +39,7 @@ class User(Bootstrap):
         self.wallet = wallet if wallet else self.load_wallet()
         # try and get updates for wallet (in case of missing out)
 
+        time.sleep(2)
         self.send_distributed_message(
             MsgTypes.REQUEST_OBJECT,
             MsgSubTypes.BLOCKCHAIN,
@@ -99,7 +102,7 @@ class User(Bootstrap):
         relevant_blocks = blockchain.get_blocks_after(self.wallet.latest_hash)
         for block in relevant_blocks:
             self.process_block_data(block)
-        logger.info(f"User ({self.address}): Blockchain added to wallet and saved.")
+        logger.info(f"User ({self.address}): Blockchain send added to wallet and saved.")
 
     def serve_blockchain_request(self, latest_hash):
         """
