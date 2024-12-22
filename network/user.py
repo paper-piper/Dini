@@ -39,13 +39,15 @@ class User(Bootstrap):
         self.wallet = wallet if wallet else self.load_wallet()
         # try and get updates for wallet (in case of missing out)
 
-        time.sleep(2)
+        self.request_blockchain_update()
+        self.save_wallet()
+
+    def request_blockchain_update(self):
         self.send_distributed_message(
             MsgTypes.REQUEST_OBJECT,
             MsgSubTypes.BLOCKCHAIN,
             self.wallet.latest_hash
         )
-        self.save_wallet()
 
     def __del__(self):
         if self.port_manager:

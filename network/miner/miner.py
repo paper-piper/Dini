@@ -142,7 +142,7 @@ class Miner(User):
             if self.blockchain.filter_and_add_block(block):
                 valid_blocks += 1
 
-        logger.info(f"({self.address}): received blockchain send and added {valid_blocks} blocks")
+        logger.info(f"({self.address}): received blockchain ({blockchain.to_dict()}) send and added {valid_blocks} blocks")
 
     def process_block_data(self, block):
         """
