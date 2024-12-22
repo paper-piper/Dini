@@ -56,6 +56,7 @@ class MsgTypes:
 class MsgSubTypes:
     TEST = "test"
     NODE_ADDRESS = "node"
+    NODE_INIT = "init"
     BLOCK = "blok"
     TRANSACTION = "trsn"
     BLOCKCHAIN = "bkcn"

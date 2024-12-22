@@ -87,6 +87,10 @@ def decrypt_msg_params(msg_subtype, params_bytes):
             # address is just a tuple, no need to convert
             main_object = main_object_dict
 
+        case MsgSubTypes.NODE_INIT:
+            # init is also just a tuple, no need to convert
+            main_object = main_object_dict
+
         case MsgSubTypes.TEST:
             # just for testing, no need to convert
             main_object = main_object_dict
