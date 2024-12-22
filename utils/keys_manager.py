@@ -105,6 +105,7 @@ def load_key(key_name):
 
 def create_all_keys():
     generate_and_save_keys(KeysSettings.LORD_SK, KeysSettings.LORD_PK)
+    generate_and_save_keys(KeysSettings.GEN_SK, KeysSettings.GEN_PK)
     generate_and_save_keys(KeysSettings.TIPPING_SK, KeysSettings.TIPPING_PK)
     generate_and_save_keys(KeysSettings.BONUS_SK, KeysSettings.BONUS_PK)
 

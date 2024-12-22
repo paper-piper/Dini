@@ -21,10 +21,12 @@ class BlockSettings:
 
 
 class BlockChainSettings:
-    FIRST_HASH = hashlib.sha256('0'.encode()).hexdigest()
+    FIRST_GEN_ENCODED_STR = '5f6bef989faab6438c2eacd664f0fd3ac7523ab688e6ed68560b0eb152bcf76c|Transaction(Sender: 270..., Recipient: 270..., Amount: 0, Tip: 0)|2|time-zero|0'
+    FIRST_HASH = hashlib.sha256(FIRST_GEN_ENCODED_STR.encode()).hexdigest()
 
 
 class KeysSettings:
+    GEN_SK, GEN_PK = "gen_sk", "gen_pk"
     LORD_SK, LORD_PK = "lord_sk", "lord_pk"
     BONUS_SK, BONUS_PK = "bonus_sk", "bonus_pk"
     TIPPING_SK, TIPPING_PK = "tipping_sk", "tipping_pk"

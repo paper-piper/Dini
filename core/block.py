@@ -88,7 +88,7 @@ class Block:
         """
         # Serialize transactions to strings using repr
         serialized_transactions = ''.join(repr(tx) for tx in self.transactions)
-        data = f"{self.previous_hash}{serialized_transactions}{self.difficulty}{self.timestamp}{self.nonce}"
+        data = f"{self.previous_hash}|{serialized_transactions}|{self.difficulty}|{self.timestamp}|{self.nonce}"
         block_hash = hashlib.sha256(data.encode()).hexdigest()
         return block_hash
 

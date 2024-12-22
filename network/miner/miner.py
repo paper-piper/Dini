@@ -38,11 +38,19 @@ class Miner(User):
         :param blockchain: The core object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.
         """
+        self.address = (ip,port)
         self.mempool = mempool if mempool else Mempool()
         self.mempool_lock = threading.Lock()
         self.multi_miner = MultiprocessMining()
         self.new_block_event = threading.Event()
         self.currently_mining = threading.Event()
+        self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
+        if blockchain:
+            self.blockchain = blockchain
+            self.save_blockchain()
+        else:
+            self.blockchain = Blockchain()
+            #  self.blockchain = self.load_blockchain()
 
         super().__init__(
             public_key,
@@ -53,13 +61,6 @@ class Miner(User):
             ip=ip,
             port=port
         )
-
-        self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
-        if blockchain:
-            self.blockchain = blockchain
-            self.save_blockchain()
-        else:
-            self.blockchain = self.load_blockchain()
 
     def __del__(self):
         super().__del__()
