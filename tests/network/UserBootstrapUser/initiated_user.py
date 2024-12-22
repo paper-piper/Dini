@@ -2,6 +2,7 @@ from network.user import User
 from threading import Event
 from utils.logging_utils import setup_logger
 from core.transaction import get_sk_pk_pair
+from core.light_blockchain import create_sample_light_blockchain
 
 logger = setup_logger()
 
@@ -12,12 +13,14 @@ if __name__ == "__main__":
     user_ip = "127.0.0.1"
 
     sk, pk = get_sk_pk_pair()
+    wallet = create_sample_light_blockchain(pk, sk)
     # Initialize User
     user = User(
         pk,
         sk,
         ip=user_ip,
-        port=9091
+        port=9091,
+        wallet=wallet
     )
     # Keep the script running
     stop_event = Event()
