@@ -1,10 +1,8 @@
 from network.miner.miner import Miner
 from threading import Event
-from utils.logging_utils import setup_logger
 from core.transaction import get_sk_pk_pair
 from core.blockchain import create_sample_blockchain
 
-logger = setup_logger()
 
 if __name__ == "__main__":
 
@@ -23,7 +21,7 @@ if __name__ == "__main__":
     stop_event = Event()
 
     try:
-        logger.info("initiated miner is running. Waiting for communication...")
+        print("initiated miner is running. Waiting for communication...")
         stop_event.wait()
     except KeyboardInterrupt:
-        logger.info("Bootstrap1 shutting down...")
+        print("miner shutting down...")

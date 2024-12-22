@@ -1,9 +1,6 @@
 from network.user import User
 from threading import Event
-from utils.logging_utils import setup_logger
 from core.transaction import get_sk_pk_pair
-
-logger = setup_logger()
 
 
 if __name__ == "__main__":

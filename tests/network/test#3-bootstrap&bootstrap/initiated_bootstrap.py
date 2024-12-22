@@ -1,8 +1,6 @@
 from network.bootstrap import Bootstrap
 from threading import Event
-from utils.logging_utils import setup_logger
 
-logger = setup_logger()
 
 if __name__ == "__main__":
     # Define peer connections for Bootstrap1
@@ -24,7 +22,7 @@ if __name__ == "__main__":
     stop_event = Event()
 
     try:
-        logger.info("Bootstrap1 is running. Waiting for communication...")
+        print("Initiated Bootstrap is running. Waiting for communication...")
         stop_event.wait()
     except KeyboardInterrupt:
-        logger.info("Bootstrap1 shutting down...")
+        print("Bootstrap1 shutting down...")
