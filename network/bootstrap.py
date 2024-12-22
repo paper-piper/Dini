@@ -1,6 +1,6 @@
 import os
 
-from core_communication.node import Node
+from communication.node import Node
 import json
 from utils.config import MsgTypes, MsgSubTypes, FilesSettings
 from utils.logging_utils import setup_logger
