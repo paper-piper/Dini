@@ -15,6 +15,9 @@ if __name__ == "__main__":
         ip=miner_ip,
         port=8001,
     )
+
+    # try and update the blockchain
+    miner.request_blockchain_update()
     # Keep the script running
     stop_event = Event()
 
