@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
         # Test communication: Send a message to Node1
         node2.send_distributed_message(
-            MsgTypes.SEND_OBJECT,
+            MsgTypes.RESPONSE_OBJECT,
             MsgSubTypes.TEST,
             'testing actual addresses',
             True

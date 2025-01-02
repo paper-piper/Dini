@@ -119,9 +119,11 @@ class Miner(User):
         logger.info(f"Miner ({self.address}): received blockchain request, sending blockchain: {blockchain}")
         return blockchain
 
-    def process_transaction_data(self, params):
-        # assuming the first parameter is the transaction
-        transaction = params[0]
+    def process_transaction_data(self, transaction):
+        # first, check if the transaction was already seen
+        if self.mempool.has_transaction(transaction):
+            return True
+
         if not transaction.verify_signature():
             logger.warning(f"Miner ({self.address}): Found unverified transaction")
             return
@@ -177,7 +179,7 @@ class Miner(User):
             else:
                 self.blockchain.filter_and_add_block(mined_block)
                 blocks_num -= 1
-                self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.BLOCK, mined_block)
+                self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.BLOCK, mined_block)
                 logger.info(f"Miner ({self.address}): "
                             f"Block mined and added to blockchain successfully. Block: {mined_block}")
 

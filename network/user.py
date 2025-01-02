@@ -62,14 +62,14 @@ class User(Bootstrap):
         lord_sk = load_key(KeysSettings.LORD_SK)
         transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(lord_sk)
-        self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         logger.info(f"User ({self.address}): bought {amount} Dini's")
 
     def sell_dinis(self, amount):
         lord_pk = load_key(KeysSettings.LORD_PK)
         transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
-        self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         logger.info(f"User ({self.address}):  {amount} Dini's")
 
     def make_transaction(self, address, amount, tip=0):
@@ -81,7 +81,7 @@ class User(Bootstrap):
         """
         transaction = Transaction(self.public_key, address, amount, tip)
         transaction.sign_transaction(self.private_key)
-        self.send_distributed_message(MsgTypes.SEND_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         logger.info(f"User ({self.address}): "
                     f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
 
@@ -92,9 +92,11 @@ class User(Bootstrap):
         :param block: Block to add.
         :return: None
         """
-        self.wallet.filter_and_add_block(block)
+        # check
+        already_seen = self.wallet.filter_and_add_block(block)
         self.save_wallet()
         logger.info(f"User ({self.address}):  Block added to wallet and saved. block: {block}")
+        return already_seen
 
     def process_blockchain_data(self, blockchain):
         """

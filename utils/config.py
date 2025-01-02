@@ -51,8 +51,9 @@ class MsgStructure:
 
 
 class MsgTypes:
-    SEND_OBJECT = "send"
+    RESPONSE_OBJECT = "resp"
     REQUEST_OBJECT = "reqt"
+    BROADCAST_OBJECT = "bcst"
 
 
 class MsgSubTypes:

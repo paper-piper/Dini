@@ -49,18 +49,18 @@ class LightBlockchain:
         Filters and adds a block to the blockchain if it is valid.
 
         :param block: A block object containing transactions and hash details
-        :return: False if the block is invalid, otherwise True
+        :return: False if the block is new, otherwise True
         """
         if block.previous_hash != self.latest_hash:
             logger.info(f"Block rejected due to mismatched hash: {block}")
-            return False
+            return True
 
         self.latest_hash = block.hash
         for transaction in block.transactions:
             self.filter_and_add_transaction(transaction)
 
         logger.info(f"Block added: {block}")
-        return True
+        return False
 
     def to_dict(self):
         return {

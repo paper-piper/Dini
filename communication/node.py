@@ -95,7 +95,7 @@ class Node(ABC):
             node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             node_socket.connect(address)
             # send the accepting node the actual address
-            send_message(node_socket, MsgTypes.SEND_OBJECT, MsgSubTypes.NODE_INIT, self.address)
+            send_message(node_socket, MsgTypes.RESPONSE_OBJECT, MsgSubTypes.NODE_INIT, self.address)
             with self.node_connections_lock:
                 self.node_connections[address] = node_socket
 
@@ -200,7 +200,7 @@ class Node(ABC):
                 forward_object = False
                 self.send_focused_message(
                     node_address,
-                    MsgTypes.SEND_OBJECT,
+                    MsgTypes.RESPONSE_OBJECT,
                     msg_subtype,
                     requested_object,
                     forward_object
@@ -208,19 +208,15 @@ class Node(ABC):
                 logger.info(f"({self.address}): {node_address} Requested ({msg_subtype}) object."
                             f" replied with object {requested_object}")
 
-            case MsgTypes.SEND_OBJECT:
+            case MsgTypes.RESPONSE_OBJECT:
                 msg_object = msg_params[0]
-                forward_object = msg_params[1]
+                self.process_response_data(msg_subtype, msg_object)
 
-                already_seen = self.process_send_message(msg_subtype, msg_object)
-                # check if message needs to be ignored
-                if already_seen:
-                    return
-
-                # check if the message is needed to be forwarded
-                if forward_object:
-                    (self.
-                     send_distributed_message(msg_type, msg_subtype, excluded_node=node_address, *msg_params))
+            case MsgTypes.BROADCAST_OBJECT:
+                msg_object = msg_params[0]
+                already_seen = self.process_response_data(msg_subtype, msg_object)
+                if not already_seen:
+                    self.send_distributed_message(msg_type, msg_subtype, excluded_node=node_address, *msg_params)
             case _:
                 logger.warning(f"Node ({self.address}): Received invalid message type ({msg_type})")
 
@@ -242,7 +238,7 @@ class Node(ABC):
 
         return results
 
-    def process_send_message(self, object_type, msg_object):
+    def process_response_data(self, object_type, msg_object):
         """
         Routes send messages to specific handlers based on object type.
         :param object_type: Type of object sent (e.g., BLOCK, NODE, TRANSACTION).

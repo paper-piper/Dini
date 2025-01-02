@@ -21,7 +21,7 @@ def main():
             sock.connect(('127.0.0.1', 8080))  # Port 65432 for local testing
             send_message(
                 sock,
-                MsgTypes.SEND_OBJECT,
+                MsgTypes.RESPONSE_OBJECT,
                 MsgSubTypes.TRANSACTION,
                 create_sample_transaction(10),
                 "My friend"

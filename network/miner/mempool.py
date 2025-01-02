@@ -43,6 +43,9 @@ class Mempool:
                 logger.info(f"Removing transaction: {tx}")
             self.transactions.discard(tx)
 
+    def has_transaction(self, transaction):
+        return transaction in self.transactions
+
     def get_all_transactions(self):
         """
         Returns all transactions currently in the mempool.
