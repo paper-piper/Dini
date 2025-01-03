@@ -1,3 +1,5 @@
+import time
+
 from communication.node import Node
 from threading import Event
 from utils.logging_utils import setup_logger
@@ -52,23 +54,22 @@ if __name__ == "__main__":
     try:
         node2.connect_to_node((NODE1_IP, NODE1_PORT))
         logger.info(f"Node2 tried to connect to node1, got the address: {node2.node_connections.keys()}")
-
         # Test communication: Send a message to Node1
         node2.send_distributed_message(
-            MsgTypes.RESPONSE_OBJECT,
+            MsgTypes.BROADCAST_OBJECT,
             MsgSubTypes.TEST,
             'testing actual addresses',
             True
         )
-        logger.info("Message sent to Node1 from Node2.")
+        print("Message sent to Node1 from Node2.")
     except Exception as e:
-        logger.error(f"Error in Node2: {e}")
+        print(f"Error in Node2: {e}")
 
     # Event to keep the script alive
     stop_event = Event()
 
     try:
-        logger.info(f"Node2 is running at {NODE2_IP}:{NODE1_PORT}. Waiting for communication...")
+        print(f"Node2 is running at {NODE2_IP}:{NODE1_PORT}. Waiting for communication...")
         stop_event.wait()  # Keep the program running
     except KeyboardInterrupt:
-        logger.info("Node2 shutting down...")
+        print("Node2 shutting down...")
