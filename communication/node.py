@@ -125,7 +125,7 @@ class Node(ABC):
                 except Exception as e:
                     logger.error(f"({self.address}): Failed to send message to {node_info}: {e}")
             if len(sent_nodes) > 0:
-                logger.info(f"({self.address}): Distributed message: ({msg_type} {msg_sub_type}), ({msg_params})"
+                logger.info(f"({self.address}): Distributed message: ({msg_type}-{msg_sub_type}), ({msg_params})"
                             f" Sent to {sent_nodes}")
 
     def send_focused_message(self, address, msg_type, msg_subtype, *msg_params):
@@ -211,12 +211,16 @@ class Node(ABC):
             case MsgTypes.RESPONSE_OBJECT:
                 msg_object = msg_params[0]
                 self.process_response_data(msg_subtype, msg_object)
+                logger.info(f"({self.address}): received response object: ({msg_object}) from node with address: {node_address}")
 
             case MsgTypes.BROADCAST_OBJECT:
                 msg_object = msg_params[0]
                 already_seen = self.process_response_data(msg_subtype, msg_object)
                 if not already_seen:
                     self.send_distributed_message(msg_type, msg_subtype, excluded_node=node_address, *msg_params)
+                logger.info(f"({self.address}): received broadcast object: ({msg_object})"
+                            f" from node with address: {node_address}")
+
             case _:
                 logger.warning(f"Node ({self.address}): Received invalid message type ({msg_type})")
 
