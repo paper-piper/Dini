@@ -36,6 +36,23 @@ class Blockchain:
         blockchain.chain = [Block.from_dict(block_data) for block_data in data["chain"]]
         return blockchain
 
+    def __repr__(self):
+        """
+        Provides a readable string representation of the blockchain.
+
+        :return: A string representation of the blockchain.
+        """
+        if len(self.chain) == 1:
+            # Only the genesis block exists
+            return "Blockchain(Length: 1, Blocks: [Genesis Block])"
+
+        # Handle the case where there are additional blocks
+        subsequent_blocks = self.chain[1:]
+        subsequent_reprs = ", ".join(repr(block) for block in subsequent_blocks)
+        str_value = (f"Blockchain(Length: {len(self.chain) - 1}, "
+                     f"Blocks: [Genesis Block, {subsequent_reprs if len(subsequent_blocks) < 5 else '...and more'}])")
+        return str_value
+
     @staticmethod
     def create_genesis_block():
         """
