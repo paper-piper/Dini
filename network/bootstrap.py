@@ -29,7 +29,7 @@ class Bootstrap(Node):
         self.bootstrap_logger = configure_logger(
             class_name="Bootstrap",
             child_dir=child_dir,
-            instance_id=instance_id
+            instance_id=f"{self.ip}-{self.port}"
         )
         self.bootstrap_logger.info("Bootstrap logger initialized.")
         if is_bootstrap:

@@ -35,15 +35,6 @@ class Node(ABC):
                             e.g. "miner", "user", etc.
         :return: None
         """
-        self.node_logger = configure_logger(
-            class_name="Node",
-            child_dir=child_dir,
-            instance_id=instance_id
-        )
-        self.node_logger.info("Node logger initialized.")
-
-        self.node_connections_lock = threading.Lock()
-        self.node_connections = {} if not node_connections else node_connections
 
         self.ip = socket.gethostbyname(socket.gethostname()) if not ip else ip
         self.port_manager = port_manager
@@ -51,8 +42,18 @@ class Node(ABC):
             self.port = port_manager.allocate_port()
         else:
             self.port = port
-
         self.address = (self.ip, self.port)
+
+        self.node_logger = configure_logger(
+            class_name="Node",
+            child_dir=child_dir,
+            instance_id=f"{self.ip}-{self.port}"
+        )
+        self.node_logger.info("Node logger initialized.")
+
+        self.node_connections_lock = threading.Lock()
+        self.node_connections = {} if not node_connections else node_connections
+
         self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.messages_queue = Queue()
 

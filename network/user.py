@@ -30,19 +30,19 @@ class User(Bootstrap):
         :param wallet: core object, or None to load from file.
         :param wallet_filename: Name of the file where wallet data is saved.
         """
-        self.user_logger = configure_logger(
-            class_name="User",
-            child_dir=child_dir,
-            instance_id=instance_id
-        )
-        self.user_logger.info("User logger initialized.")
-
         super().__init__(is_bootstrap=False,
                          port_manager=port_manager,
                          ip=ip, port=port,
                          instance_id=instance_id,
                          child_dir=child_dir
                          )
+
+        self.user_logger = configure_logger(
+            class_name="User",
+            child_dir=child_dir,
+            instance_id=f"{self.ip}-{self.port}"
+        )
+        self.user_logger.info("User logger initialized.")
 
         self.public_key = public_key
         self.private_key = secret_key

@@ -37,10 +37,23 @@ class Miner(User):
         :param blockchain: The core object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.
         """
+
+        super().__init__(
+            public_key,
+            secret_key,
+            wallet=wallet,
+            wallet_filename=wallet_filename,
+            port_manager=port_manager,
+            ip=ip,
+            port=port,
+            instance_id=instance_id,
+            child_dir=child_dir
+        )
+
         self.miner_logger = configure_logger(
             class_name="Miner",
             child_dir=child_dir,
-            instance_id=instance_id
+            instance_id=f"{self.ip}-{self.port}"
         )
         self.miner_logger.info("Miner logger initialized.")
 
@@ -55,20 +68,7 @@ class Miner(User):
             self.blockchain = blockchain
             self.save_blockchain()
         else:
-            self.blockchain = Blockchain()
-            #  self.blockchain = self.load_blockchain()
-
-        super().__init__(
-            public_key,
-            secret_key,
-            wallet=wallet,
-            wallet_filename=wallet_filename,
-            port_manager=port_manager,
-            ip=ip,
-            port=port,
-            instance_id=instance_id,
-            child_dir=child_dir
-        )
+            self.blockchain = self.load_blockchain()
 
     def __del__(self):
         super().__del__()
@@ -239,7 +239,4 @@ def assertion_checks():
 
 
 if __name__ == "__main__":
-    #assert_file_saving()
-    sk, pk = get_sk_pk_pair()
-    mini = Miner(pk,sk)
-    mini.miner_logger.info("Anotherrr!")
+    assert_file_saving()
