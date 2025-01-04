@@ -82,7 +82,7 @@ class BootSettings:
 
 
 class LoggingSettings:
-    REWRITE = False
+    REWRITE = True
     BASIC_LOGS = "basic"
 
 

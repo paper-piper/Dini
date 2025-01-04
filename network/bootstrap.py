@@ -51,7 +51,7 @@ class Bootstrap(Node):
 
         # after connecting to all available bootstrap addresses, send a distributed request peer msg
         self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.NODE_ADDRESS)
-        self.bootstrap_logger.info(f": Send a distributed request for nodes")
+        self.bootstrap_logger.info(f"Send a distributed request for nodes")
 
     def get_bootstrap_addresses(self):
         """
@@ -70,7 +70,7 @@ class Bootstrap(Node):
             return [tuple(address) for address in addresses]
 
         except Exception as e:
-            self.bootstrap_logger.error(f": An error occurred while retrieving bootstrap addresses: {e}")
+            self.bootstrap_logger.error(f"An error occurred while retrieving bootstrap addresses: {e}")
             return []
 
     def add_bootstrap_address(self):
@@ -83,10 +83,10 @@ class Bootstrap(Node):
         # Add the address if it's not already in the list
         if address_as_list not in config["bootstrap_addresses"]:
             config["bootstrap_addresses"].append(address_as_list)
-            self.bootstrap_logger.info(f": Added new bootstrap address: {self.address}")
+            self.bootstrap_logger.info(f"Added new bootstrap address: {self.address}")
             self._save_config(config)
         else:
-            self.bootstrap_logger.info(f": Bootstrap address {self.address} already exists.")
+            self.bootstrap_logger.info(f"Bootstrap address {self.address} already exists.")
 
     def delete_bootstrap_address(self):
         """Deletes the bootstrap server address from the config file."""
@@ -98,20 +98,19 @@ class Bootstrap(Node):
         # Remove the address if it exists in the list
         if address_as_list in config["bootstrap_addresses"]:
             config["bootstrap_addresses"].remove(address_as_list)
-            self.bootstrap_logger.info(f": Deleted bootstrap address: {self.address}")
+            self.bootstrap_logger.info(f"Deleted bootstrap address: {self.address}")
             self._save_config(config)
         else:
-            self.bootstrap_logger.warning(f": Bootstrap address {self.address} not found.")
+            self.bootstrap_logger.warning(f"Bootstrap address {self.address} not found.")
 
     def serve_node_request(self):
         # Implementation for Bootstrap
         peer_addresses = list(self.node_connections.keys())
-        self.bootstrap_logger.info(f": Received peer request, returned the peers addresses: {peer_addresses}")
         return peer_addresses
 
     def process_node_data(self, peer_addresses):
         # Implementation for Bootstrap
-        self.bootstrap_logger.info(f": Received peer data: {peer_addresses}")
+        self.bootstrap_logger.info(f"Received peer data: {peer_addresses}")
         for address in peer_addresses:
             self.connect_to_node(address)
 

@@ -97,7 +97,7 @@ class Node(ABC):
                     self.node_connections[node_address] = node_socket
 
                 threading.Thread(target=self.receive_messages, args=(node_address, node_socket), daemon=True).start()
-                self.node_logger.info(f" accepted connection from {node_address}")
+                self.node_logger.info(f"accepted connection from {node_address}")
         except Exception as e:
             self.node_logger.error(f"Error in accept_connections: {e}")
 
@@ -220,16 +220,15 @@ class Node(ABC):
         match msg_type:
             case MsgTypes.REQUEST_OBJECT:
                 requested_object = self.get_requested_object(msg_subtype, msg_params)
+
                 # if the node cannot handle the request, discard it for now and trust other node to answer it
                 if not requested_object:
                     return
-                forward_object = False
                 self.send_focused_message(
                     node_address,
                     MsgTypes.RESPONSE_OBJECT,
                     msg_subtype,
-                    requested_object,
-                    forward_object
+                    requested_object
                 )
                 self.node_logger.info(f"{node_address} Requested ({msg_subtype}) object."
                                       f" replied with object {requested_object}")
@@ -246,7 +245,7 @@ class Node(ABC):
                 already_seen = self.process_response_data(msg_subtype, msg_object)
                 if not already_seen:
                     self.send_distributed_message(msg_type, msg_subtype, excluded_node=node_address, *msg_params)
-                self.node_logger.info(f"received broadcast object: ({msg_object})"
+                self.node_logger.info(f"received broadcast object (type: {msg_subtype}): ({msg_object})"
                                       f" from node with address: {node_address}")
 
             case _:

@@ -1,7 +1,8 @@
 from communication.node import Node
 from threading import Event
-from utils.logging_utils import setup_logger
-logger = setup_logger()
+from utils.logging_utils import setup_basic_logger
+
+logger = setup_basic_logger()
 
 
 NODE1_IP = "127.0.0.1"

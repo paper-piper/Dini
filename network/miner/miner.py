@@ -58,9 +58,9 @@ class Miner(User):
         self.miner_logger.info("Miner logger initialized.")
 
         self.address = (ip, port)
-        self.mempool = mempool if mempool else Mempool(instance_id, child_dir)
+        self.mempool = mempool if mempool else Mempool(f"{self.ip}-{self.port}", child_dir)
         self.mempool_lock = threading.Lock()
-        self.multi_miner = MultiprocessMining(instance_id=instance_id, child_dir=child_dir)
+        self.multi_miner = MultiprocessMining(instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
         self.new_block_event = threading.Event()
         self.currently_mining = threading.Event()
         self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME

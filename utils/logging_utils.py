@@ -25,10 +25,10 @@ def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
     The logger's name is the class name (e.g. "Miner", "User").
     """
 
-    # 1) Build the logger name
+    # Build the logger name
     logger_name = class_name
 
-    # 2) Get (or create) the logger
+    # Get (or create) the logger
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)  # Or any level you prefer
 
@@ -37,28 +37,31 @@ def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
     if logger.handlers:
         return logger
 
-    # 3) Ensure directory exists: logs/<child_dir>/
-
+    # Ensure directory exists: logs/<child_dir>/
     directory_path = os.path.join(LOGS_DIRECTORY, child_dir.lower())
     os.makedirs(directory_path, exist_ok=True)
 
-    # 4) Build the log file path
+    # Build the log file path
     instance_id = instance_id or datetime.now().strftime("-%H-%M-%S")
     log_filename = f"{child_dir.lower()}{instance_id}.log"
     log_filepath = os.path.join(directory_path, log_filename)
 
-    # 5) Create the FileHandler
+    # Clear the file if it already exists
+    if os.path.exists(log_filepath) and LoggingSettings.REWRITE:
+        open(log_filepath, "w").close()  # Open in write mode to truncate the file
+
+    # Create the FileHandler
     fh = logging.FileHandler(log_filepath)
     fh.setLevel(logging.DEBUG)
 
-    # 6) Build a formatter that includes the logger name as your "class" tag
-    #    e.g. 2025-01-04 13:15:00,123 - INFO - [Miner] - Some log message
+    # Build a formatter that includes the logger name as your "class" tag
+    # e.g. 2025-01-04 13:15:00,123 - INFO - [Miner] - Some log message
     formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - [%(name)s] - %(message)s"
     )
     fh.setFormatter(formatter)
 
-    # 7) Add the file handler to this logger
+    # Add the file handler to this logger
     logger.addHandler(fh)
 
     return logger
