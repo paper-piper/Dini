@@ -83,10 +83,8 @@ class Bootstrap(Node):
         # Add the address if it's not already in the list
         if address_as_list not in config["bootstrap_addresses"]:
             config["bootstrap_addresses"].append(address_as_list)
-            self.bootstrap_logger.info(f"Added new bootstrap address: {self.address}")
+            self.bootstrap_logger.info(f"Added bootstrap address: {self.address} to data")
             self._save_config(config)
-        else:
-            self.bootstrap_logger.info(f"Bootstrap address {self.address} already exists.")
 
     def delete_bootstrap_address(self):
         """Deletes the bootstrap server address from the config file."""

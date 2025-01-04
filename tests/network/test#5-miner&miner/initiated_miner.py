@@ -17,6 +17,9 @@ if __name__ == "__main__":
         port=8000,
         blockchain=create_sample_blockchain()
     )
+
+    print(miner.blockchain)
+
     # Keep the script running
     stop_event = Event()
 

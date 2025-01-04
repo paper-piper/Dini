@@ -68,7 +68,8 @@ class Miner(User):
             self.blockchain = blockchain
             self.save_blockchain()
         else:
-            self.blockchain = self.load_blockchain()
+            self.blockchain = Blockchain()
+            #self.blockchain = self.load_blockchain()
 
     def __del__(self):
         super().__del__()
@@ -114,7 +115,7 @@ class Miner(User):
             with open(blockchain_path, "w") as f:
                 blockchain_dict = self.blockchain.to_dict()
                 json.dump(blockchain_dict, f, indent=4)
-            self.miner_logger.info(f"core saved to {blockchain_path}")
+            self.miner_logger.info(f"blockchain saved to {blockchain_path}")
         except Exception as e:
             self.miner_logger.error(f"Error saving blockchain: {e}")
 
@@ -123,7 +124,8 @@ class Miner(User):
         Handles requests from peers to update the blockchain.
         """
         blockchain = self.blockchain.create_sub_blockchain(latest_hash)
-        self.miner_logger.info(f"received blockchain request, sending blockchain: {blockchain}")
+        self.miner_logger.info(f"received blockchain request with latest hash: {latest_hash},"
+                               f" sending blockchain: {blockchain}")
         return blockchain
 
     def process_transaction_data(self, transaction):
@@ -142,7 +144,6 @@ class Miner(User):
     def process_blockchain_data(self, blockchain):
         super().process_blockchain_data(blockchain)
 
-        # bonus: only if new blocks
         self.new_block_event.set()
 
         # add blockchain to current blockchain

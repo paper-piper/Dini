@@ -46,10 +46,6 @@ def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
     log_filename = f"{child_dir.lower()}{instance_id}.log"
     log_filepath = os.path.join(directory_path, log_filename)
 
-    # Clear the file if it already exists
-    if os.path.exists(log_filepath) and LoggingSettings.REWRITE:
-        open(log_filepath, "w").close()  # Open in write mode to truncate the file
-
     # Create the FileHandler
     fh = logging.FileHandler(log_filepath)
     fh.setLevel(logging.DEBUG)

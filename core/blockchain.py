@@ -114,10 +114,9 @@ class Blockchain:
         found = False
 
         for block in self.chain:
-            if found:  # Start collecting blocks after the latest_hash block
-                blocks.append(block)
-            elif block.hash == latest_hash:  # Find the block with the latest_hash
+            if found or block.previous_hash == latest_hash:  # Find the block with the latest_hash
                 found = True
+                blocks.append(block)
 
         if not found:
             logger.warning("Hash not found in the blockchain: %s", latest_hash)

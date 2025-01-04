@@ -1,5 +1,4 @@
 import threading
-from datetime import datetime
 from queue import Queue
 from abc import abstractmethod, ABC
 from utils.config import MsgTypes, MsgSubTypes
@@ -169,6 +168,8 @@ class Node(ABC):
                 self.node_logger.warning(f" Node at {address} not found.")
                 return False
         try:
+            if msg_subtype == MsgSubTypes.BLOCKCHAIN:
+                pass
             with self.node_connections_lock:
                 send_message(self.node_connections[address], msg_type, msg_subtype, *msg_params)
             self.node_logger.info(f"Focused message sent to {address}: "
@@ -187,10 +188,12 @@ class Node(ABC):
         try:
             while True:
                 # Receive message from node
-                msg_type, msg_sub_type, msg_params = receive_message(node_socket)
-                # Add the message to the queue for processing if message is not None
-                if msg_type:
-                    self.messages_queue.put((node_address, msg_type, msg_sub_type, msg_params))
+                message = receive_message(node_socket)
+                if message:
+                    msg_type, msg_subtype, msg_params = message
+                    # Add the message to the queue for processing if message is not None
+                    if msg_type:
+                        self.messages_queue.put((node_address, msg_type, msg_subtype, msg_params))
         except socket.error as e:
             self.node_logger.error(f" Socket error while receiving message: {e}")
         except Exception as e:
@@ -207,6 +210,8 @@ class Node(ABC):
         while True:
             if not self.messages_queue.empty():
                 node_address, msg_type, msg_subtype, msg_params = self.messages_queue.get()
+                if msg_subtype == MsgSubTypes.BLOCKCHAIN:
+                    pass
                 try:
                     self.process_message(node_address, msg_type, msg_subtype, msg_params)
                 except Exception as e:
@@ -261,7 +266,7 @@ class Node(ABC):
         results = None
         match object_type:
             case MsgSubTypes.BLOCKCHAIN:
-                results = self.serve_blockchain_request(params)
+                results = self.serve_blockchain_request(params[0])
             case MsgSubTypes.NODE_ADDRESS:
                 results = self.serve_node_request()
             case _:

@@ -1,3 +1,5 @@
+import time
+
 from network.miner.miner import Miner
 from threading import Event
 from core.transaction import get_sk_pk_pair
@@ -18,6 +20,13 @@ if __name__ == "__main__":
 
     # try and update the blockchain
     miner.request_blockchain_update()
+
+    # wait for response
+    while len(miner.blockchain.chain) == 1:
+        print("waiting for block update...")
+        time.sleep(2)
+
+    print(miner.blockchain)
     # Keep the script running
     stop_event = Event()
 

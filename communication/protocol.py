@@ -4,8 +4,10 @@ A functions which takes message type, message subtype and message parameters.
 """
 
 import pickle
+import socket
+
 from utils.logging_utils import setup_basic_logger
-from utils.config import MsgTypes, MsgSubTypes, MsgStructure
+from utils.config import MsgSubTypes, MsgStructure, MsgTypes
 from core.blockchain import Transaction, Blockchain, Block
 
 
@@ -29,34 +31,39 @@ def receive_message(sock):
 
 
 def receive_socket_message(sock):
-    # Step 1: Read the message length until encountering ":"
-    message_len_str = ""
-    while True:
-        char = sock.recv(1).decode()  # Read one byte, decode it to a string
-        if char == ":":
-            break
-        message_len_str += char  # Add the character to the length string
 
-    message_len = int(message_len_str)  # Convert the length to an integer
+    try:
+        # Step 1: Read the message length until encountering ":"
+        message_len_str = ""
+        while True:
+            char = sock.recv(1).decode()  # Read one byte, decode it to a string
+            if char == ":":
+                break
+            message_len_str += char  # Add the character to the length string
 
-    # Step 2: get msg type and subtype
-    msg_type = get_msg_section(sock)
+        message_len = int(message_len_str)  # Convert the length to an integer
 
-    msg_subtype = get_msg_section(sock)
+        # Step 2: get msg type and subtype
+        msg_type = get_msg_section(sock)
 
-    # Step 3: Read the rest of the message with the specified length
-    # First check for no parameters
-    if message_len == 0:
-        return msg_type, msg_subtype, None
+        msg_subtype = get_msg_section(sock)
 
-    byte_sequence = bytearray()
-    while len(byte_sequence) < message_len:
-        byte = sock.recv(1)  # Read one byte at a time
-        byte_sequence.extend(byte)   # Add the character to the message
+        # Step 3: Read the rest of the message with the specified length
+        # First check for no parameters
+        if message_len == 0:
+            return msg_type, msg_subtype, None
 
-    param_bytes = bytes(byte_sequence)
-    param_dictionary = decrypt_msg_params(msg_subtype, param_bytes)
-    return msg_type, msg_subtype, param_dictionary
+        byte_sequence = bytearray()
+        while len(byte_sequence) < message_len:
+            byte = sock.recv(1)  # Read one byte at a time
+            byte_sequence.extend(byte)   # Add the character to the message
+
+        param_bytes = bytes(byte_sequence)
+
+        param_dictionary = decrypt_msg_params(msg_type, msg_subtype, param_bytes)
+        return msg_type, msg_subtype, param_dictionary
+    except Exception as e:
+        logger.error(f"Received socket error while reading message: {e}")
 
 
 def get_msg_section(sock, length=4):
@@ -67,8 +74,10 @@ def get_msg_section(sock, length=4):
     return section
 
 
-def decrypt_msg_params(msg_subtype, params_bytes):
+def decrypt_msg_params(msg_type, msg_subtype, params_bytes):
     params_dictionary = pickle.loads(params_bytes)
+    if msg_type == MsgTypes.REQUEST_OBJECT:
+        return params_dictionary
 
     # try and convert the main object to an object from dictionary
     main_object_dict = params_dictionary[0]
@@ -131,20 +140,19 @@ def construct_message(msg_type: str, msg_sub_type: str, *params) -> bytes:
         msg_type_encoded = msg_type.encode()
         msg_sub_type_encoded = msg_sub_type.encode()
 
-        # if the msg type is request, there is no parameters
-        if msg_type == MsgTypes.REQUEST_OBJECT:
-            msg_len = '0'
-            message = msg_len.encode() + MsgStructure.DIVIDER + msg_type_encoded + msg_sub_type_encoded
-            return message
+        # Handle parameters, including the case of no parameters
+        if params:
+            msg_params = list(params)
+            # Convert the first parameter to a dictionary if it has a 'to_dict' method
+            if hasattr(msg_params[0], "to_dict"):
+                msg_params[0] = msg_params[0].to_dict()
+            params_data = pickle.dumps(msg_params)
+            msg_len = str(len(params_data)).encode()
+            message = msg_len + MsgStructure.DIVIDER + msg_type_encoded + msg_sub_type_encoded + params_data
+        else:
+            msg_len = b'0'
+            message = msg_len + MsgStructure.DIVIDER + msg_type_encoded + msg_sub_type_encoded
 
-        msg_params = [param for param in params]
-        # else, it is a send message
-        if hasattr(msg_params[0], "to_dict"):
-            msg_params[0] = msg_params[0].to_dict()
-        params_data = pickle.dumps(msg_params)
-        msg_len = str(len(params_data)).encode()
-
-        message = msg_len + MsgStructure.DIVIDER + msg_type_encoded + msg_sub_type_encoded + params_data
         return message
 
     except (pickle.PickleError, ValueError) as e:
