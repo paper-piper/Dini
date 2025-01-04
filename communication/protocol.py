@@ -4,13 +4,13 @@ A functions which takes message type, message subtype and message parameters.
 """
 
 import pickle
-from utils.logging_utils import setup_logger
+from utils.logging_utils import setup_basic_logger
 from utils.config import MsgTypes, MsgSubTypes, MsgStructure
 from core.blockchain import Transaction, Blockchain, Block
 
 
 # Setup logger for file
-logger = setup_logger("protocol")
+logger = setup_basic_logger()
 
 
 def receive_message(sock):

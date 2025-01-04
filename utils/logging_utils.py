@@ -1,13 +1,70 @@
+# logging_config.py
+import inspect
 import logging
 import os
-import inspect
-from utils.config import LoggingSettings, FilesSettings
+from datetime import datetime
 
-# Root directory for logs
-ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", FilesSettings.LOGS_FOLDER_NAME)
+from utils.config import FilesSettings, LoggingSettings
+
+LOGS_DIRECTORY = str(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..",
+    FilesSettings.LOGS_FOLDER_NAME
+))
 
 
-def setup_logger(name=None, root_directory=None, level=logging.DEBUG):
+def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
+    """
+    Configure and return a logger for `class_name`.
+    `child_dir`   : The directory under logs/ where the file will go (e.g. "miner").
+    `instance_id` : Unique ID (e.g. timestamp) to distinguish the file, e.g. "20250104_130045".
+
+    The resulting log file path will be:
+        logs/<child_dir>/<child_dir><instance_id>.log
+
+    The logger's name is the class name (e.g. "Miner", "User").
+    """
+
+    # 1) Build the logger name
+    logger_name = class_name
+
+    # 2) Get (or create) the logger
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.DEBUG)  # Or any level you prefer
+
+    # If this logger already has handlers, return it as is
+    # (so we don't add multiple FileHandlers to the same logger)
+    if logger.handlers:
+        return logger
+
+    # 3) Ensure directory exists: logs/<child_dir>/
+
+    directory_path = os.path.join(LOGS_DIRECTORY, child_dir.lower())
+    os.makedirs(directory_path, exist_ok=True)
+
+    # 4) Build the log file path
+    instance_id = instance_id or datetime.now().strftime("-%H-%M-%S")
+    log_filename = f"{child_dir.lower()}{instance_id}.log"
+    log_filepath = os.path.join(directory_path, log_filename)
+
+    # 5) Create the FileHandler
+    fh = logging.FileHandler(log_filepath)
+    fh.setLevel(logging.DEBUG)
+
+    # 6) Build a formatter that includes the logger name as your "class" tag
+    #    e.g. 2025-01-04 13:15:00,123 - INFO - [Miner] - Some log message
+    formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - [%(name)s] - %(message)s"
+    )
+    fh.setFormatter(formatter)
+
+    # 7) Add the file handler to this logger
+    logger.addHandler(fh)
+
+    return logger
+
+
+def setup_basic_logger(name=None, root_directory=None, level=logging.DEBUG):
     """
     Configures and returns a logger that mirrors the structure of the source file in the logs directory.
 
@@ -18,7 +75,7 @@ def setup_logger(name=None, root_directory=None, level=logging.DEBUG):
     """
     # Determine the root directory for logs
     if root_directory is None:
-        root_directory = ROOT_DIRECTORY
+        root_directory = os.path.join(LOGS_DIRECTORY, LoggingSettings.BASIC_LOGS)
 
     # Get the calling file's absolute path and calculate its relative path within the project
     stack = inspect.stack()

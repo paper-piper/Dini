@@ -2,16 +2,13 @@ import json
 import os
 import threading
 from utils.config import MsgTypes, MsgSubTypes, FilesSettings
-from utils.logging_utils import setup_logger
 from network.user import User
 from network.miner.mempool import Mempool
 from network.miner.multiprocess_mining import MultiprocessMining
 from core.transaction import get_sk_pk_pair, create_sample_transaction
 from core.block import Block
 from core.blockchain import create_sample_blockchain, Blockchain
-
-# Setup logger for file
-logger = setup_logger()
+from utils.logging_utils import configure_logger
 
 
 class Miner(User):
@@ -30,7 +27,9 @@ class Miner(User):
             wallet_filename=None,
             port_manager=None,
             ip=None,
-            port=None
+            port=None,
+            instance_id=None,
+            child_dir="Miner"
     ):
         """
         Initialize a miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
@@ -38,10 +37,17 @@ class Miner(User):
         :param blockchain: The core object this miner will add mined blocks to.
         :param mempool: A list or object representing the transaction pool from which this miner selects transactions.
         """
-        self.address = (ip,port)
-        self.mempool = mempool if mempool else Mempool()
+        self.miner_logger = configure_logger(
+            class_name="Miner",
+            child_dir=child_dir,
+            instance_id=instance_id
+        )
+        self.miner_logger.info("Miner logger initialized.")
+
+        self.address = (ip, port)
+        self.mempool = mempool if mempool else Mempool(instance_id, child_dir)
         self.mempool_lock = threading.Lock()
-        self.multi_miner = MultiprocessMining()
+        self.multi_miner = MultiprocessMining(instance_id=instance_id, child_dir=child_dir)
         self.new_block_event = threading.Event()
         self.currently_mining = threading.Event()
         self.blockchain_filename = blockchain_filename if blockchain_filename else FilesSettings.BLOCKCHAIN_FILE_NAME
@@ -59,7 +65,9 @@ class Miner(User):
             wallet_filename=wallet_filename,
             port_manager=port_manager,
             ip=ip,
-            port=port
+            port=port,
+            instance_id=instance_id,
+            child_dir=child_dir
         )
 
     def __del__(self):
@@ -68,7 +76,7 @@ class Miner(User):
 
     def start_mining(self, blocks_num=-1):
         if self.currently_mining.is_set():
-            logger.info(f"Miner ({self.address}): can't start mining again, process already mining, ")
+            self.miner_logger.info(f"can't start mining again, process already mining, ")
         self.currently_mining.set()
         threading.Thread(target=self.mine_blocks, args=(blocks_num,)).start()
 
@@ -87,14 +95,13 @@ class Miner(User):
                 with open(blockchain_path, "r") as f:
                     blockchain_data = json.load(f)
                     blockchain = Blockchain.from_dict(blockchain_data)
-                logger.info(f"Miner ({self.address}): core loaded from {blockchain_path}")
+                self.miner_logger.info(f"core loaded from {blockchain_path}")
                 return blockchain
             except Exception as e:
-                logger.error(f"Miner ({self.address}): Error loading blockchain: {e}")
+                self.miner_logger.error(f"Error loading blockchain: {e}")
                 return False
 
-        logger.info(f"Miner ({self.address}): No blockchain file found at path {blockchain_path}, "
-                    f"initializing new blockchain.")
+        self.miner_logger.info(f"No blockchain file found at path {blockchain_path}, initializing new blockchain.")
         return Blockchain()
 
     def save_blockchain(self):
@@ -107,16 +114,16 @@ class Miner(User):
             with open(blockchain_path, "w") as f:
                 blockchain_dict = self.blockchain.to_dict()
                 json.dump(blockchain_dict, f, indent=4)
-            logger.info(f"Miner ({self.address}): core saved to {blockchain_path}")
+            self.miner_logger.info(f"core saved to {blockchain_path}")
         except Exception as e:
-            logger.error(f"Miner ({self.address}): Error saving blockchain: {e}")
+            self.miner_logger.error(f"Error saving blockchain: {e}")
 
     def serve_blockchain_request(self, latest_hash):
         """
         Handles requests from peers to update the blockchain.
         """
         blockchain = self.blockchain.create_sub_blockchain(latest_hash)
-        logger.info(f"Miner ({self.address}): received blockchain request, sending blockchain: {blockchain}")
+        self.miner_logger.info(f"received blockchain request, sending blockchain: {blockchain}")
         return blockchain
 
     def process_transaction_data(self, transaction):
@@ -125,12 +132,12 @@ class Miner(User):
             return True
 
         if not transaction.verify_signature():
-            logger.warning(f"Miner ({self.address}): Found unverified transaction")
+            self.miner_logger.warning(f"Found unverified transaction")
             return
         with self.mempool_lock:
             self.mempool.add_transactions([transaction])
 
-        logger.info(f"Miner ({self.address}): added transaction {transaction} to mempool")
+        self.miner_logger.info(f"added transaction {transaction} to mempool")
 
     def process_blockchain_data(self, blockchain):
         super().process_blockchain_data(blockchain)
@@ -145,7 +152,7 @@ class Miner(User):
             if self.blockchain.filter_and_add_block(block):
                 valid_blocks += 1
 
-        logger.info(f"({self.address}): received blockchain ({blockchain.to_dict()}) send and added {valid_blocks} blocks")
+        self.miner_logger.info(f"received blockchain ({blockchain.to_dict()}) send and added {valid_blocks} blocks")
 
     def process_block_data(self, block):
         """
@@ -175,13 +182,12 @@ class Miner(User):
 
             # if the mining was interrupted, the mined block is None
             if not mined_block:
-                logger.info(f"Miner ({self.address}): Mining interrupted by a new block, resetting mining process")
+                self.miner_logger.info(f"Mining interrupted by a new block, resetting mining process")
             else:
                 self.blockchain.filter_and_add_block(mined_block)
                 blocks_num -= 1
                 self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.BLOCK, mined_block)
-                logger.info(f"Miner ({self.address}): "
-                            f"Block mined and added to blockchain successfully. Block: {mined_block}")
+                self.miner_logger.info(f"Block mined and added to blockchain successfully. Block: {mined_block}")
 
     def create_block(self):
         # Lock mempool to prevent transaction modifications
@@ -218,7 +224,6 @@ def assert_file_saving():
         blockchain_data_2 = json.load(f2)
 
     assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
-    logger.info("core data saved and loaded successfully and files match.")
 
 
 def assertion_checks():
@@ -229,9 +234,12 @@ def assertion_checks():
     sk, pk = get_sk_pk_pair()
     miner = Miner(pk, sk)
 
-    miner.process_transaction_data([create_sample_transaction()])
+    miner.process_transaction_data(create_sample_transaction())
     miner.start_mining(1)
 
 
 if __name__ == "__main__":
-    assert_file_saving()
+    #assert_file_saving()
+    sk, pk = get_sk_pk_pair()
+    mini = Miner(pk,sk)
+    mini.miner_logger.info("Anotherrr!")

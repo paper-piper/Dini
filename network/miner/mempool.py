@@ -1,8 +1,7 @@
-from utils.logging_utils import setup_logger
+from utils.logging_utils import configure_logger
 from core.transaction import create_sample_transaction
 from utils.config import BlockSettings
-# Setup logger for file
-logger = setup_logger()
+# Setup self.mempool_logger for file
 
 
 class Mempool:
@@ -11,11 +10,17 @@ class Mempool:
     to add, remove, and select transactions based on specific criteria.
     """
 
-    def __init__(self):
+    def __init__(self, instance_id=None, child_dir="mempool"):
         """
         Initializes the mempool with an empty set to store unique transactions.
         """
         self.transactions = set()
+        self.mempool_logger = configure_logger(
+            class_name="Mempool",
+            child_dir=child_dir,
+            instance_id=instance_id
+        )
+        self.mempool_logger.info("mempool logger initiated!")
 
     def add_transactions(self, transactions):
         """
@@ -27,8 +32,8 @@ class Mempool:
         """
         for tx in transactions:
             if tx not in self.transactions:
-                logger.info(f"Adding transaction: {tx}")
-            self.transactions.add(tx)
+                self.mempool_logger.info(f"Adding transaction: {tx}")
+                self.transactions.add(tx)
 
     def remove_transactions(self, transactions):
         """
@@ -40,7 +45,7 @@ class Mempool:
         """
         for tx in transactions:
             if tx in self.transactions:
-                logger.info(f"Removing transaction: {tx}")
+                self.mempool_logger.info(f"Removing transaction: {tx}")
             self.transactions.discard(tx)
 
     def has_transaction(self, transaction):
@@ -52,7 +57,7 @@ class Mempool:
 
         :return: List of Transaction objects currently in the mempool
         """
-        logger.info(f"Fetching all transactions. Count: {len(self.transactions)}")
+        self.mempool_logger.info(f"Fetching all transactions. Count: {len(self.transactions)}")
         return list(self.transactions)
 
     def select_transactions(self, num_transactions=BlockSettings.MAX_TRANSACTIONS):
@@ -70,10 +75,10 @@ class Mempool:
                 selected = sorted_transactions
             else:
                 selected = sorted_transactions[:num_transactions]
-            logger.info(f"Selected top {num_transactions} transactions.")
+            self.mempool_logger.info(f"Selected top {num_transactions} transactions.")
             return selected
         except Exception as e:
-            logger.error(f"Error while selecting transactions: {e}")
+            self.mempool_logger.error(f"Error while selecting transactions: {e}")
             return []
 
 
@@ -84,7 +89,6 @@ def assertion_check():
     :return: None
     """
 
-    logger.info("Starting assertion checks for Mempool class.")
     transactions = []
     for i in range(10):
         transactions.append(create_sample_transaction())
@@ -102,11 +106,8 @@ def assertion_check():
 
     # Test select_transactions
     selected = mempool.select_transactions(2)
-    logger.info(f"from all transactions: {mempool.transactions} selected {selected}")
     assert len(selected) == 2, "Select transactions failed."
     assert selected[0].tip >= selected[1].tip, "Transactions not sorted correctly."
-
-    logger.info("All assertion checks passed.")
 
 
 if __name__ == "__main__":

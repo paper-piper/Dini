@@ -5,10 +5,10 @@ import random
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
-from utils.logging_utils import setup_logger
+from utils.logging_utils import setup_basic_logger
 
 # Setup logger for file
-logger = setup_logger()
+logger = setup_basic_logger()
 
 # Constants for assertion error messages
 HASH_LENGTH_ERROR = "Hash length should be 64 characters"

@@ -1,12 +1,12 @@
 import hashlib
 import time
 from core.transaction import Transaction, create_sample_transaction, get_sk_pk_pair
-from utils.logging_utils import setup_logger
+from utils.logging_utils import setup_basic_logger
 from utils.config import MinerSettings, BlockSettings, KeysSettings
 from utils.keys_manager import load_key
 
 # Setup logger for file
-logger = setup_logger()
+logger = setup_basic_logger()
 
 # Constants for assertion error messages
 HASH_VALIDATION_ERROR = "Calculated hash should match the expected hash"

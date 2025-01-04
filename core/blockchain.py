@@ -1,10 +1,10 @@
 from core.block import Block, create_sample_block
 from core.transaction import Transaction
-from utils.logging_utils import setup_logger
+from utils.logging_utils import setup_basic_logger
 from utils.config import MinerSettings, BlockChainSettings, KeysSettings
 from utils.keys_manager import load_key
 # Setup logger for file
-logger = setup_logger()
+logger = setup_basic_logger()
 
 # Constants for assertion error messages
 GENESIS_BLOCK_ERROR = "Genesis block should be the first block in the chain"

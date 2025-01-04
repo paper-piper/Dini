@@ -1,12 +1,12 @@
 from cryptography.hazmat.primitives import serialization
 
-from utils.logging_utils import setup_logger
+from utils.logging_utils import setup_basic_logger
 from utils.config import BlockChainSettings
 from core.transaction import Transaction, get_sk_pk_pair
 from core.block import Block
 import random
 # Setup logger for the file
-logger = setup_logger()
+logger = setup_basic_logger()
 
 
 class LightBlockchain:

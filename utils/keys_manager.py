@@ -5,9 +5,9 @@ import os
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from utils.config import KeysSettings, FilesSettings
-from utils.logging_utils import setup_logger
+from utils.logging_utils import setup_basic_logger
 
-logger = setup_logger()
+logger = setup_basic_logger()
 
 # Define the relative path for the data folder and JSON file
 DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", str(FilesSettings.DATA_FOLDER_NAME))

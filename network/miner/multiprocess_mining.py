@@ -1,22 +1,26 @@
 import multiprocessing
 from core.block import create_sample_block
 from utils.config import BlockSettings
-from utils.logging_utils import setup_logger
+from utils.logging_utils import configure_logger
 import time
-logger = setup_logger()
 
 
 class MultiprocessMining:
-    def __init__(self, num_processes=BlockSettings.PROCESSES_NUMBER):
+    def __init__(self, num_processes=BlockSettings.PROCESSES_NUMBER, instance_id=None, child_dir="multiprocess_mining"):
         """
         Initialize the MultiprocessMining class.
         :param num_processes: Number of processes to use for mining.
         """
+        self.multiproc_logger = configure_logger(
+            class_name="multiprocess_mining",
+            child_dir=child_dir,
+            instance_id=instance_id
+        )
+        self.multiproc_logger.info("multiprocess mining loggerr initiated!")
         self.num_processes = num_processes
         self.new_block_event = multiprocessing.Event()
 
-    @staticmethod
-    def _mine_range(block_dict, difficulty, start_nonce, end_nonce, new_block_event, result_queue, block_class):
+    def _mine_range(self, block_dict, difficulty, start_nonce, end_nonce, new_block_event, result_queue, block_class):
         """
         Worker function to mine a block within a specific nonce range.
         :param block_dict: Serialized Block object (dictionary) to be mined.
@@ -55,9 +59,9 @@ class MultiprocessMining:
 
             # Log the best hash every 100,000 attempts
             if nonce % 100000 == 0 and not nonce == 0:
-                #logger.debug("Nonce: %d, Best hash so far: %s (Trailing zeros: %d)",
-                #             nonce, best_hash, max_trailing_zeros)
-                pass
+                self.multiproc_logger.debug("Nonce: %d, Best hash so far: %s (Trailing zeros: %d)",
+                                            nonce, best_hash, max_trailing_zeros)
+
     def get_block_hash(self, block, difficulty):
         """
         Mines the given block using multiple processes.
@@ -88,8 +92,8 @@ class MultiprocessMining:
         try:
             mined_block_dict = result_queue.get(timeout=None)  # Wait indefinitely for a result
             mined_block = type(block).from_dict(mined_block_dict)  # Deserialize the block
-        except Exception:
-            logger.error("Mining interrupted or no block found.")
+        except Exception as e:
+            self.multiproc_logger.error(f"Mining interrupted or no block found: {e}")
 
         # Signal all processes to terminate and join them
         self.new_block_event.set()
@@ -129,11 +133,10 @@ def test_processes_speeds(start, end, difficulty=5):
     sorted_times = sorted(indexed_times, key=lambda x: x[1])
 
     # Print the sorted times with their original index
-    logger.info("Sorted times:")
+    print("Sorted times:")
     for index, time_value in sorted_times:
-        logger.info(f"{index+1}: {time_value:.2f} seconds")
+        print(f"{index+1}: {time_value:.2f} seconds")
 
 
 if __name__ == "__main__":
     test_processes_speeds(1, 20)
-

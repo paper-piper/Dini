@@ -1,5 +1,3 @@
-import time
-
 from network.bootstrap import Bootstrap
 import json
 import os
@@ -7,9 +5,7 @@ from core.light_blockchain import LightBlockchain, create_sample_light_blockchai
 from core.transaction import Transaction, get_sk_pk_pair
 from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings
 from utils.keys_manager import load_key
-from utils.logging_utils import setup_logger
-
-logger = setup_logger()
+from utils.logging_utils import configure_logger
 
 
 class User(Bootstrap):
@@ -24,7 +20,9 @@ class User(Bootstrap):
             wallet_filename=None,
             port_manager=None,
             ip=None,
-            port=None
+            port=None,
+            instance_id=None,
+            child_dir="User"
     ):
         """
         :param public_key: User's public key
@@ -32,7 +30,20 @@ class User(Bootstrap):
         :param wallet: core object, or None to load from file.
         :param wallet_filename: Name of the file where wallet data is saved.
         """
-        super().__init__(is_bootstrap=False, port_manager=port_manager, ip=ip, port=port)
+        self.user_logger = configure_logger(
+            class_name="User",
+            child_dir=child_dir,
+            instance_id=instance_id
+        )
+        self.user_logger.info("User logger initialized.")
+
+        super().__init__(is_bootstrap=False,
+                         port_manager=port_manager,
+                         ip=ip, port=port,
+                         instance_id=instance_id,
+                         child_dir=child_dir
+                         )
+
         self.public_key = public_key
         self.private_key = secret_key
         self.wallet_filename = FilesSettings.WALLET_FILE_NAME if wallet_filename is None else wallet_filename
@@ -50,7 +61,7 @@ class User(Bootstrap):
         )
 
     def __del__(self):
-        if self.port_manager:
+        if hasattr(self, "port_manager") and self.port_manager:
             self.port_manager.release_port(self.port)
         self.save_wallet()
 
@@ -63,14 +74,14 @@ class User(Bootstrap):
         transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(lord_sk)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"User ({self.address}): bought {amount} Dini's")
+        self.user_logger.info(f"bought {amount} Dini's")
 
     def sell_dinis(self, amount):
         lord_pk = load_key(KeysSettings.LORD_PK)
         transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"User ({self.address}):  {amount} Dini's")
+        self.user_logger.info(f" {amount} Dini's")
 
     def make_transaction(self, address, amount, tip=0):
         """
@@ -82,8 +93,7 @@ class User(Bootstrap):
         transaction = Transaction(self.public_key, address, amount, tip)
         transaction.sign_transaction(self.private_key)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        logger.info(f"User ({self.address}): "
-                    f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
+        self.user_logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
 
     def process_block_data(self, block):
         """
@@ -95,7 +105,7 @@ class User(Bootstrap):
         # check
         already_seen = self.wallet.filter_and_add_block(block)
         self.save_wallet()
-        logger.info(f"User ({self.address}):  Block added to wallet and saved. block: {block}")
+        self.user_logger.info(f" Block added to wallet and saved. block: {block}")
         return already_seen
 
     def process_blockchain_data(self, blockchain):
@@ -106,13 +116,13 @@ class User(Bootstrap):
         relevant_blocks = blockchain.get_blocks_after(self.wallet.latest_hash)
         for block in relevant_blocks:
             self.process_block_data(block)
-        logger.info(f"User ({self.address}): Blockchain send added to wallet and saved.")
+        self.user_logger.info(f"Blockchain send added to wallet and saved.")
 
     def serve_blockchain_request(self, latest_hash):
         """
         Handles requests from peers to update the blockchain.
         """
-        logger.debug(f"User ({self.address}): User does not handle blockchain updates")
+        self.user_logger.debug(f"User does not handle blockchain updates")
 
     def process_transaction_data(self, params):
         """
@@ -120,7 +130,7 @@ class User(Bootstrap):
 
         :param params: Parameters associated with the transaction send.
         """
-        logger.debug(f"User ({self.address}): User does not handle transactions")
+        self.user_logger.debug(f"User does not handle transactions")
 
     def save_wallet(self):
         """
@@ -132,9 +142,9 @@ class User(Bootstrap):
             with open(wallet_path, "w") as f:
                 dictionary_wallet = self.wallet.to_dict()
                 json.dump(dictionary_wallet, f, indent=4)
-            logger.info(f"User ({self.address}): wallet saved to {wallet_path}")
+            self.user_logger.info(f"wallet saved to {wallet_path}")
         except Exception as e:
-            logger.error(f"User ({self.address}): Error saving wallet: {e}")
+            self.user_logger.error(f"Error saving wallet: {e}")
 
     def load_wallet(self):
         """
@@ -147,13 +157,13 @@ class User(Bootstrap):
                 with open(wallet_path, "r") as f:
                     blockchain_data = json.load(f)
                     wallet = LightBlockchain.from_dict(blockchain_data)
-                logger.info(f"User ({self.address}): core loaded from {wallet_path}")
+                self.user_logger.info(f"core loaded from {wallet_path}")
                 return wallet
             except Exception as e:
-                logger.error(f"User ({self.address}): Error loading blockchain: {e}")
+                self.user_logger.error(f"Error loading blockchain: {e}")
                 return LightBlockchain(self.public_key)
 
-        logger.warning(f"User ({self.address}): No blockchain file found at {self.wallet_filename}, initializing new blockchain.")
+        self.user_logger.warning(f"No blockchain file found at {self.wallet_filename}, initializing new blockchain.")
         return LightBlockchain(self.public_key)
 
     def request_update_blockchain(self):
@@ -166,7 +176,7 @@ class User(Bootstrap):
             MsgSubTypes.BLOCKCHAIN,
             self.wallet.latest_hash
         )
-        logger.info(f"User ({self.address}): Requesting updates with latest hash: {self.wallet.latest_hash}")
+        self.user_logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
 
 
 def assertion_check():
@@ -200,7 +210,6 @@ def assertion_check():
         blockchain_data_2 = json.load(f2)
 
     assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
-    logger.info("core data saved and loaded successfully and files match.")
 
 
 if __name__ == "__main__":
