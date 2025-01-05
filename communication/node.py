@@ -187,12 +187,15 @@ class Node(ABC):
             while True:
                 # Receive message from node
                 message = receive_message(node_socket)
+                if not message:  # connection crushed
+                    self.node_logger.error(f"node {node_address} raised error when trying to read his message, "
+                                           f"closing connection")
+                    return
                 self.node_logger.critical(f"Got message: {message}")
-                if message:
-                    msg_type, msg_subtype, msg_params = message
-                    # Add the message to the queue for processing if message is not None
-                    if msg_type:
-                        self.messages_queue.put((node_address, msg_type, msg_subtype, msg_params))
+                msg_type, msg_subtype, msg_params = message
+                # Add the message to the queue for processing if message is not None
+                if msg_type:
+                    self.messages_queue.put((node_address, msg_type, msg_subtype, msg_params))
         except socket.error as e:
             self.node_logger.error(f" Socket error while receiving message: {e}")
         except Exception as e:
@@ -239,14 +242,14 @@ class Node(ABC):
 
             case MsgTypes.RESPONSE_OBJECT:
                 msg_object = msg_params[0]
-                self.process_response_data(msg_subtype, msg_object)
+                self.process_object_data(msg_subtype, msg_object)
                 self.node_logger.info(
                     f"received response object: ({msg_object}) from node with address: {node_address}"
                 )
 
             case MsgTypes.BROADCAST_OBJECT:
                 msg_object = msg_params[0]
-                already_seen = self.process_response_data(msg_subtype, msg_object)
+                already_seen = self.process_object_data(msg_subtype, msg_object)
                 if not already_seen:
                     self.send_distributed_message(msg_type, msg_subtype, excluded_node=node_address, *msg_params)
                 self.node_logger.info(f"received broadcast object (type: {msg_subtype}): ({msg_object})"
@@ -273,7 +276,7 @@ class Node(ABC):
 
         return results
 
-    def process_response_data(self, object_type, msg_object):
+    def process_object_data(self, object_type, msg_object):
         """
         Routes send messages to specific handlers based on object type.
         :param object_type: Type of object sent (e.g., BLOCK, NODE, TRANSACTION).
