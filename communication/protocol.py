@@ -22,10 +22,11 @@ def receive_message(sock):
     :return: A tuple of message type, subtype, and the decoded message object
     """
     try:
-        msg_type, msg_sub_type, params = receive_socket_message(sock)
-
-        return msg_type, msg_sub_type, params
-    except (pickle.PickleError, ValueError, ConnectionError) as e:
+        message = receive_socket_message(sock)
+        if message:
+            msg_type, msg_sub_type, params = message
+            return msg_type, msg_sub_type, params
+    except Exception as e:
         logger.error(f"Failed to receive and decode message: {e}")
         raise
 

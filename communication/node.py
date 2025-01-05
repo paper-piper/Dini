@@ -189,6 +189,7 @@ class Node(ABC):
             while True:
                 # Receive message from node
                 message = receive_message(node_socket)
+                self.node_logger.critical(f"Got message: {message}")
                 if message:
                     msg_type, msg_subtype, msg_params = message
                     # Add the message to the queue for processing if message is not None
