@@ -152,6 +152,7 @@ class Miner(User):
         for block in relevant_blocks:
             if self.blockchain.filter_and_add_block(block):
                 valid_blocks += 1
+                self.mempool.remove_transactions(block.transactions)
 
         self.miner_logger.info(f"received blockchain ({blockchain.to_dict()}) send and added {valid_blocks} blocks")
 
@@ -188,6 +189,7 @@ class Miner(User):
                 self.blockchain.filter_and_add_block(mined_block)
                 blocks_num -= 1
                 self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.BLOCK, mined_block)
+                self.mempool.remove_transactions(mined_block.transactions)
                 self.miner_logger.info(f"Block mined and added to blockchain successfully. Block: {mined_block}")
 
     def create_block(self):
