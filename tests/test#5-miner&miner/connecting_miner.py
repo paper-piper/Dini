@@ -17,7 +17,7 @@ if __name__ == "__main__":
         ip=miner_ip,
         port=8001,
     )
-
+    miner.connect_to_node(("127.0.0.1", 8000))
     # try and update the blockchain
     miner.request_blockchain_update()
 

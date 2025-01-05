@@ -56,8 +56,8 @@ def receive_socket_message(sock):
 
         byte_sequence = bytearray()
         while len(byte_sequence) < message_len:
-            byte = sock.recv(1)  # Read one byte at a time
-            byte_sequence.extend(byte)   # Add the character to the message
+            remaining_bytes = message_len - len(byte_sequence)
+            byte_sequence.extend(sock.recv(min(4096, remaining_bytes)))
 
         param_bytes = bytes(byte_sequence)
 

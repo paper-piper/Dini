@@ -168,8 +168,6 @@ class Node(ABC):
                 self.node_logger.warning(f" Node at {address} not found.")
                 return False
         try:
-            if msg_subtype == MsgSubTypes.BLOCKCHAIN:
-                pass
             with self.node_connections_lock:
                 send_message(self.node_connections[address], msg_type, msg_subtype, *msg_params)
             self.node_logger.info(f"Focused message sent to {address}: "
