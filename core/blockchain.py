@@ -60,8 +60,8 @@ class Blockchain:
         :return: The genesis block with a predefined "Genesis Block" transaction.
         """
         # Generate keys for the genesis block transaction
-        genesis_private_key = load_key(KeysSettings.GEN_SK)
-        genesis_public_key = load_key(KeysSettings.GEN_PK)
+        genesis_private_key = load_key(KeysSettings.GENESIS_SK)
+        genesis_public_key = load_key(KeysSettings.GENESIS_PK)
 
         # Create a unique genesis transaction
         genesis_transaction = Transaction(genesis_public_key, genesis_public_key, 0)

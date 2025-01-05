@@ -26,7 +26,7 @@ class BlockChainSettings:
 
 
 class KeysSettings:
-    GEN_SK, GEN_PK = "gen_sk", "gen_pk"
+    GENESIS_SK, GENESIS_PK = "gen_sk", "gen_pk"
     LORD_SK, LORD_PK = "lord_sk", "lord_pk"
     BONUS_SK, BONUS_PK = "bonus_sk", "bonus_pk"
     TIPPING_SK, TIPPING_PK = "tipping_sk", "tipping_pk"
