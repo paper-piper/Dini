@@ -103,18 +103,33 @@ class Block:
         tips_sum = 0
         tips_transaction = self.transactions[0]
         bonus_transaction = self.transactions[-1]
+
+        # keep track of seen transactions to check for duplicates
+        seen_transactions = set()
+
         # check every transaction except for the first and last one (tips and bonus)
         for transaction in self.transactions[1:-1]:
             # check for invalid pk (tipping or bonus)
             if transaction.sender_pk == bonus_pk or transaction.sender_pk == tipping_pk:
                 logger.warning(f"Invalid transaction: use of global pk {transaction.sender_pk}")
                 return False
+
+            # check for negative amount
             if transaction.amount <= 0:
                 logger.warning(f"Invalid transaction amount ({transaction.amount}) in transaction: {transaction}")
                 return False
+
+            # check for not valid signature
             if not transaction.verify_signature():
                 logger.warning("Invalid transaction detected: %s", transaction)
                 return False
+
+            # check for duplicate
+            if transaction in seen_transactions:
+                logger.warning(f"Duplicate transaction used twice: {transaction}")
+                return False
+            seen_transactions.add(transaction)
+
             tips_sum += transaction.tip
 
         # check the tipping transaction
