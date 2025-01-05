@@ -68,8 +68,7 @@ class Miner(User):
             self.blockchain = blockchain
             self.save_blockchain()
         else:
-            self.blockchain = Blockchain()
-            #self.blockchain = self.load_blockchain()
+            self.blockchain = self.load_blockchain()
 
     def __del__(self):
         super().__del__()
@@ -164,6 +163,10 @@ class Miner(User):
         """
         super().process_block_data(block)
         # only if new blocks
+        if self.blockchain.filter_and_add_block(block):
+            self.miner_logger.info(f"Added new block to blockchain: {block}")
+        else:
+            self.miner_logger.info(f"Rejected mined block: {block}")
         self.save_blockchain()
         self.new_block_event.set()
 
@@ -188,7 +191,7 @@ class Miner(User):
             else:
                 self.blockchain.filter_and_add_block(mined_block)
                 blocks_num -= 1
-                self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.BLOCK, mined_block)
+                self.send_distributed_message(MsgTypes.BROADCAST_OBJECT, MsgSubTypes.BLOCK, mined_block)
                 self.mempool.remove_transactions(mined_block.transactions)
                 self.miner_logger.info(f"Block mined and added to blockchain successfully. Block: {mined_block}")
 
@@ -205,6 +208,7 @@ class Miner(User):
             # create the tipping transaction at start
             block.add_tipping_transaction(self.public_key)
             block.add_bonus_transaction(self.public_key)
+            self.miner_logger.info(f"Created new block to mine! block: {block}")
             return block
 
 

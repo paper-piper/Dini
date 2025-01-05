@@ -75,7 +75,6 @@ class Mempool:
                 selected = sorted_transactions
             else:
                 selected = sorted_transactions[:num_transactions]
-            self.mempool_logger.info(f"Selected top {num_transactions} transactions.")
             return selected
         except Exception as e:
             self.mempool_logger.error(f"Error while selecting transactions: {e}")

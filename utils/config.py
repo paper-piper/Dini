@@ -73,7 +73,7 @@ class MsgSideParameters:
 class MinerSettings:
     PROCESSES_NUMBER = 7
     PROCESS_RANGE = 10 ** 4
-    DIFFICULTY_LEVEL = 2
+    DIFFICULTY_LEVEL = 3
 
 
 class BootSettings:

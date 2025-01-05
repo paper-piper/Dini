@@ -74,7 +74,7 @@ class Block:
         """
         transaction_reprs = ", ".join(repr(tx) for tx in self.transactions)
         str_value = (f"Block(Previous Hash: {self.previous_hash[:6] if self.previous_hash else 'None'}..., "
-                     f"Hash: {self.hash[:6]}..., "
+                     f"Hash: {self.hash[:6] if self.hash else 'None'}..., "
                      f"Nonce: {self.nonce}, "
                      f"Difficulty: {self.difficulty}, "
                      f"Transactions: [{transaction_reprs if len(self.transactions) < 5 else len(self.transactions)}])")
