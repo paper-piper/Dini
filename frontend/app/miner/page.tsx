@@ -118,7 +118,7 @@ export default function MinerPage() {
       <Card className="w-full backdrop-blur-xl bg-white/10 border-white/20 shadow-xl">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center text-white">
-            Dini Mining Platform
+            Dini - Miner Dashboard
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-6">
