@@ -43,7 +43,8 @@ def process_transaction_in_background(txn_id):
     """Simulate a time-consuming transaction, then set 'approved' or 'failed'."""
     time.sleep(5)  # Wait 5 seconds
     # Randomly mark as approved or failed
-    final_status = random.choice(["approved", "failed"])
+    num = random.randint(1,5)
+    final_status = "failed" if num == 2 else "approved"
     user.update_transaction_status(txn_id, final_status)
 
 
@@ -122,4 +123,5 @@ def handle_transactions():
 if __name__ == "__main__":
     # The React frontend points to http://localhost:8000/transactions
     # so let's run Flask on port 8000
+    print("Starting backend!")
     app.run(debug=True, port=8000)
