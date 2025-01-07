@@ -191,7 +191,6 @@ class Node(ABC):
                     self.node_logger.error(f"node {node_address} raised error when trying to read his message, "
                                            f"closing connection")
                     return
-                self.node_logger.critical(f"Got message: {message}")
                 msg_type, msg_subtype, msg_params = message
                 # Add the message to the queue for processing if message is not None
                 if msg_type:
