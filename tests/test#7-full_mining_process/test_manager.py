@@ -1,11 +1,9 @@
 import time
-from ensurepip import bootstrap
 from network.bootstrap import Bootstrap
 from network.miner.miner import Miner
 from network.user import User
 from threading import Event
-from core.transaction import get_sk_pk_pair, create_sample_transaction
-from core.blockchain import create_sample_blockchain
+from core.transaction import get_sk_pk_pair
 
 
 if __name__ == "__main__":
@@ -20,23 +18,23 @@ if __name__ == "__main__":
     miner_sk, miner_pk = get_sk_pk_pair()
     receiving_user_sk, receiving_user_pk = get_sk_pk_pair()
     bootstrap = Bootstrap(ip=ip, port=bootstrap_port)
-    miner = Miner(
-        miner_pk,
-        miner_sk,
-        ip=ip,
-        port=miner_port,
-    )
     spending_user = User(
         spending_user_pk,
         spending_user_sk,
         ip=ip,
         port=spending_user_port
     )
+    miner = Miner(
+        miner_pk,
+        miner_sk,
+        ip=ip,
+        port=miner_port,
+    )
+
     receiving_user = User(receiving_user_pk, receiving_user_sk, ip=ip, port=receiving_user_port)
     print(f"Finished loading! starting to cook 👨‍🍳")
-    spending_user.make_transaction(receiving_user_pk,100,10)
+    spending_user.make_transaction(receiving_user_pk, 100, 10)
     miner.start_mining(1)
-
 
     while receiving_user.wallet.balance == 0:
         time.sleep(1)
