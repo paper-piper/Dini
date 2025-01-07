@@ -26,7 +26,7 @@ def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
     """
 
     # Build the logger name
-    logger_name = class_name
+    logger_name = class_name + instance_id
 
     # Get (or create) the logger
     logger = logging.getLogger(logger_name)
@@ -53,12 +53,20 @@ def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
     # Build a formatter that includes the logger name as your "class" tag
     # e.g. 2025-01-04 13:15:00,123 - INFO - [Miner] - Some log message
     formatter = logging.Formatter(
-        "%(asctime)s - %(levelname)s - [%(name)s] - %(message)s"
+        "%(asctime)s - %(levelname)s - [%(class)s] - %(message)s"
     )
     fh.setFormatter(formatter)
 
     # Add the file handler to this logger
     logger.addHandler(fh)
+
+    # add filter to display to class name.
+    class CustomFilter(logging.Filter):
+        def filter(self, record):
+            record.class_ = class_name  # Custom "class" attribute
+            return True
+
+    logger.addFilter(CustomFilter())
 
     return logger
 
