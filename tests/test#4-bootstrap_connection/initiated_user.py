@@ -1,7 +1,7 @@
 from network.user import User
 from threading import Event
 from core.transaction import get_sk_pk_pair
-from core.light_blockchain import create_sample_light_blockchain
+from core.wallet import create_sample_light_blockchain
 
 
 if __name__ == "__main__":

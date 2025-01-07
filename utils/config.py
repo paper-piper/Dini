@@ -10,6 +10,13 @@ def get_sk_pk_pair():
     return ps, ps.public_key()
 
 
+class PortsRanges:
+    RANGE_SIZE = 1000
+    BOOTSTRAP_RANGE_START = 4000
+    USER_RANGE_START = 5000
+    MINER_RANGE_START = 5000
+
+
 class TransactionSettings:
     MAX_AMOUNT = 10 ** 6
 

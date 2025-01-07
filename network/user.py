@@ -1,7 +1,7 @@
 from network.bootstrap import Bootstrap
 import json
 import os
-from core.light_blockchain import LightBlockchain, create_sample_light_blockchain
+from core.wallet import Wallet, create_sample_light_blockchain
 from core.transaction import Transaction, get_sk_pk_pair
 from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings
 from utils.keys_manager import load_key
@@ -83,7 +83,7 @@ class User(Bootstrap):
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f" {amount} Dini's")
 
-    def make_transaction(self, address, amount, tip=0):
+    def add_transaction(self, address, amount, tip=0):
         """
         Creates a signed transaction and broadcasts it to peers.
         :param address: Recipient's address.
@@ -92,6 +92,8 @@ class User(Bootstrap):
         """
         transaction = Transaction(self.public_key, address, amount, tip)
         transaction.sign_transaction(self.private_key)
+        # keep track of pending transactions
+        self.wallet.add_pending_transaction(transaction)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
 
@@ -156,15 +158,15 @@ class User(Bootstrap):
             try:
                 with open(wallet_path, "r") as f:
                     blockchain_data = json.load(f)
-                    wallet = LightBlockchain.from_dict(blockchain_data)
+                    wallet = Wallet.from_dict(blockchain_data)
                 self.user_logger.info(f"core loaded from {wallet_path}")
                 return wallet
             except Exception as e:
                 self.user_logger.error(f"Error loading blockchain: {e}")
-                return LightBlockchain(self.public_key)
+                return Wallet(self.public_key)
 
         self.user_logger.warning(f"No blockchain file found at {self.wallet_filename}, initializing new blockchain.")
-        return LightBlockchain(self.public_key)
+        return Wallet(self.public_key)
 
     def request_update_blockchain(self):
         """
