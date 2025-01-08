@@ -118,7 +118,7 @@ class User(Bootstrap):
         relevant_blocks = blockchain.get_blocks_after(self.wallet.latest_hash)
         for block in relevant_blocks:
             self.process_block_data(block)
-        self.user_logger.info(f"Blockchain send added to wallet and saved.")
+        self.user_logger.info(f"Blockchain response added to wallet and saved.")
 
     def serve_blockchain_request(self, latest_hash):
         """
