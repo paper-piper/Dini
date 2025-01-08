@@ -20,10 +20,18 @@ class PortsRanges:
 class TransactionSettings:
     MAX_AMOUNT = 10 ** 6
     ID_LENGTH = 8
-    STATUS_PENDING = "pending"
-    STATUS_APPROVED = "approved"
-    STATUS_FAILED = "failed"
 
+
+class TxnStatus:
+    PENDING = "pending"
+    APPROVED = "approved"
+    FAILED = "failed"
+
+class TxnType:
+    BUY = "buy"
+    SELL = "sell"
+    TRANSFER = "transfer"
+    MINE = "mine"
 
 class BlockSettings:
     MAX_TRANSACTIONS = 1024
