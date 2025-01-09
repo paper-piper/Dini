@@ -3,7 +3,7 @@ import json
 import os
 from core.wallet import Wallet, create_sample_light_blockchain
 from core.transaction import Transaction, get_sk_pk_pair
-from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings, ActionType
+from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings, ActionType, ActionSettings
 from utils.keys_manager import load_key
 from utils.logging_utils import configure_logger
 
@@ -78,6 +78,8 @@ class User(Bootstrap):
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f"bought {amount} Dini's")
 
+        return transaction.signature[:ActionSettings.ID_LENGTH]
+
     def sell_dinis(self, amount):
         lord_pk = load_key(KeysSettings.LORD_PK)
         transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
@@ -85,6 +87,9 @@ class User(Bootstrap):
         self.wallet.add_pending_transaction(transaction, ActionType.SELL)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f" {amount} Dini's")
+
+        return transaction.signature[:ActionSettings.ID_LENGTH]
+
 
     def add_transaction(self, address, amount, tip=0):
         """
@@ -99,6 +104,8 @@ class User(Bootstrap):
         self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
+
+        return transaction.signature[:ActionSettings.ID_LENGTH]
 
     def process_block_data(self, block):
         """
