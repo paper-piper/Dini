@@ -19,19 +19,25 @@ class PortsRanges:
 
 class TransactionSettings:
     MAX_AMOUNT = 10 ** 6
+
+
+class ActionSettings:
     ID_LENGTH = 8
 
 
-class TxnStatus:
+class ActionStatus:
     PENDING = "pending"
     APPROVED = "approved"
     FAILED = "failed"
 
-class TxnType:
+
+class ActionType:
     BUY = "buy"
     SELL = "sell"
     TRANSFER = "transfer"
     MINE = "mine"
+    TIP = "mining tip"
+
 
 class BlockSettings:
     MAX_TRANSACTIONS = 1024

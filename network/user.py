@@ -3,7 +3,7 @@ import json
 import os
 from core.wallet import Wallet, create_sample_light_blockchain
 from core.transaction import Transaction, get_sk_pk_pair
-from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings, TxnType
+from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings, ActionType
 from utils.keys_manager import load_key
 from utils.logging_utils import configure_logger
 
@@ -73,7 +73,7 @@ class User(Bootstrap):
         lord_sk = load_key(KeysSettings.LORD_SK)
         transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(lord_sk)
-        self.wallet.add_pending_transaction(transaction, TxnType.BUY)
+        self.wallet.add_pending_transaction(transaction, ActionType.BUY)
 
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f"bought {amount} Dini's")
@@ -82,7 +82,7 @@ class User(Bootstrap):
         lord_pk = load_key(KeysSettings.LORD_PK)
         transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
-        self.wallet.add_pending_transaction(transaction, TxnType.SELL)
+        self.wallet.add_pending_transaction(transaction, ActionType.SELL)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f" {amount} Dini's")
 
@@ -96,7 +96,7 @@ class User(Bootstrap):
         transaction = Transaction(self.public_key, address, amount, tip)
         transaction.sign_transaction(self.private_key)
         # keep track of pending transactions
-        self.wallet.add_pending_transaction(transaction, TxnType.TRANSFER)
+        self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
 

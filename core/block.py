@@ -1,4 +1,5 @@
 import hashlib
+import random
 import time
 from core.transaction import Transaction, create_sample_transaction, get_sk_pk_pair
 from utils.logging_utils import setup_basic_logger
@@ -199,7 +200,7 @@ def create_sample_block(
         difficulty=MinerSettings.DIFFICULTY_LEVEL
 ):
     if transactions_amounts is None:
-        transactions_amounts = [10, 20]
+        transactions_amounts = [random.randint(10, 100) for x in range(transactions_num)]
     if len(transactions_amounts) != transactions_num:
         raise "transaction num does not much the transaction amounts"
     transactions = []

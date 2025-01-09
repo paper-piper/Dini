@@ -191,7 +191,7 @@ def assert_transaction():
     logger.info("All assertions passed for Transaction class.")
 
 
-def create_sample_transaction(amount=0, tip=0):
+def create_sample_transaction(amount=0, tip=0, pk_sk_pair=None, recipient_pk=None):
     """
     create a simple demo transaction for assertion purpose
     """
@@ -202,6 +202,10 @@ def create_sample_transaction(amount=0, tip=0):
     sender_private_key, sender_public_key = get_sk_pk_pair()
     _, recipient_public_key = get_sk_pk_pair()
 
+    if pk_sk_pair:
+        sender_public_key = pk_sk_pair[0]
+        sender_private_key = pk_sk_pair[1]
+    recipient_public_key = recipient_pk or recipient_public_key
     # Create a test transaction
     transaction = Transaction(sender_public_key, recipient_public_key, amount, tip=tip)
     transaction.sign_transaction(sender_private_key)

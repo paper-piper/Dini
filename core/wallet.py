@@ -1,11 +1,10 @@
 from cryptography.hazmat.primitives import serialization
-from datetime import datetime
-
 from network.miner.action import Action
+from utils.keys_manager import load_key
 from utils.logging_utils import setup_basic_logger
-from utils.config import BlockChainSettings, KeysSettings, TransactionSettings, TxnStatus
-from core.transaction import Transaction, get_sk_pk_pair
-from core.block import Block
+from utils.config import BlockChainSettings, KeysSettings, ActionStatus, ActionType, ActionSettings
+from core.transaction import Transaction, get_sk_pk_pair, create_sample_transaction
+from core.block import create_sample_block
 import random
 # Setup logger for the file
 logger = setup_basic_logger()
@@ -17,7 +16,7 @@ class Wallet:
 
     :param owner_pk: Public key of the blockchain owner
     :param balance: Initial balance of the owner, default is 0
-    :param transactions: List of transactions associated with the blockchain
+    :param actions: List of transactions associated with the blockchain
     :param latest_hash: Hash of the latest block added to the blockchain
     """
     def __init__(self, owner_pk, balance=0, actions=None, latest_hash=None):
@@ -31,10 +30,10 @@ class Wallet:
         Place a transaction in the pending pool with a timestamp.
         """
         action = Action(
-            transaction.signature[:TransactionSettings.ID_LENGTH],
+            transaction.signature[:ActionSettings.ID_LENGTH],
             action_type,
             transaction.amount,
-            TxnStatus.PENDING
+            ActionStatus.PENDING
         )
         self.actions[action.id] = action
 
@@ -47,18 +46,33 @@ class Wallet:
         """
         if transaction.sender_pk == self.owner_pk:
             self.balance -= transaction.amount
-            self.balance -= transaction.tip
         elif transaction.recipient_pk == self.owner_pk:
             self.balance += transaction.amount
         else:
             logger.info(f"Irrelevant transaction detected: {transaction}")
             return False
 
-        transaction_id = transaction.signature[:TransactionSettings.ID_LENGTH]
+        transaction_id = transaction.signature[:ActionSettings.ID_LENGTH]
         if transaction_id in self.actions:
-            self.actions[transaction_id].status = TxnStatus.APPROVED
-            logger.info(f"Transaction updated to be approved: {transaction_id}")
-        logger.info(f"Transaction added: {transaction}")
+            self.actions[transaction_id].status = ActionStatus.APPROVED
+            logger.info(f"action updated to be approved: {self.actions[transaction_id]}")
+        else:
+            action_type = ActionType.TRANSFER
+            lord_key = load_key(KeysSettings.LORD_PK)
+            bonus_key = lord_key(KeysSettings.BONUS_PK)
+            tipping_key = lord_key(KeysSettings.TIPPING_PK)
+            if transaction.sender_pk == lord_key:
+                action_type = ActionType.BUY
+            if transaction.recipient_pk == lord_key:
+                action_type = ActionType.SELL
+            if transaction.sender_pk == bonus_key:
+                action_type = ActionType.MINE
+            if transaction.sender_pk == tipping_key:
+                action_type = ActionType.TIP
+
+            action = Action(transaction_id, action_type, transaction.amount, ActionStatus.APPROVED)
+            self.actions[transaction_id] = action
+            logger.info(f"Action added: {action}")
         return True
 
     def filter_and_add_block(self, block):
@@ -91,14 +105,7 @@ class Wallet:
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             ).decode(),
             "balance": self.balance,
-            "transactions": [
-                {"transaction": transaction.to_dict(), "timestamp": timestamp.isoformat()}
-                for transaction, timestamp in self.transactions.items()
-            ],
-            "pending_transactions": [
-                {"transaction": transaction.to_dict(), "timestamp": timestamp.isoformat()}
-                for transaction, timestamp in self.pending_transactions.items()
-            ],
+            "actions": {action_id.hex(): action.to_dict() for action_id, action in self.actions.items()},
             "latest_hash": self.latest_hash if self.latest_hash else None
         }
 
@@ -110,24 +117,12 @@ class Wallet:
         """
         owner_pk = serialization.load_pem_public_key(data["owner_pk"].encode())
         balance = data["balance"]
-
-        # Rebuild finalized transactions
-        transactions = {}
-        for item in data["transactions"]:
-            transaction = Transaction.from_dict(item["transaction"])
-            timestamp = datetime.fromisoformat(item["timestamp"])
-            transactions[transaction] = timestamp
-
-        # Rebuild pending transactions
-        pending_transactions = {}
-        for item in data["pending_transactions"]:
-            transaction = Transaction.from_dict(item["transaction"])
-            timestamp = datetime.fromisoformat(item["timestamp"])
-            pending_transactions[transaction] = timestamp
-
+        actions = {
+            bytes.fromhex(key): Action.from_dict(value)
+            for key, value in data.get("actions", {}).items()
+        }
         latest_hash = data["latest_hash"] if data["latest_hash"] else None
-        light_blockchain = cls(owner_pk, balance, transactions, latest_hash)
-        light_blockchain.pending_transactions = pending_transactions
+        light_blockchain = cls(owner_pk, balance, actions, latest_hash)
         return light_blockchain
 
     def get_recent_transactions(self, num):
@@ -135,18 +130,14 @@ class Wallet:
         Return the most recent `num` transactions, merging both finalized and pending transactions,
         sorted by timestamp descending.
         """
-        # Combine both finalized and pending transactions into one list
-        all_transactions = list(self.transactions.items()) + list(self.pending_transactions.items())
-
-        # Sort by timestamp descending
-        sorted_by_time = sorted(all_transactions, key=lambda item: item[1], reverse=True)
+        # Make sure the list is sorted
+        sorted_actions = sorted(self.actions.values(), key=lambda x: x.timestamp, reverse=True)
 
         # Extract the transaction objects from the sorted list
-        if num > len(sorted_by_time) or num == -1:
-            return sorted_by_time
-        recent_transactions = [tx for tx, ts in sorted_by_time[:num]]
+        if num > len(sorted_actions) or num == -1:
+            return sorted_actions
 
-        return recent_transactions
+        return sorted_actions[:num]
 
 
 def create_sample_light_blockchain(
@@ -180,38 +171,40 @@ def create_sample_light_blockchain(
     return blockchain
 
 
-def assertion_check():
-    """
-    Performs assertion checks to validate the functionality of the LightBlockchain class.
-    """
+def test_wallet():
+    # Setup
+    owner_sk, owner_pk = get_sk_pk_pair()  # Assume a utility function for creating a test key
+    wallet = Wallet(owner_pk)
+    transaction = create_sample_transaction(pk_sk_pair=(owner_pk, owner_sk))  # Assume a utility function for creating a test transaction
+    block = create_sample_block(previews_hash=wallet.latest_hash, transactions_num=0)  # Assume a utility for creating a test block
+    block.transactions.insert(1, transaction)
 
-    # Create a blockchain instance
-    my_sk, my_pk = get_sk_pk_pair()
-    other_sk, other_pk = get_sk_pk_pair()
-    blockchain = Wallet(owner_pk=my_pk, balance=100)
+    # Test `add_pending_transaction`
+    wallet.add_pending_transaction(transaction, "test_action")
+    assert transaction.signature[:ActionSettings.ID_LENGTH] in wallet.actions, "Pending transaction not added correctly."
 
-    # Test transactions
-    transaction1 = Transaction(sender_pk=my_pk, recipient_pk=other_pk, amount=50)
-    transaction2 = Transaction(sender_pk=other_pk, recipient_pk=my_pk, amount=30)
+    # Test `filter_and_add_transaction`
+    wallet.filter_and_add_transaction(transaction)
+    assert wallet.balance == -transaction.amount, "Balance not updated correctly for received transaction."
 
-    blockchain.filter_and_add_transaction(transaction1)
+    # Test `filter_and_add_block`
+    result = wallet.filter_and_add_block(block)
+    assert result is False, "Block addition returned incorrect value."
+    assert wallet.latest_hash == block.hash, "Latest hash not updated after block addition."
 
-    assert blockchain.balance == 50, "Balance calculation error after transactions"
+    # Test `to_dict` and `from_dict`
+    wallet_dict = wallet.to_dict()
+    new_wallet = Wallet.from_dict(wallet_dict)
+    assert wallet.owner_pk == new_wallet.owner_pk, "Owner public key mismatch after serialization."
+    assert wallet.balance == new_wallet.balance, "Balance mismatch after serialization."
 
-    # Test blocks
-    block = Block(previous_hash=None, transactions=[transaction1, transaction2], block_hash="hash123")
-    blockchain.latest_hash = None  # Setting the latest hash for validation
-    blockchain.filter_and_add_block(block)
+    # Test `get_recent_transactions`
+    recent_transactions = wallet.get_recent_transactions(1)
+    assert len(recent_transactions) == 1, "Recent transactions retrieval failed."
+    assert recent_transactions[0].id == transaction.signature[:ActionSettings.ID_LENGTH], "Incorrect transaction retrieved."
 
-    assert blockchain.latest_hash == "hash123", "Block hash mismatch after adding block"
-    assert len(blockchain.transactions) == 2, "Transaction count mismatch after adding block"
-
-    transaction1.sign_transaction(my_sk)
-    blockchain.latest_hash = transaction1.signature
-    blockchain_dict = blockchain.to_dict()
-    duplicate_blockchain = Wallet.from_dict(blockchain_dict)
-    assert duplicate_blockchain.to_dict() == blockchain.to_dict()
+    print("All Wallet class tests passed!")
 
 
 if __name__ == "__main__":
-    assertion_check()
+    test_wallet()
