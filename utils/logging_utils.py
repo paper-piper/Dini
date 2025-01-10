@@ -63,7 +63,7 @@ def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
     # add filter to display to class name.
     class CustomFilter(logging.Filter):
         def filter(self, record):
-            record.class_ = class_name  # Custom "class" attribute
+            record.__dict__['class'] = class_name  # Set 'class' attribute
             return True
 
     logger.addFilter(CustomFilter())
