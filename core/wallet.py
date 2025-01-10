@@ -1,13 +1,12 @@
 from cryptography.hazmat.primitives import serialization
 from network.miner.action import Action
 from utils.keys_manager import load_key
-from utils.logging_utils import setup_basic_logger
+from utils.logging_utils import configure_logger
 from utils.config import BlockChainSettings, KeysSettings, ActionStatus, ActionType, ActionSettings
 from core.transaction import Transaction, get_sk_pk_pair, create_sample_transaction
 from core.block import create_sample_block
 import random
 # Setup logger for the file
-logger = setup_basic_logger()
 
 
 class Wallet:
@@ -19,11 +18,17 @@ class Wallet:
     :param actions: List of transactions associated with the blockchain
     :param latest_hash: Hash of the latest block added to the blockchain
     """
-    def __init__(self, owner_pk, balance=0, actions=None, latest_hash=None):
+    def __init__(self, owner_pk, balance=0, actions=None, latest_hash=None, instance_id=None, child_dir="wallet"):
         self.owner_pk = owner_pk
         self.balance = balance
         self.actions = actions or {}
         self.latest_hash = latest_hash if latest_hash else BlockChainSettings.FIRST_HASH
+        self.wallet_logger = configure_logger(
+            class_name="wallet",
+            child_dir=child_dir,
+            instance_id=instance_id
+        )
+        self.wallet_logger.info("mempool logger initiated!")
 
     def add_pending_transaction(self, transaction, action_type):
         """
@@ -49,13 +54,13 @@ class Wallet:
         elif transaction.recipient_pk == self.owner_pk:
             self.balance += transaction.amount
         else:
-            logger.info(f"Irrelevant transaction detected: {transaction}")
+            self.wallet_logger.info(f"Irrelevant transaction detected: {transaction}")
             return False
 
         transaction_id = transaction.signature[:ActionSettings.ID_LENGTH]
         if transaction_id in self.actions:
             self.actions[transaction_id].status = ActionStatus.APPROVED
-            logger.info(f"action updated to be approved: {self.actions[transaction_id]}")
+            self.wallet_logger.info(f"action updated to be approved: {self.actions[transaction_id]}")
         else:
             action_type = ActionType.TRANSFER
             lord_key = load_key(KeysSettings.LORD_PK)
@@ -72,7 +77,7 @@ class Wallet:
 
             action = Action(transaction_id, action_type, transaction.amount, ActionStatus.APPROVED)
             self.actions[transaction_id] = action
-            logger.info(f"Action added: {action}")
+            self.wallet_logger.info(f"Action added: {action}")
         return True
 
     def filter_and_add_block(self, block):
@@ -83,20 +88,20 @@ class Wallet:
         :return: False if the block is new, otherwise True
         """
         if block.previous_hash != self.latest_hash:
-            logger.info(f"Block rejected due to mismatched hash: {block}")
+            self.wallet_logger.info(f"Block rejected due to mismatched hash: {block}")
             return True
 
         self.latest_hash = block.hash
         for transaction in block.transactions:
             self.filter_and_add_transaction(transaction)
 
-        logger.info(f"Block added: {block}")
+        self.wallet_logger.info(f"Block added: {block}")
         return False
 
     def to_dict(self):
         """
         Convert this LightBlockchain object into a dictionary for serialization.
-        Since self.transactions and self.pending_transactions store timestamps,
+        Since self.actions and self.pending_transactions store timestamps,
         convert them to a serializable format.
         """
         return {
@@ -125,7 +130,7 @@ class Wallet:
         light_blockchain = cls(owner_pk, balance, actions, latest_hash)
         return light_blockchain
 
-    def get_recent_transactions(self, num):
+    def get_recent_transactions(self, num=-1):
         """
         Return the most recent `num` transactions, merging both finalized and pending transactions,
         sorted by timestamp descending.

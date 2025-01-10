@@ -47,7 +47,7 @@ class User(Bootstrap):
         self.public_key = public_key
         self.private_key = secret_key
         self.wallet_filename = FilesSettings.WALLET_FILE_NAME if wallet_filename is None else wallet_filename
-        self.wallet = wallet if wallet else self.load_wallet()
+        self.wallet = wallet if wallet else self.load_wallet(child_dir)
         # try and get updates for wallet (in case of missing out)
 
         self.request_blockchain_update()
@@ -158,7 +158,7 @@ class User(Bootstrap):
         except Exception as e:
             self.user_logger.error(f"Error saving wallet: {e}")
 
-    def load_wallet(self):
+    def load_wallet(self, child_dir):
         """
         Loads the wallet from a file if it exists.
         :return: the wallet if exists, else initialized wallet
@@ -173,10 +173,10 @@ class User(Bootstrap):
                 return wallet
             except Exception as e:
                 self.user_logger.error(f"Error loading blockchain: {e}")
-                return Wallet(self.public_key)
+                return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
 
         self.user_logger.warning(f"No blockchain file found at {self.wallet_filename}, initializing new blockchain.")
-        return Wallet(self.public_key)
+        return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
 
     def request_update_blockchain(self):
         """
