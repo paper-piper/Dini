@@ -22,13 +22,13 @@ class Wallet:
         self.owner_pk = owner_pk
         self.balance = balance
         self.actions = actions or {}
-        self.latest_hash = latest_hash if latest_hash else BlockChainSettings.FIRST_HASH
+        self.latest_hash = latest_hash if latest_hash else BlockChainSettings.SECOND_HASH
         self.wallet_logger = configure_logger(
             class_name="wallet",
             child_dir=child_dir,
             instance_id=instance_id
         )
-        self.wallet_logger.info("mempool logger initiated!")
+        self.wallet_logger.info("wallet logger initiated!")
 
     def add_pending_transaction(self, transaction, action_type):
         """

@@ -48,6 +48,9 @@ class BlockSettings:
 class BlockChainSettings:
     FIRST_GEN_ENCODED_STR = '5f6bef989faab6438c2eacd664f0fd3ac7523ab688e6ed68560b0eb152bcf76c|Transaction(Sender: 270..., Recipient: 270..., Amount: 0, Tip: 0)|2|time-zero|0'
     FIRST_HASH = hashlib.sha256(FIRST_GEN_ENCODED_STR.encode()).hexdigest()
+    SECOND_HASH_DATA = 'e4e5e801f8d62dc6564612ad956763af4ac2350080093abca3765b020fa6af6c|Transaction(Sender: 304..., Recipient: 304..., Amount: 0, Tip: 0)|3|time-zero|0'
+    SECOND_HASH = hashlib.sha256(SECOND_HASH_DATA.encode()).hexdigest()
+    # e4e5e801f8d62dc6564612ad956763af4ac2350080093abca3765b020fa6af6c
 
 
 class KeysSettings:
@@ -116,3 +119,4 @@ class PortSettings:
     USER_RANGE = (5501, 5800)
     MINER_RANGE = (5801, 6000)
     GENERAL_RANGE = (5000, 6000)
+
