@@ -20,7 +20,6 @@ class Mempool:
             child_dir=child_dir,
             instance_id=instance_id
         )
-        self.mempool_logger.info("mempool logger initiated!")
 
     def add_transactions(self, transactions):
         """

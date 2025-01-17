@@ -36,17 +36,9 @@ if __name__ == "__main__":
     print("Loading receiving user...")
     print(f"Finished loading! starting to cook 👨‍🍳")
     spending_user.add_transaction(receiving_user_pk, 100, 10)
-    miner.start_mining(1)
+    miner.start_mining(-1)
 
     while spending_user.wallet.balance == 0:
         time.sleep(1)
 
     print(f"Received transaction! {spending_user.wallet.get_recent_transactions(-1)}")
-    # Keep the script running
-    stop_event = Event()
-
-    try:
-        print("initiated miner is running. Waiting for communication...")
-        stop_event.wait()
-    except KeyboardInterrupt:
-        print("miner shutting down...")

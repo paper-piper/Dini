@@ -42,7 +42,6 @@ class User(Bootstrap):
             child_dir=child_dir,
             instance_id=f"{self.ip}-{self.port}"
         )
-        self.user_logger.info("User logger initialized.")
 
         self.public_key = public_key
         self.private_key = secret_key
@@ -90,7 +89,6 @@ class User(Bootstrap):
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
 
-
     def add_transaction(self, address, amount, tip=0):
         """
         Creates a signed transaction and broadcasts it to peers.
@@ -103,7 +101,7 @@ class User(Bootstrap):
         # keep track of pending transactions
         self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
         self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
-        self.user_logger.info(f"Transaction made from {self.public_key} to {address} of amount {amount} and tip {tip}")
+        self.user_logger.info(f"new transaction made: {transaction} ")
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
 
@@ -134,7 +132,8 @@ class User(Bootstrap):
         """
         Handles requests from peers to update the blockchain.
         """
-        self.user_logger.debug(f"User does not handle blockchain updates")
+        pass
+        #  self.user_logger.debug(f"User does not handle blockchain updates")
 
     def process_transaction_data(self, params):
         """
@@ -142,7 +141,8 @@ class User(Bootstrap):
 
         :param params: Parameters associated with the transaction send.
         """
-        self.user_logger.debug(f"User does not handle transactions")
+        pass
+        #  self.user_logger.debug(f"User does not handle transactions")
 
     def save_wallet(self):
         """
@@ -154,9 +154,8 @@ class User(Bootstrap):
             with open(wallet_path, "w") as f:
                 dictionary_wallet = self.wallet.to_dict()
                 json.dump(dictionary_wallet, f, indent=4)
-            self.user_logger.info(f"wallet saved to {wallet_path}")
         except Exception as e:
-            self.user_logger.error(f"Error saving wallet: {e}")
+            self.user_logger.error(f"Error saving wallet: {e} the wallet: {dictionary_wallet}")
 
     def load_wallet(self, child_dir):
         """
@@ -164,7 +163,7 @@ class User(Bootstrap):
         :return: the wallet if exists, else initialized wallet
         """
         wallet_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, self.wallet_filename)
-        if os.path.exists(wallet_path):
+        if os.path.exists(wallet_path) and os.path.getsize(wallet_path) == 0:
             try:
                 with open(wallet_path, "r") as f:
                     blockchain_data = json.load(f)
@@ -172,10 +171,10 @@ class User(Bootstrap):
                 self.user_logger.info(f"core loaded from {wallet_path}")
                 return wallet
             except Exception as e:
-                self.user_logger.error(f"Error loading blockchain: {e}")
+                self.user_logger.error(f"Error loading wallet: {e}")
                 return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
 
-        self.user_logger.warning(f"No blockchain file found at {self.wallet_filename}, initializing new blockchain.")
+        self.user_logger.warning(f"No wallet file found at {self.wallet_filename}, initializing new blockchain.")
         return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
 
     def request_update_blockchain(self):

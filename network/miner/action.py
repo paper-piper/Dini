@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from utils.config import TransactionSettings
-
 
 class Action:
     def __init__(self, action_id, action_type, amount, status, details=None, timestamp=None):
@@ -28,7 +26,6 @@ class Action:
             "details": self.details.to_dict() if self.details and hasattr(self.details, "to_dict") else self.details,
         }
 
-    @classmethod
     @classmethod
     def from_dict(cls, data):
         details = data.get("details")

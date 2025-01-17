@@ -41,7 +41,7 @@ class ActionType:
 
 class BlockSettings:
     MAX_TRANSACTIONS = 1024
-    BONUS_AMOUNT = 100
+    BONUS_AMOUNT = 199
     PROCESSES_NUMBER = 10
 
 

@@ -47,14 +47,14 @@ def handle_transactions():
             # Convert the transactions to a list (if they aren't already)
             response = [
                 {
-                    "id": str(action.signature)[:ActionSettings.ID_LENGTH],
+                    "id": str(action.id)[:ActionSettings.ID_LENGTH],
                     "type": action.type,
                     "amount": action.amount,
                     "status": action.status,
                     "timestamp": action.timestamp,
                     "details": action.details or "",
                 }
-                for action, timestamp in actions.items()
+                for action in actions
             ]
             logger.info(f"Successfully processed GET request with {len(response)} transactions")
             return jsonify(response), 200
@@ -92,6 +92,7 @@ def handle_transactions():
                 logger.info("Initiating TRANSFER transaction with details: %s and amount: %s", details, amount)
                 action_id = user.add_transaction(details, amount)
 
+            action_id = str(action_id)
             logger.debug("Transaction created with ID: %s", action_id)
 
             # Build the transaction object

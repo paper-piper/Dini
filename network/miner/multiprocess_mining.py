@@ -16,7 +16,6 @@ class MultiprocessMining:
             child_dir=child_dir,
             instance_id=instance_id
         )
-        self.multiproc_logger.info("multiprocess mining loggerr initiated!")
         self.num_processes = num_processes
         self.new_block_event = multiprocessing.Event()
 

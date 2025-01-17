@@ -31,7 +31,6 @@ class Bootstrap(Node):
             child_dir=child_dir,
             instance_id=f"{self.ip}-{self.port}"
         )
-        self.bootstrap_logger.info("Bootstrap logger initialized.")
         if is_bootstrap:
             self.add_bootstrap_address()
 
@@ -44,14 +43,13 @@ class Bootstrap(Node):
 
     def discover_peers(self):
         bootstrap_addresses = self.get_bootstrap_addresses()
-        self.bootstrap_logger.info(f"tried to connect to bootstrap addresses, got the address: {bootstrap_addresses}")
         for address in bootstrap_addresses:
             # convert the list to a tuple
             self.connect_to_node(address)
 
         # after connecting to all available bootstrap addresses, send a distributed request peer msg
+        self.bootstrap_logger.debug("Sending nodes discovery message")
         self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.NODE_ADDRESS)
-        self.bootstrap_logger.info(f"Send a distributed request for nodes")
 
     def get_bootstrap_addresses(self):
         """
@@ -107,8 +105,6 @@ class Bootstrap(Node):
         return peer_addresses
 
     def process_node_data(self, peer_addresses):
-        # Implementation for Bootstrap
-        self.bootstrap_logger.info(f"Received peer data: {peer_addresses}")
         for address in peer_addresses:
             self.connect_to_node(address)
 

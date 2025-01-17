@@ -28,7 +28,6 @@ class Wallet:
             child_dir=child_dir,
             instance_id=instance_id
         )
-        self.wallet_logger.info("wallet logger initiated!")
 
     def add_pending_transaction(self, transaction, action_type):
         """
@@ -49,6 +48,7 @@ class Wallet:
         :param transaction: A transaction object containing sender, recipient, and amount details
         :return: False if the transaction is not relevant, otherwise True
         """
+        # add or subtract transaction from balance
         if transaction.sender_pk == self.owner_pk:
             self.balance -= transaction.amount
         elif transaction.recipient_pk == self.owner_pk:
@@ -75,7 +75,7 @@ class Wallet:
             if transaction.sender_pk == tipping_key:
                 action_type = ActionType.TIP
 
-            action = Action(transaction_id, action_type, transaction.amount, ActionStatus.APPROVED)
+            action = Action(transaction_id[:ActionSettings.ID_LENGTH], action_type, transaction.amount, ActionStatus.APPROVED)
             self.actions[transaction_id] = action
             self.wallet_logger.info(f"Action added: {action}")
         return True
@@ -88,14 +88,21 @@ class Wallet:
         :return: False if the block is new, otherwise True
         """
         if block.previous_hash != self.latest_hash:
-            self.wallet_logger.info(f"Block rejected due to mismatched hash: {block}")
+            self.wallet_logger.warning(f"Block rejected due to mismatched hash: {block}")
             return True
 
         self.latest_hash = block.hash
+        relevant_transactions = 0
+        not_relevant_transaction = 0
         for transaction in block.transactions:
-            self.filter_and_add_transaction(transaction)
+            passed = self.filter_and_add_transaction(transaction)
+            if passed:
+                relevant_transactions += 1
+            else:
+                not_relevant_transaction += 1
 
-        self.wallet_logger.info(f"Block added: {block}")
+        self.wallet_logger.info(f"Block added with {relevant_transactions} relevant transactions "
+                                f"and {not_relevant_transaction} not relevant transactions. the block: {block}")
         return False
 
     def to_dict(self):

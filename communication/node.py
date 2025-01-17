@@ -48,7 +48,6 @@ class Node(ABC):
             child_dir=child_dir,
             instance_id=f"{self.ip}-{self.port}"
         )
-        self.node_logger.info("Node logger initialized.")
 
         self.node_connections_lock = threading.Lock()
         self.node_connections = {} if not node_connections else node_connections
@@ -87,7 +86,6 @@ class Node(ABC):
             # accept all connections
             self.accept_socket.bind(('0.0.0.0', self.port))
             self.accept_socket.listen(QUEUE_SIZE)
-            self.node_logger.info(f"listening for connections")
             while True:
                 node_socket, _ = self.accept_socket.accept()
                 _, _, node_address = receive_message(node_socket)
@@ -125,10 +123,11 @@ class Node(ABC):
 
             # Start a thread to listen for messages from this node
             threading.Thread(target=self.receive_messages, args=(address, node_socket), daemon=True).start()
-            self.node_logger.info(f"Connected to new node {address}")
-
+            self.node_logger.info(f"Connected to node with address {address}")
+        except socket.error as se:
+            self.node_logger.info(f"Failed to connect to node with address {address}")
         except Exception as e:
-            self.node_logger.error(f"Failed to connect to node {address} - {e}")
+            self.node_logger.error(f"Caught unexpected error while connecting to node with address {address} - {e}")
 
     def send_distributed_message(self, msg_type, msg_sub_type, *msg_params, excluded_node=None):
         """
@@ -150,8 +149,8 @@ class Node(ABC):
                     self.node_logger.error(f"Failed to send message to {node_info}: {e}")
             if len(sent_nodes) > 0:
                 self.node_logger.info(
-                    f"Distributed message: ({msg_type}-{msg_sub_type}), ({msg_params})"
-                    f" Sent to {sent_nodes}")
+                    f"Distributed message with {msg_sub_type} object: ({msg_params})"
+                    f" was sent to: {sent_nodes}")
 
     def send_focused_message(self, address, msg_type, msg_subtype, *msg_params):
         """
@@ -243,7 +242,7 @@ class Node(ABC):
                 msg_object = msg_params[0]
                 self.process_object_data(msg_subtype, msg_object)
                 self.node_logger.info(
-                    f"received response object: ({msg_object}) from node with address: {node_address}"
+                    f"received response {msg_subtype} object: ({msg_object}) from node with address: {node_address}"
                 )
 
             case MsgTypes.BROADCAST_OBJECT:
@@ -251,11 +250,11 @@ class Node(ABC):
                 already_seen = self.process_object_data(msg_subtype, msg_object)
                 if not already_seen:
                     self.send_distributed_message(msg_type, msg_subtype, excluded_node=node_address, *msg_params)
-                self.node_logger.info(f"received broadcast object (type: {msg_subtype}): ({msg_object})"
+                self.node_logger.info(f"received broadcast {msg_subtype} object: ({msg_object})"
                                       f" from node with address: {node_address}")
 
             case _:
-                self.node_logger.warning(f" Received invalid message type ({msg_type})")
+                self.node_logger.warning(f"Received invalid message type ({msg_type})")
 
     def get_requested_object(self, object_type, params):
         """

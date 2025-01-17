@@ -55,7 +55,6 @@ class Miner(User):
             child_dir=child_dir,
             instance_id=f"{self.ip}-{self.port}"
         )
-        self.miner_logger.info("Miner logger initialized.")
 
         self.address = (ip, port)
         self.mempool = mempool if mempool else Mempool(f"{self.ip}-{self.port}", child_dir)
@@ -90,7 +89,7 @@ class Miner(User):
         :return: The blockchain if exists, else initialized blockchain
         """
         blockchain_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, self.blockchain_filename)
-        if os.path.exists(blockchain_path):
+        if os.path.exists(blockchain_path) and os.path.getsize(blockchain_path) == 0:
             try:
                 with open(blockchain_path, "r") as f:
                     blockchain_data = json.load(f)
@@ -99,7 +98,6 @@ class Miner(User):
                 return blockchain
             except Exception as e:
                 self.miner_logger.error(f"Error loading blockchain: {e}")
-                return False
 
         self.miner_logger.info(f"No blockchain file found at path {blockchain_path}, initializing new blockchain.")
         return Blockchain()
