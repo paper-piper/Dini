@@ -187,13 +187,12 @@ class Node(ABC):
                 # Receive message from node
                 message = receive_message(node_socket)
                 if not message:  # connection crushed
-                    self.node_logger.error(f"node {node_address} raised error when trying to read his message, "
-                                           f"closing connection")
-                    return
-                msg_type, msg_subtype, msg_params = message
-                # Add the message to the queue for processing if message is not None
-                if msg_type:
-                    self.messages_queue.put((node_address, msg_type, msg_subtype, msg_params))
+                    self.node_logger.warning(f"node {node_address} raised error when trying to read his message")
+                else:
+                    msg_type, msg_subtype, msg_params = message
+                    # Add the message to the queue for processing if message is not None
+                    if msg_type:
+                        self.messages_queue.put((node_address, msg_type, msg_subtype, msg_params))
         except socket.error as e:
             self.node_logger.error(f" Socket error while receiving message: {e}")
         except Exception as e:

@@ -44,6 +44,7 @@ def receive_socket_message(sock):
 
         message_len = int(message_len_str)  # Convert the length to an integer
 
+
         # Step 2: get msg type and subtype
         msg_type = get_msg_section(sock)
 

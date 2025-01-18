@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
     print("Loading receiving user...")
     print(f"Finished loading! starting to cook 👨‍🍳")
-    spending_user.add_transaction(receiving_user_pk, 100, 10)
+    spending_user.buy_dinis(100)
     miner.start_mining(-1)
 
     while spending_user.wallet.balance == 0:

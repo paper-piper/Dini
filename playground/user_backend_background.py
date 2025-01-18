@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # Use localhost for same-computer testing
     ip = "127.0.0.1"
     bootstrap_port = 8001
-    miner_port = 8000
+    miner_port = 8002
     miner_sk, miner_pk = get_sk_pk_pair()
     print("Loading bootstrap...")
     bootstrap = Bootstrap(ip=ip, port=bootstrap_port)
