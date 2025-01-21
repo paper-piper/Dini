@@ -17,7 +17,6 @@ class User(Bootstrap):
             public_key,
             secret_key,
             wallet=None,
-            wallet_filename=None,
             ip=None,
             port=None,
             child_dir="User"
@@ -26,7 +25,6 @@ class User(Bootstrap):
         :param public_key: User's public key
         :param secret_key: User's secret key
         :param wallet: core object, or None to load from file.
-        :param wallet_filename: Name of the file where wallet data is saved.
         """
         super().__init__(is_bootstrap=False,
                          ip=ip, port=port,
@@ -41,10 +39,15 @@ class User(Bootstrap):
 
         self.public_key = public_key
         self.private_key = secret_key
-        self.wallet_filename = FilesSettings.WALLET_FILE_NAME if wallet_filename is None else wallet_filename
-        self.wallet = wallet if wallet else self.load_wallet(child_dir)
-        # try and get updates for wallet (in case of missing out)
 
+        directory_name = f"{child_dir}_{str(self.port)}"
+        self.wallet_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, directory_name, FilesSettings.WALLET_FILE_NAME)
+        # make the wallet directory if you don't already exist
+        full_directory = os.path.dirname(self.wallet_path)
+        os.makedirs(full_directory, exist_ok=True)
+        self.wallet = wallet if wallet else self.load_wallet(child_dir)
+
+        # try and get updates for wallet (in case of missing out)
         self.request_blockchain_update()
         self.save_wallet()
 
@@ -145,9 +148,11 @@ class User(Bootstrap):
         Saves the current wallet to a file in JSON format.
         :return: None
         """
+        # if the wallet is empty, don't save it
+        if not self.wallet:
+            return
         try:
-            wallet_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, self.wallet_filename)
-            with open(wallet_path, "w") as f:
+            with open(self.wallet_path, "w") as f:
                 dictionary_wallet = self.wallet.to_dict()
                 json.dump(dictionary_wallet, f, indent=4)
         except Exception as e:
@@ -158,19 +163,18 @@ class User(Bootstrap):
         Loads the wallet from a file if it exists.
         :return: the wallet if exists, else initialized wallet
         """
-        wallet_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, self.wallet_filename)
-        if os.path.exists(wallet_path) and os.path.getsize(wallet_path) == 0:
+        if os.path.exists(self.wallet_path) and os.path.getsize(self.wallet_path) != 0:
             try:
-                with open(wallet_path, "r") as f:
+                with open(self.wallet_path, "r") as f:
                     blockchain_data = json.load(f)
                     wallet = Wallet.from_dict(blockchain_data)
-                self.user_logger.info(f"core loaded from {wallet_path}")
+                self.user_logger.info(f"core loaded from {self.wallet_path}")
                 return wallet
             except Exception as e:
                 self.user_logger.error(f"Error loading wallet: {e}")
                 return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
 
-        self.user_logger.warning(f"No wallet file found at {self.wallet_filename}, initializing new blockchain.")
+        self.user_logger.warning(f"No wallet file found at {self.wallet_path}, initializing new blockchain.")
         return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
 
     def request_update_blockchain(self):
@@ -194,20 +198,17 @@ def assertion_check():
     """
     # Generate key pair for testing
     sk, pk = get_sk_pk_pair()
-    first_wallet_name = "sample_wallet1.json"
-    second_wallet_name = "sample_wallet2.json"
     # Create a sample blockchain and save it using the first User instance
     user1 = User(
         pk,
         sk,
         wallet=create_sample_light_blockchain(pk, sk),
-        wallet_filename=first_wallet_name)
+        )
     user1.save_wallet()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    user2 = User(pk, sk, wallet_filename=first_wallet_name)
-    user2.load_wallet()
-    user2.wallet_filename = second_wallet_name
+    user2 = User(pk, sk, )
+    user2.load_wallet("User")
     user2.save_wallet()
 
     # Load files and verify they are identical
