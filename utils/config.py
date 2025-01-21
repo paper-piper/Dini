@@ -72,9 +72,10 @@ class MsgStructure:
 
 
 class MsgTypes:
-    RESPONSE_OBJECT = "resp"
-    REQUEST_OBJECT = "reqt"
-    BROADCAST_OBJECT = "bcst"
+    RESPONSE = "resp"
+    REQUEST = "reqt"
+    BROADCAST = "bcst"
+    ALL_MSG_TYPES = [RESPONSE, REQUEST, BROADCAST]
 
 
 class MsgSubTypes:
@@ -84,6 +85,7 @@ class MsgSubTypes:
     BLOCK = "blok"
     TRANSACTION = "trsn"
     BLOCKCHAIN = "bkcn"
+    ALL_MSGSUB_TYPES = [TEST, NODE_ADDRESS, NODE_INIT, BLOCK, TRANSACTION, BLOCKCHAIN]
 
 
 class MsgSideParameters:

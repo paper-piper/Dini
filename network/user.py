@@ -53,7 +53,7 @@ class User(Bootstrap):
 
     def request_blockchain_update(self):
         self.send_distributed_message(
-            MsgTypes.REQUEST_OBJECT,
+            MsgTypes.REQUEST,
             MsgSubTypes.BLOCKCHAIN,
             self.wallet.latest_hash
         )
@@ -73,7 +73,7 @@ class User(Bootstrap):
         transaction.sign_transaction(lord_sk)
         self.wallet.add_pending_transaction(transaction, ActionType.BUY)
 
-        self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f"bought {amount} Dini's")
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
@@ -83,7 +83,7 @@ class User(Bootstrap):
         transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
         self.wallet.add_pending_transaction(transaction, ActionType.SELL)
-        self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f" {amount} Dini's")
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
@@ -99,7 +99,7 @@ class User(Bootstrap):
         transaction.sign_transaction(self.private_key)
         # keep track of pending transactions
         self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
-        self.send_distributed_message(MsgTypes.RESPONSE_OBJECT, MsgSubTypes.TRANSACTION, transaction)
+        self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
         self.user_logger.info(f"new transaction made: {transaction} ")
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
@@ -183,7 +183,7 @@ class User(Bootstrap):
         :return: None
         """
         self.send_distributed_message(
-            MsgTypes.REQUEST_OBJECT,
+            MsgTypes.REQUEST,
             MsgSubTypes.BLOCKCHAIN,
             self.wallet.latest_hash
         )

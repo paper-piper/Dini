@@ -4,8 +4,6 @@ A functions which takes message type, message subtype and message parameters.
 """
 
 import pickle
-import socket
-
 from utils.logging_utils import setup_basic_logger
 from utils.config import MsgSubTypes, MsgStructure, MsgTypes
 from core.blockchain import Transaction, Blockchain, Block
@@ -23,12 +21,16 @@ def receive_message(sock):
     """
     try:
         message = receive_socket_message(sock)
-        if message:
-            msg_type, msg_sub_type, params = message
-            return msg_type, msg_sub_type, params
+        if not message:
+            return None
+
+        msg_type, msg_sub_type, params = message
+        if msg_sub_type not in MsgSubTypes.ALL_MSGSUB_TYPES or msg_type not in MsgTypes.ALL_MSG_TYPES:
+            return None
+        return msg_type, msg_sub_type, params
     except Exception as e:
         logger.error(f"Failed to receive and decode message: {e}")
-        raise
+        return None
 
 
 def receive_socket_message(sock):
@@ -43,7 +45,6 @@ def receive_socket_message(sock):
             message_len_str += char  # Add the character to the length string
 
         message_len = int(message_len_str)  # Convert the length to an integer
-
 
         # Step 2: get msg type and subtype
         msg_type = get_msg_section(sock)
@@ -78,7 +79,7 @@ def get_msg_section(sock, length=4):
 
 def decrypt_msg_params(msg_type, msg_subtype, params_bytes):
     params_dictionary = pickle.loads(params_bytes)
-    if msg_type == MsgTypes.REQUEST_OBJECT:
+    if msg_type == MsgTypes.REQUEST:
         return params_dictionary
 
     # try and convert the main object to an object from dictionary

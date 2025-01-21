@@ -45,7 +45,7 @@ class Bootstrap(Node):
 
         # after connecting to all available bootstrap addresses, send a distributed request peer msg
         self.bootstrap_logger.debug("Sending nodes discovery message")
-        self.send_distributed_message(MsgTypes.REQUEST_OBJECT, MsgSubTypes.NODE_ADDRESS)
+        self.send_distributed_message(MsgTypes.REQUEST, MsgSubTypes.NODE_ADDRESS)
 
     def get_bootstrap_addresses(self):
         """

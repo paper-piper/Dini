@@ -56,7 +56,7 @@ if __name__ == "__main__":
         logger.info(f"Node2 tried to connect to node1, got the address: {node2.node_connections.keys()}")
         # Test communication: Send a message to Node1
         node2.send_distributed_message(
-            MsgTypes.BROADCAST_OBJECT,
+            MsgTypes.BROADCAST,
             MsgSubTypes.TEST,
             'testing actual addresses',
             True

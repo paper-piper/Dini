@@ -186,7 +186,7 @@ class Miner(User):
             else:
                 self.blockchain.filter_and_add_block(mined_block)
                 blocks_num -= 1
-                self.send_distributed_message(MsgTypes.BROADCAST_OBJECT, MsgSubTypes.BLOCK, mined_block)
+                self.send_distributed_message(MsgTypes.BROADCAST, MsgSubTypes.BLOCK, mined_block)
                 self.mempool.remove_transactions(mined_block.transactions)
                 self.miner_logger.info(f"Block mined and added to blockchain successfully. Block: {mined_block}")
 

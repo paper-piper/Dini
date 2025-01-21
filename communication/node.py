@@ -116,7 +116,7 @@ class Node(ABC):
             node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             node_socket.connect(address)
             # send the accepting node the actual address
-            send_message(node_socket, MsgTypes.RESPONSE_OBJECT, MsgSubTypes.NODE_INIT, self.address)
+            send_message(node_socket, MsgTypes.RESPONSE, MsgSubTypes.NODE_INIT, self.address)
             with self.node_connections_lock:
                 self.node_connections[address] = node_socket
 
@@ -221,7 +221,7 @@ class Node(ABC):
 
     def process_message(self, node_address, msg_type, msg_subtype, msg_params):
         match msg_type:
-            case MsgTypes.REQUEST_OBJECT:
+            case MsgTypes.REQUEST:
                 requested_object = self.get_requested_object(msg_subtype, msg_params)
 
                 # if the node cannot handle the request, discard it for now and trust other node to answer it
@@ -229,21 +229,21 @@ class Node(ABC):
                     return
                 self.send_focused_message(
                     node_address,
-                    MsgTypes.RESPONSE_OBJECT,
+                    MsgTypes.RESPONSE,
                     msg_subtype,
                     requested_object
                 )
                 self.node_logger.info(f"{node_address} Requested ({msg_subtype}) object."
                                       f" replied with object {requested_object}")
 
-            case MsgTypes.RESPONSE_OBJECT:
+            case MsgTypes.RESPONSE:
                 msg_object = msg_params[0]
                 self.process_object_data(msg_subtype, msg_object)
                 self.node_logger.info(
                     f"received response {msg_subtype} object: ({msg_object}) from node with address: {node_address}"
                 )
 
-            case MsgTypes.BROADCAST_OBJECT:
+            case MsgTypes.BROADCAST:
                 msg_object = msg_params[0]
                 already_seen = self.process_object_data(msg_subtype, msg_object)
                 if not already_seen:
@@ -267,8 +267,7 @@ class Node(ABC):
                 results = self.serve_blockchain_request(params[0])
             case MsgSubTypes.NODE_ADDRESS:
                 results = self.serve_node_request()
-            case _:
-                self.node_logger.error(" Received invalid message subtype")
+
 
         return results
 
