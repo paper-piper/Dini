@@ -18,10 +18,8 @@ class User(Bootstrap):
             secret_key,
             wallet=None,
             wallet_filename=None,
-            port_manager=None,
             ip=None,
             port=None,
-            instance_id=None,
             child_dir="User"
     ):
         """
@@ -31,9 +29,7 @@ class User(Bootstrap):
         :param wallet_filename: Name of the file where wallet data is saved.
         """
         super().__init__(is_bootstrap=False,
-                         port_manager=port_manager,
                          ip=ip, port=port,
-                         instance_id=instance_id,
                          child_dir=child_dir
                          )
 

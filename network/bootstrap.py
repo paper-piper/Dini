@@ -13,16 +13,12 @@ class Bootstrap(Node):
             port=8000,
             node_connections=None,
             ip=None,
-            port_manager=None,
-            instance_id=None,
             child_dir="Bootstrap"
 
     ):
         super().__init__(port,
                          node_connections=node_connections,
                          ip=ip,
-                         port_manager=port_manager,
-                         instance_id=instance_id,
                          child_dir=child_dir
                          )
 

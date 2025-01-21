@@ -21,9 +21,7 @@ class Node(ABC):
                  port=8080,
                  ip=None,
                  node_connections=None,
-                 port_manager=None,
                  child_dir="Node",
-                 instance_id=None
                  ):
         """
         :param port: Port number for the node's socket.
@@ -36,11 +34,15 @@ class Node(ABC):
         """
 
         self.ip = socket.gethostbyname(socket.gethostname()) if not ip else ip
-        self.port_manager = port_manager
-        if port_manager:
-            self.port = port_manager.allocate_port()
-        else:
+        self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if port:
             self.port = port
+            self.accept_socket.bind(('0.0.0.0', self.port))
+        else:
+            # Bind to all interfaces on an ephemeral port
+            self.accept_socket.bind(('0.0.0.0', 0))
+            self.port = self.accept_socket.getsockname()[1]
+
         self.address = (self.ip, self.port)
 
         self.node_logger = configure_logger(
@@ -51,8 +53,6 @@ class Node(ABC):
 
         self.node_connections_lock = threading.Lock()
         self.node_connections = {} if not node_connections else node_connections
-
-        self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.messages_queue = Queue()
 
         self.process_incoming_messages = threading.Thread(target=self.process_messages_from_queue, daemon=True)
@@ -84,7 +84,6 @@ class Node(ABC):
         """
         try:
             # accept all connections
-            self.accept_socket.bind(('0.0.0.0', self.port))
             self.accept_socket.listen(QUEUE_SIZE)
             while True:
                 node_socket, _ = self.accept_socket.accept()

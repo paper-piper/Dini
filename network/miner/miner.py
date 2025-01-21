@@ -25,10 +25,8 @@ class Miner(User):
             mempool=None,
             wallet=None,
             wallet_filename=None,
-            port_manager=None,
             ip=None,
             port=None,
-            instance_id=None,
             child_dir="Miner"
     ):
         """
@@ -43,10 +41,8 @@ class Miner(User):
             secret_key,
             wallet=wallet,
             wallet_filename=wallet_filename,
-            port_manager=port_manager,
             ip=ip,
             port=port,
-            instance_id=instance_id,
             child_dir=child_dir
         )
 
