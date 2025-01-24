@@ -1,7 +1,7 @@
 import threading
 from queue import Queue
 from abc import abstractmethod, ABC
-from utils.config import MsgTypes, MsgSubTypes
+from utils.config import MsgTypes, MsgSubTypes, NodeSettings
 from utils.logging_utils import configure_logger
 from communication.protocol import receive_message, send_message
 import socket
@@ -22,12 +22,12 @@ class Node(ABC):
                  ip=None,
                  node_connections=None,
                  child_dir="Node",
+                 name=NodeSettings.DEFAULT_NAME
                  ):
         """
         :param port: Port number for the node's socket.
         :param ip: IP address of the node (defaults to the local machine's IP).
         :param node_connections: Dictionary of existing node connections.
-        :param instance_id: The unique ID used to name the log file (passed from the actual child).
         :param child_dir:   The name of the subdirectory under logs/,
                             e.g. "miner", "user", etc.
         :return: None
@@ -44,7 +44,7 @@ class Node(ABC):
             self.port = self.accept_socket.getsockname()[1]
 
         self.address = (self.ip, self.port)
-
+        self.name = name
         self.node_logger = configure_logger(
             class_name="Node",
             child_dir=child_dir,
@@ -53,24 +53,13 @@ class Node(ABC):
 
         self.node_connections_lock = threading.Lock()
         self.node_connections = {} if not node_connections else node_connections
+        self.node_details = {}  # name : public key
         self.messages_queue = Queue()
 
         self.process_incoming_messages = threading.Thread(target=self.process_messages_from_queue, daemon=True)
         self.process_incoming_messages.start()
         self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
         self.accept_connections_thread.start()
-
-    def log(self, level, message):
-        """
-        Logs a message with the class name as a tag.
-        :param level: Logging level (e.g., logging.INFO).
-        :param message: Message to log.
-        """
-        self.node_logger.log(level, message, extra={"class_name": self.__class__.__name__})
-
-    def __del__(self):
-        if self.port_manager:
-            self.port_manager.release_port(self.port)
 
     def get_connected_nodes(self):
         with self.node_connections_lock:
@@ -91,6 +80,9 @@ class Node(ABC):
                 node_address = node_address[0]
                 with self.node_connections_lock:
                     self.node_connections[node_address] = node_socket
+
+                self.receive_pk_name_message(node_socket)
+                self.send_pk_name_message(node_socket)
 
                 threading.Thread(target=self.receive_messages, args=(node_address, node_socket), daemon=True).start()
                 self.node_logger.info(f"accepted connection from {node_address}")
@@ -117,6 +109,10 @@ class Node(ABC):
             node_socket.connect(address)
             # send the accepting node the actual address
             send_message(node_socket, MsgTypes.RESPONSE, MsgSubTypes.NODE_INIT, self.address)
+            # send the accepting node name and public key
+            self.send_pk_name_message(node_socket)
+            self.receive_pk_name_message(node_socket)
+
             with self.node_connections_lock:
                 self.node_connections[address] = node_socket
 
@@ -124,7 +120,7 @@ class Node(ABC):
             threading.Thread(target=self.receive_messages, args=(address, node_socket), daemon=True).start()
             self.node_logger.info(f"Connected to node with address {address}")
         except socket.error as se:
-            self.node_logger.info(f"Failed to connect to node with address {address}")
+            self.node_logger.info(f"Failed to connect to node with address {address}. {se}")
         except Exception as e:
             self.node_logger.error(f"Caught unexpected error while connecting to node with address {address} - {e}")
 
@@ -268,7 +264,6 @@ class Node(ABC):
             case MsgSubTypes.NODE_ADDRESS:
                 results = self.serve_node_request()
 
-
         return results
 
     def process_object_data(self, object_type, msg_object):
@@ -350,6 +345,20 @@ class Node(ABC):
 
         :param params: Parameters for transaction sending.
         """
+
+    @abstractmethod
+    def get_public_key(self):
+        """
+        Sends the public key (depends on the class, not every class can send it)
+        """
+    def send_pk_name_message(self, node_socket):
+        send_message(node_socket, MsgTypes.RESPONSE, MsgSubTypes.NODE_INIT, self.name, self.get_public_key())
+
+    def receive_pk_name_message(self, node_socket):
+        _, _, name_pk_pair = receive_message(node_socket)
+        if len(name_pk_pair) == 1 or name_pk_pair[1] is None:
+            return
+        self.node_details[name_pk_pair[0]] = name_pk_pair[1]
 
     def process_test_data(self, params):
         """

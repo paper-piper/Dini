@@ -2,7 +2,6 @@ import time
 from network.bootstrap import Bootstrap
 from network.miner.miner import Miner
 from network.user import User
-from threading import Event
 from core.transaction import get_sk_pk_pair
 
 
@@ -13,10 +12,8 @@ if __name__ == "__main__":
     bootstrap_port = 8001
     miner_port = 8000
     spending_user_port = 9000
-    receiving_user_port = 9001
     spending_user_sk, spending_user_pk = get_sk_pk_pair()
     miner_sk, miner_pk = get_sk_pk_pair()
-    receiving_user_sk, receiving_user_pk = get_sk_pk_pair()
     print("Loading bootstrap...")
     bootstrap = Bootstrap(ip=ip, port=bootstrap_port)
     print("Loading spending user...")
@@ -42,3 +39,4 @@ if __name__ == "__main__":
         time.sleep(1)
 
     print(f"Received transaction! {spending_user.wallet.get_recent_transactions(-1)}")
+    print(spending_user.node_details)

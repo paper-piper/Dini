@@ -1,7 +1,7 @@
 import os
 from communication.node import Node
 import json
-from utils.config import MsgTypes, MsgSubTypes, FilesSettings
+from utils.config import MsgTypes, MsgSubTypes, FilesSettings, NodeSettings
 from utils.logging_utils import configure_logger
 
 
@@ -13,13 +13,15 @@ class Bootstrap(Node):
             port=8000,
             node_connections=None,
             ip=None,
-            child_dir="Bootstrap"
+            child_dir="Bootstrap",
+            name=NodeSettings.DEFAULT_NAME
 
     ):
         super().__init__(port,
                          node_connections=node_connections,
                          ip=ip,
-                         child_dir=child_dir
+                         child_dir=child_dir,
+                         name=name
                          )
 
         self.bootstrap_logger = configure_logger(
@@ -119,6 +121,9 @@ class Bootstrap(Node):
 
     def serve_blockchain_request(self, latest_hash):
         self.bootstrap_logger.debug(f"Bootstrap does not handle block requests")
+
+    def get_public_key(self):
+        return None
 
     def _load_config(self):
         bootstrap_config_filepath = os.path.join(

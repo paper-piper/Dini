@@ -2,6 +2,10 @@ import hashlib
 import os
 
 
+class NodeSettings:
+    DEFAULT_NAME = "boring node :("
+
+
 class PortsRanges:
     RANGE_SIZE = 1000
     BOOTSTRAP_RANGE_START = 4000

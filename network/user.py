@@ -3,7 +3,8 @@ import json
 import os
 from core.wallet import Wallet, create_sample_light_blockchain
 from core.transaction import Transaction, get_sk_pk_pair
-from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings, ActionType, ActionSettings
+from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings, ActionType, ActionSettings, \
+    NodeSettings
 from utils.keys_manager import load_key
 from utils.logging_utils import configure_logger
 
@@ -19,7 +20,8 @@ class User(Bootstrap):
             wallet=None,
             ip=None,
             port=None,
-            child_dir="User"
+            child_dir="User",
+            name=NodeSettings.DEFAULT_NAME
     ):
         """
         :param public_key: User's public key
@@ -28,7 +30,8 @@ class User(Bootstrap):
         """
         super().__init__(is_bootstrap=False,
                          ip=ip, port=port,
-                         child_dir=child_dir
+                         child_dir=child_dir,
+                         name=name
                          )
 
         self.user_logger = configure_logger(
@@ -142,6 +145,9 @@ class User(Bootstrap):
         """
         pass
         #  self.user_logger.debug(f"User does not handle transactions")
+
+    def get_public_key(self):
+        return self.public_key
 
     def save_wallet(self):
         """

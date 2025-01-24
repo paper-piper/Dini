@@ -1,7 +1,7 @@
 import json
 import os
 import threading
-from utils.config import MsgTypes, MsgSubTypes, FilesSettings
+from utils.config import MsgTypes, MsgSubTypes, FilesSettings, NodeSettings
 from network.user import User
 from network.miner.mempool import Mempool
 from network.miner.multiprocess_mining import MultiprocessMining
@@ -25,7 +25,8 @@ class Miner(User):
             wallet=None,
             ip=None,
             port=None,
-            child_dir="Miner"
+            child_dir="Miner",
+            name=NodeSettings.DEFAULT_NAME
     ):
         """
         Initialize a miner instance with a blockchain reference, mempool, difficulty level, and necessary sync elements.
@@ -40,7 +41,8 @@ class Miner(User):
             wallet=wallet,
             ip=ip,
             port=port,
-            child_dir=child_dir
+            child_dir=child_dir,
+            name=name
         )
 
         self.miner_logger = configure_logger(
