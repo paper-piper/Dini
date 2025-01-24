@@ -114,7 +114,7 @@ def decrypt_msg_params(msg_type, msg_subtype, params_bytes):
     return params_dictionary
 
 
-def send_message(sock, msg_type, msg_sub_type, *msg_params):
+def send_protocol_message(sock, msg_type, msg_sub_type, *msg_params):
     """
     Constructs and sends an encrypted message over the socket.
     :param sock: The socket through which the message is sent.

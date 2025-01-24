@@ -1,5 +1,5 @@
 import socket
-from communication.protocol import send_message
+from communication.protocol import send_protocol_message
 from core.transaction import create_sample_transaction
 from utils.config import MsgTypes, MsgSubTypes
 from utils.logging_utils import setup_logger
@@ -19,7 +19,7 @@ def main():
         # Connect to the receiver on localhost
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect(('127.0.0.1', 8080))  # Port 65432 for local testing
-            send_message(
+            send_protocol_message(
                 sock,
                 MsgTypes.RESPONSE,
                 MsgSubTypes.TRANSACTION,

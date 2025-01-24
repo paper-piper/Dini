@@ -3,7 +3,7 @@ from queue import Queue
 from abc import abstractmethod, ABC
 from utils.config import MsgTypes, MsgSubTypes, NodeSettings
 from utils.logging_utils import configure_logger
-from communication.protocol import receive_message, send_message
+from communication.protocol import receive_message, send_protocol_message
 import socket
 
 # Setup logger for node file
@@ -81,9 +81,6 @@ class Node(ABC):
                 with self.node_connections_lock:
                     self.node_connections[node_address] = node_socket
 
-                self.receive_pk_name_message(node_socket)
-                self.send_pk_name_message(node_socket)
-
                 threading.Thread(target=self.receive_messages, args=(node_address, node_socket), daemon=True).start()
                 self.node_logger.info(f"accepted connection from {node_address}")
         except Exception as e:
@@ -108,10 +105,7 @@ class Node(ABC):
             node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             node_socket.connect(address)
             # send the accepting node the actual address
-            send_message(node_socket, MsgTypes.RESPONSE, MsgSubTypes.NODE_INIT, self.address)
-            # send the accepting node name and public key
-            self.send_pk_name_message(node_socket)
-            self.receive_pk_name_message(node_socket)
+            send_protocol_message(node_socket, MsgTypes.RESPONSE, MsgSubTypes.NODE_INIT, self.address)
 
             with self.node_connections_lock:
                 self.node_connections[address] = node_socket
@@ -138,7 +132,7 @@ class Node(ABC):
             for node_info, node_socket in self.node_connections.items():
                 try:
                     if not excluded_node or node_info is not excluded_node:
-                        send_message(node_socket, msg_type, msg_sub_type, *msg_params)
+                        send_protocol_message(node_socket, msg_type, msg_sub_type, *msg_params)
                         sent_nodes.append(node_info)
                 except Exception as e:
                     self.node_logger.error(f"Failed to send message to {node_info}: {e}")
@@ -163,7 +157,7 @@ class Node(ABC):
                 return False
         try:
             with self.node_connections_lock:
-                send_message(self.node_connections[address], msg_type, msg_subtype, *msg_params)
+                send_protocol_message(self.node_connections[address], msg_type, msg_subtype, *msg_params)
             self.node_logger.info(f"Focused message sent to {address}: "
                                   f"({msg_type}), ({msg_subtype}), ({msg_params})")
             return True
@@ -178,6 +172,11 @@ class Node(ABC):
         :param node_socket: The socket connection to the node.
         """
         try:
+            # before receiving messages from his indefinably, send him your name
+            pk = self.get_public_key()
+            if pk:
+                self.send_focused_message(
+                    node_address, MsgTypes.RESPONSE, MsgSubTypes.NODE_NAME, [self.name, pk])
             while True:
                 # Receive message from node
                 message = receive_message(node_socket)
@@ -290,8 +289,11 @@ class Node(ABC):
 
             case MsgSubTypes.TEST:
                 # since this is a test, it is new
-                already_seen = self.process_test_data(msg_object)
+                self.process_test_data(msg_object)
 
+            case MsgSubTypes.NODE_NAME:
+                # since name is new connection-based, it is always new
+                self.process_name_data(msg_object)
             case _:
                 self.node_logger.error(f" invalid object type: '{object_type}'")
 
@@ -346,19 +348,18 @@ class Node(ABC):
         :param params: Parameters for transaction sending.
         """
 
+    def process_name_data(self, name_pk_pair):
+        if len(name_pk_pair) == 1 or name_pk_pair[1] is None:
+            self.node_logger.warning(f"Invalid name pk pair - {name_pk_pair}")
+            return
+        self.connected_nodes_names[name_pk_pair[0]] = name_pk_pair[1]
+
     @abstractmethod
     def get_public_key(self):
         """
         Sends the public key (depends on the class, not every class can send it)
         """
-    def send_pk_name_message(self, node_socket):
-        send_message(node_socket, MsgTypes.RESPONSE, MsgSubTypes.NODE_INIT, self.name, self.get_public_key())
 
-    def receive_pk_name_message(self, node_socket):
-        _, _, name_pk_pair = receive_message(node_socket)
-        if len(name_pk_pair) == 1 or name_pk_pair[1] is None:
-            return
-        self.connected_nodes_names[name_pk_pair[0]] = name_pk_pair[1]
 
     def process_test_data(self, params):
         """

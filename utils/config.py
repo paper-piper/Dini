@@ -86,10 +86,11 @@ class MsgSubTypes:
     TEST = "test"
     NODE_ADDRESS = "node"
     NODE_INIT = "init"
+    NODE_NAME = "name"
     BLOCK = "blok"
     TRANSACTION = "trsn"
     BLOCKCHAIN = "bkcn"
-    ALL_MSGSUB_TYPES = [TEST, NODE_ADDRESS, NODE_INIT, BLOCK, TRANSACTION, BLOCKCHAIN]
+    ALL_MSGSUB_TYPES = [TEST, NODE_ADDRESS, NODE_INIT, NODE_NAME, BLOCK, TRANSACTION, BLOCKCHAIN]
 
 
 class MsgSideParameters:
