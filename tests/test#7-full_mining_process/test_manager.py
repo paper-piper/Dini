@@ -39,4 +39,4 @@ if __name__ == "__main__":
         time.sleep(1)
 
     print(f"Received transaction! {spending_user.wallet.get_recent_transactions(-1)}")
-    print(spending_user.node_details)
+    print(spending_user.connected_nodes_names)

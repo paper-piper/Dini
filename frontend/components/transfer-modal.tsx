@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -20,38 +20,50 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-// In a real application, you would fetch or receive this list from your backend:
-const users = [
-  { id: "1", name: "Alice" },
-  { id: "2", name: "Bob" },
-  { id: "3", name: "Charlie" },
-  { id: "4", name: "Diana" },
-]
-
 interface TransferModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onTransfer: (recipient: string, amount: number) => void // callback from parent
 }
 
+// Adjust this to match your backend URL if it's different
+const API_URL = "http://localhost:8000"
+
 export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalProps) {
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([])
   const [selectedRecipient, setSelectedRecipient] = useState("")
   const [amount, setAmount] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const handleTransfer = useCallback(() => {
-    // Basic validation
-    if (!selectedRecipient || amount <= 0 || isProcessing) return
+  // Fetch connected users from the backend when the modal opens
+  useEffect(() => {
+    if (open) {
+      // GET the array of connected user names
+      fetch(`${API_URL}/connected-users`)
+        .then((res) => res.json())
+        .then((data: string[]) => {
+          setConnectedUsers(data || [])
+        })
+        .catch((error) => {
+          console.error("Failed to fetch connected users:", error)
+          setConnectedUsers([]) // fallback to empty array
+        })
+    }
+  }, [open])
 
+  const handleTransfer = useCallback(() => {
+    if (!selectedRecipient || amount <= 0 || isProcessing) return
     setIsProcessing(true)
-    // Call the parent's onTransfer, passing the selected user name and amount
+
+    // Call parent's onTransfer (which triggers the creation of a transaction)
     onTransfer(selectedRecipient, amount)
+
     // Reset fields
     setSelectedRecipient("")
     setAmount(0)
     setIsProcessing(false)
     onOpenChange(false)
-  }, [selectedRecipient, amount, isProcessing, onTransfer, onOpenChange])
+  }, [selectedRecipient, amount, isProcessing, onOpenChange, onTransfer])
 
   return (
     <Dialog
@@ -60,7 +72,7 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
         // Prevent closing while processing
         if (!isProcessing) {
           if (!newOpen) {
-            // Reset fields on close
+            // Reset when user manually closes or modal unmounts
             setSelectedRecipient("")
             setAmount(0)
           }
@@ -93,13 +105,13 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
                 <SelectValue placeholder="Select recipient" />
               </SelectTrigger>
               <SelectContent className="backdrop-blur-xl bg-white/10 border-white/20">
-                {users.map((user) => (
+                {connectedUsers.map((userName, index) => (
                   <SelectItem
-                    key={user.id}
-                    value={user.name} // store the user name (or use user.id if you prefer)
+                    key={index}
+                    value={userName}
                     className="text-white hover:bg-white/20"
                   >
-                    {user.name}
+                    {userName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -134,11 +146,7 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
           <Button
             className="bg-purple-600 hover:bg-purple-700 text-white"
             onClick={handleTransfer}
-            disabled={
-              isProcessing ||
-              !selectedRecipient ||
-              amount <= 0
-            }
+            disabled={!selectedRecipient || amount <= 0 || isProcessing}
           >
             {isProcessing ? "Processing..." : "Transfer Now"}
           </Button>

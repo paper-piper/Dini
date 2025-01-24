@@ -21,6 +21,19 @@ sk, pk = get_sk_pk_pair()
 user = User(pk, sk, ip=ip, port=user_port)  # Assume `User` is already implemented
 
 
+@app.route("/connected-users", methods=["GET"])
+def get_connected_users():
+    """
+    Returns the list of connected user names (dictionary keys).
+    """
+    try:
+        connected_user_names = list(user.connected_nodes_names.keys())
+        return jsonify(connected_user_names), 200
+    except Exception as e:
+        logger.error(f"Error getting connected users: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 @app.route("/transactions", methods=["GET", "POST", "OPTIONS"])
 def handle_transactions():
     """

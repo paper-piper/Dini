@@ -53,7 +53,7 @@ class Node(ABC):
 
         self.node_connections_lock = threading.Lock()
         self.node_connections = {} if not node_connections else node_connections
-        self.node_details = {}  # name : public key
+        self.connected_nodes_names = {}  # name : public key
         self.messages_queue = Queue()
 
         self.process_incoming_messages = threading.Thread(target=self.process_messages_from_queue, daemon=True)
@@ -358,7 +358,7 @@ class Node(ABC):
         _, _, name_pk_pair = receive_message(node_socket)
         if len(name_pk_pair) == 1 or name_pk_pair[1] is None:
             return
-        self.node_details[name_pk_pair[0]] = name_pk_pair[1]
+        self.connected_nodes_names[name_pk_pair[0]] = name_pk_pair[1]
 
     def process_test_data(self, params):
         """
