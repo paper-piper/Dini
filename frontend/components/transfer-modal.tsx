@@ -12,13 +12,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import Select from "react-select"
+
+// Define the shape of a user option
+interface UserOption {
+  label: string
+  value: string
+}
 
 interface TransferModalProps {
   open: boolean
@@ -30,19 +30,29 @@ interface TransferModalProps {
 const API_URL = "http://localhost:8000"
 
 export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalProps) {
-  const [connectedUsers, setConnectedUsers] = useState<string[]>([])
-  const [selectedRecipient, setSelectedRecipient] = useState("")
-  const [amount, setAmount] = useState(0)
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [connectedUsers, setConnectedUsers] = useState<UserOption[]>([])
+  const [selectedRecipient, setSelectedRecipient] = useState<UserOption | null>(null)
+  const [amount, setAmount] = useState<number>(0)
+  const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
   // Fetch connected users from the backend when the modal opens
   useEffect(() => {
     if (open) {
       // GET the array of connected user names
       fetch(`${API_URL}/connected-users`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`Error fetching users: ${res.statusText}`)
+          }
+          return res.json()
+        })
         .then((data: string[]) => {
-          setConnectedUsers(data || [])
+          // Transform the data into the format react-select expects
+          const options = data.map((userName) => ({
+            label: userName,
+            value: userName, // You can use user IDs here if available
+          }))
+          setConnectedUsers(options)
         })
         .catch((error) => {
           console.error("Failed to fetch connected users:", error)
@@ -56,10 +66,10 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
     setIsProcessing(true)
 
     // Call parent's onTransfer (which triggers the creation of a transaction)
-    onTransfer(selectedRecipient, amount)
+    onTransfer(selectedRecipient.value, amount)
 
     // Reset fields
-    setSelectedRecipient("")
+    setSelectedRecipient(null)
     setAmount(0)
     setIsProcessing(false)
     onOpenChange(false)
@@ -73,7 +83,7 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
         if (!isProcessing) {
           if (!newOpen) {
             // Reset when user manually closes or modal unmounts
-            setSelectedRecipient("")
+            setSelectedRecipient(null)
             setAmount(0)
           }
           onOpenChange(newOpen)
@@ -94,28 +104,15 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
               Recipient
             </Label>
             <Select
-              onValueChange={setSelectedRecipient}
+              id="recipient"
+              options={connectedUsers}
               value={selectedRecipient}
-              disabled={isProcessing}
-            >
-              <SelectTrigger
-                id="recipient"
-                className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
-              >
-                <SelectValue placeholder="Select recipient" />
-              </SelectTrigger>
-              <SelectContent className="backdrop-blur-xl bg-white/10 border-white/20">
-                {connectedUsers.map((userName, index) => (
-                  <SelectItem
-                    key={index}
-                    value={userName}
-                    className="text-white hover:bg-white/20"
-                  >
-                    {userName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={setSelectedRecipient}
+              isDisabled={isProcessing || connectedUsers.length === 0}
+              placeholder="Select recipient"
+              className="react-select-container"
+              classNamePrefix="react-select"
+            />
           </div>
 
           {/* Amount Input */}
