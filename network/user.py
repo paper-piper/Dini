@@ -1,3 +1,5 @@
+from cryptography.hazmat.primitives import serialization
+
 from network.bootstrap import Bootstrap
 import json
 import os
@@ -28,6 +30,11 @@ class User(Bootstrap):
         :param secret_key: User's secret key
         :param wallet: core object, or None to load from file.
         """
+
+        # initiate public and private keys before calling super class in order to pass public key and name
+        self.public_key = public_key
+        self.private_key = secret_key
+
         super().__init__(is_bootstrap=False,
                          ip=ip, port=port,
                          child_dir=child_dir,
@@ -40,8 +47,6 @@ class User(Bootstrap):
             instance_id=f"{self.ip}-{self.port}"
         )
 
-        self.public_key = public_key
-        self.private_key = secret_key
 
         directory_name = f"{child_dir}_{str(self.port)}"
         self.wallet_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, directory_name, FilesSettings.WALLET_FILE_NAME)
@@ -147,7 +152,10 @@ class User(Bootstrap):
         #  self.user_logger.debug(f"User does not handle transactions")
 
     def get_public_key(self):
-        return self.public_key
+        return self.public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode()
 
     def save_wallet(self):
         """

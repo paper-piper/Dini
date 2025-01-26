@@ -1,6 +1,9 @@
 import threading
 from queue import Queue
 from abc import abstractmethod, ABC
+
+from cryptography.hazmat.primitives import serialization
+
 from utils.config import MsgTypes, MsgSubTypes, NodeSettings
 from utils.logging_utils import configure_logger
 from communication.protocol import receive_message, send_protocol_message
@@ -104,6 +107,8 @@ class Node(ABC):
             # Attempt to connect to the new node
             node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             node_socket.connect(address)
+            self.node_logger.info(f"Connected to node with address {address}")
+
             # send the accepting node the actual address
             send_protocol_message(node_socket, MsgTypes.RESPONSE, MsgSubTypes.NODE_INIT, self.address)
 
@@ -112,7 +117,6 @@ class Node(ABC):
 
             # Start a thread to listen for messages from this node
             threading.Thread(target=self.receive_messages, args=(address, node_socket), daemon=True).start()
-            self.node_logger.info(f"Connected to node with address {address}")
         except socket.error as se:
             self.node_logger.info(f"Failed to connect to node with address {address}. {se}")
         except Exception as e:
@@ -349,10 +353,12 @@ class Node(ABC):
         """
 
     def process_name_data(self, name_pk_pair):
-        if len(name_pk_pair) == 1 or name_pk_pair[1] is None:
+        if not name_pk_pair or len(name_pk_pair) == 1 or name_pk_pair[1] is None:
             self.node_logger.warning(f"Invalid name pk pair - {name_pk_pair}")
             return
-        self.connected_nodes_names[name_pk_pair[0]] = name_pk_pair[1]
+        name = name_pk_pair[0]
+        public_key = serialization.load_pem_public_key(name_pk_pair[1].encode())
+        self.connected_nodes_names[name] = public_key
 
     @abstractmethod
     def get_public_key(self):

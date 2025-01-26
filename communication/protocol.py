@@ -107,8 +107,13 @@ def decrypt_msg_params(msg_type, msg_subtype, params_bytes):
             # just for testing, no need to convert
             main_object = main_object_dict
 
+        case MsgSubTypes.NODE_NAME:
+            # no converting here
+            main_object = main_object_dict
+
         case _:
             logger.error(f"Got invalid message subtype: {msg_subtype}")
+            raise
 
     params_dictionary[0] = main_object
     return params_dictionary
