@@ -2,6 +2,7 @@
 import inspect
 import logging
 import os
+import shutil
 from datetime import datetime
 
 from utils.config import FilesSettings, LoggingSettings
@@ -11,6 +12,12 @@ LOGS_DIRECTORY = str(os.path.join(
     "..",
     FilesSettings.LOGS_FOLDER_NAME
 ))
+
+
+def clean_logs():
+    if os.path.exists(LOGS_DIRECTORY):
+        shutil.rmtree(LOGS_DIRECTORY)  # Delete all existing logs
+    os.makedirs(LOGS_DIRECTORY)
 
 
 def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:

@@ -1,9 +1,10 @@
+from utils.logging_utils import clean_logs
+# clean logs before creaing new ones using the imports
+clean_logs()
 import time
 from network.bootstrap import Bootstrap
-from network.miner.miner import Miner
 from network.user import User
 from core.transaction import get_sk_pk_pair
-
 
 if __name__ == "__main__":
 
