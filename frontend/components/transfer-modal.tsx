@@ -12,7 +12,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Select from "react-select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 // Define the shape of a user option
 interface UserOption {
@@ -31,7 +37,7 @@ const API_URL = "http://localhost:8000"
 
 export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalProps) {
   const [connectedUsers, setConnectedUsers] = useState<UserOption[]>([])
-  const [selectedRecipient, setSelectedRecipient] = useState<UserOption | null>(null)
+  const [selectedRecipient, setSelectedRecipient] = useState<string>("")
   const [amount, setAmount] = useState<number>(0)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
@@ -47,7 +53,7 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
           return res.json()
         })
         .then((data: string[]) => {
-          // Transform the data into the format react-select expects
+          // Transform the data into the format expected
           const options = data.map((userName) => ({
             label: userName,
             value: userName, // You can use user IDs here if available
@@ -66,10 +72,10 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
     setIsProcessing(true)
 
     // Call parent's onTransfer (which triggers the creation of a transaction)
-    onTransfer(selectedRecipient.value, amount)
+    onTransfer(selectedRecipient, amount)
 
     // Reset fields
-    setSelectedRecipient(null)
+    setSelectedRecipient("")
     setAmount(0)
     setIsProcessing(false)
     onOpenChange(false)
@@ -83,7 +89,7 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
         if (!isProcessing) {
           if (!newOpen) {
             // Reset when user manually closes or modal unmounts
-            setSelectedRecipient(null)
+            setSelectedRecipient("")
             setAmount(0)
           }
           onOpenChange(newOpen)
@@ -104,15 +110,27 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
               Recipient
             </Label>
             <Select
-              id="recipient"
-              options={connectedUsers}
+              onValueChange={setSelectedRecipient}
               value={selectedRecipient}
-              onChange={setSelectedRecipient}
-              isDisabled={isProcessing || connectedUsers.length === 0}
-              placeholder="Select recipient"
-              className="react-select-container"
-              classNamePrefix="react-select"
-            />
+            >
+              <SelectTrigger
+                id="recipient"
+                className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
+              >
+                <SelectValue placeholder="Select recipient" />
+              </SelectTrigger>
+              <SelectContent className="backdrop-blur-xl bg-white/10 border-white/20">
+                {connectedUsers.map((user) => (
+                  <SelectItem
+                    key={user.value}
+                    value={user.value}
+                    className="text-white hover:bg-white/20"
+                  >
+                    {user.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Amount Input */}

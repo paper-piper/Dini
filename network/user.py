@@ -69,7 +69,8 @@ class User(Bootstrap):
     def __del__(self):
         if hasattr(self, "port_manager") and self.port_manager:
             self.port_manager.release_port(self.port)
-        self.save_wallet()
+        if hasattr(self, "wallet") and self.wallet:
+            self.save_wallet()
 
     def get_recent_transactions(self, num=5):
         return self.wallet.get_recent_transactions(num)
@@ -96,14 +97,15 @@ class User(Bootstrap):
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
 
-    def add_transaction(self, address, amount, tip=0):
+    def add_transaction(self, name, amount, tip=0):
         """
         Creates a signed transaction and broadcasts it to peers.
-        :param address: Recipient's address.
+        :param name: Recipient's name.
         :param amount: Amount to be transferred.
         :param tip: added tip (optional)
         """
-        transaction = Transaction(self.public_key, address, amount, tip)
+        address = self.nodes_names_addresses[name]
+        transaction = Transaction(self.public_key, name, amount, tip)
         transaction.sign_transaction(self.private_key)
         # keep track of pending transactions
         self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)

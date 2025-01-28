@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
     print(f"Finished loading! starting to cook 👨‍🍳")
 
-    while len(spending_user.connected_nodes_names) == 0:
+    while len(spending_user.nodes_names_addresses) == 0:
         time.sleep(1)
 
-    print(f"Connected to name! {spending_user.connected_nodes_names}")
+    print(f"Connected to name! {spending_user.nodes_names_addresses}")

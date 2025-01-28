@@ -16,9 +16,8 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})  # Allow requ
 
 # Create a mock user instance
 ip = "127.0.0.1"
-user_port = 9000
 sk, pk = get_sk_pk_pair()
-user = User(pk, sk, ip=ip, port=user_port)  # Assume `User` is already implemented
+user = User(pk, sk, ip=ip)  # Assume `User` is already implemented
 
 
 @app.route("/connected-users", methods=["GET"])
@@ -27,7 +26,7 @@ def get_connected_users():
     Returns the list of connected user names (dictionary keys).
     """
     try:
-        connected_user_names = list(user.connected_nodes_names.keys())
+        connected_user_names = list(user.nodes_names_addresses.keys())
         return jsonify(connected_user_names), 200
     except Exception as e:
         logger.error(f"Error getting connected users: {e}")

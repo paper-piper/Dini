@@ -56,7 +56,7 @@ class Node(ABC):
 
         self.node_connections_lock = threading.Lock()
         self.node_connections = {} if not node_connections else node_connections
-        self.connected_nodes_names = {}  # name : public key
+        self.nodes_names_addresses = {}  # name : public key
         self.messages_queue = Queue()
 
         self.process_incoming_messages = threading.Thread(target=self.process_messages_from_queue, daemon=True)
@@ -185,7 +185,7 @@ class Node(ABC):
                 # Receive message from node
                 message = receive_message(node_socket)
                 if not message:  # connection crushed
-                    self.node_logger.warning(f"node {node_address} raised error when trying to read his message")
+                    pass
                 else:
                     msg_type, msg_subtype, msg_params = message
                     # Add the message to the queue for processing if message is not None
@@ -358,7 +358,7 @@ class Node(ABC):
             return
         name = name_pk_pair[0]
         public_key = serialization.load_pem_public_key(name_pk_pair[1].encode())
-        self.connected_nodes_names[name] = public_key
+        self.nodes_names_addresses[name] = public_key
 
     @abstractmethod
     def get_public_key(self):
