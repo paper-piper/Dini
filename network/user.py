@@ -104,15 +104,18 @@ class User(Bootstrap):
         :param amount: Amount to be transferred.
         :param tip: added tip (optional)
         """
-        address = self.nodes_names_addresses[name]
-        transaction = Transaction(self.public_key, name, amount, tip)
-        transaction.sign_transaction(self.private_key)
-        # keep track of pending transactions
-        self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
-        self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
-        self.user_logger.info(f"new transaction made: {transaction} ")
+        try:
+            address = self.nodes_names_addresses[name]
+            transaction = Transaction(self.public_key, address, amount, tip)
+            transaction.sign_transaction(self.private_key)
+            # keep track of pending transactions
+            self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
+            self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
+            self.user_logger.info(f"new transaction made: {transaction} ")
 
-        return transaction.signature[:ActionSettings.ID_LENGTH]
+            return transaction.signature[:ActionSettings.ID_LENGTH]
+        except Exception as e:
+            self.user_logger.error(f"error while trying to send a transaction: - {e}")
 
     def process_block_data(self, block):
         """

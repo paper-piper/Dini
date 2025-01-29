@@ -26,7 +26,7 @@ if __name__ == "__main__":
     stop_event = Event()
 
     try:
-        print("user backend background is running💚")
+        print("user backend background is running!💚")
         stop_event.wait()
     except KeyboardInterrupt:
         print("miner shutting down...")

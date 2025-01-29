@@ -74,10 +74,10 @@ class Node(ABC):
         logs any connection errors.
         :return: None
         """
-        try:
-            # accept all connections
-            self.accept_socket.listen(QUEUE_SIZE)
-            while True:
+        # accept all connections
+        self.accept_socket.listen(QUEUE_SIZE)
+        while True:
+            try:
                 node_socket, _ = self.accept_socket.accept()
                 _, _, node_address = receive_message(node_socket)
                 node_address = node_address[0]
@@ -86,8 +86,8 @@ class Node(ABC):
 
                 threading.Thread(target=self.receive_messages, args=(node_address, node_socket), daemon=True).start()
                 self.node_logger.info(f"accepted connection from {node_address}")
-        except Exception as e:
-            self.node_logger.error(f"Error in accept_connections: {e}")
+            except Exception as e:
+                self.node_logger.error(f"Error in reading message: {e}")
 
     def connect_to_node(self, address):
         """
