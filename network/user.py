@@ -1,5 +1,4 @@
 from cryptography.hazmat.primitives import serialization
-
 from network.bootstrap import Bootstrap
 import json
 import os
@@ -60,6 +59,10 @@ class User(Bootstrap):
         self.save_wallet()
 
     def request_blockchain_update(self):
+        """
+        Requests an update of the blockchain from peers by sending the latest hash.
+        :return: None
+        """
         self.send_distributed_message(
             MsgTypes.REQUEST,
             MsgSubTypes.BLOCKCHAIN,
@@ -73,9 +76,19 @@ class User(Bootstrap):
             self.save_wallet()
 
     def get_recent_transactions(self, num=5):
+        """
+        Retrieves the most recent transactions from the wallet.
+        :param num: Number of recent transactions to retrieve (default is 5).
+        :return: List of recent transactions.
+        """
         return self.wallet.get_recent_transactions(num)
 
     def buy_dinis(self, amount):
+        """
+        Purchases a specified amount of Dini's by creating a transaction with the lord key.
+        :param amount: The amount of Dini's to purchase.
+        :return: Transaction signature (shortened for identification).
+        """
         lord_pk = load_key(KeysSettings.LORD_PK)
         lord_sk = load_key(KeysSettings.LORD_SK)
         transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
@@ -88,6 +101,11 @@ class User(Bootstrap):
         return transaction.signature[:ActionSettings.ID_LENGTH]
 
     def sell_dinis(self, amount):
+        """
+        Sells a specified amount of Dini's by creating a transaction to the lord key.
+        :param amount: The amount of Dini's to sell.
+        :return: Transaction signature (shortened for identification).
+        """
         lord_pk = load_key(KeysSettings.LORD_PK)
         transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
@@ -102,7 +120,8 @@ class User(Bootstrap):
         Creates a signed transaction and broadcasts it to peers.
         :param name: Recipient's name.
         :param amount: Amount to be transferred.
-        :param tip: added tip (optional)
+        :param tip: Optional tip amount to include in the transaction.
+        :return: Transaction signature (shortened for identification).
         """
         try:
             address = self.nodes_names_addresses[name]
@@ -119,10 +138,9 @@ class User(Bootstrap):
 
     def process_block_data(self, block):
         """
-        Adds a block to the wallet and saves the updated chain.
-
-        :param block: Block to add.
-        :return: None
+        Processes and adds a received block to the user's wallet.
+        :param block: Block object to be processed.
+        :return: Boolean indicating whether the block was already seen.
         """
         # check
         already_seen = self.wallet.filter_and_add_block(block)
@@ -132,8 +150,9 @@ class User(Bootstrap):
 
     def process_blockchain_data(self, blockchain):
         """
-        Handles the sending of blocks to other peers.
-        :param blockchain: Parameters associated with the block send.
+        Processes a received blockchain update by adding new blocks.
+        :param blockchain: The blockchain object received.
+        :return: None
         """
         relevant_blocks = blockchain.get_blocks_after(self.wallet.latest_hash)
         for block in relevant_blocks:
@@ -142,21 +161,25 @@ class User(Bootstrap):
 
     def serve_blockchain_request(self, latest_hash):
         """
-        Handles requests from peers to update the blockchain.
+        Handles a request from a peer to provide blockchain updates.
+        :param latest_hash: The latest hash of the requester's blockchain.
+        :return: None
         """
-        pass
-        #  self.user_logger.debug(f"User does not handle blockchain updates")
+        pass  # user does not handle blockchain requests
 
     def process_transaction_data(self, params):
         """
-        Raises an error as users do not handle transactions directly.
-
-        :param params: Parameters associated with the transaction send.
+        Processes a received transaction, although users do not directly handle transactions.
+        :param params: Transaction data parameters.
+        :return: None
         """
         pass
-        #  self.user_logger.debug(f"User does not handle transactions")
 
     def get_public_key(self):
+        """
+        Retrieves the user's public key in PEM format.
+        :return: Public key as a string.
+        """
         return self.public_key.public_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -164,9 +187,10 @@ class User(Bootstrap):
 
     def save_wallet(self):
         """
-        Saves the current wallet to a file in JSON format.
+        Saves the user's wallet to a file in JSON format.
         :return: None
         """
+
         # if the wallet is empty, don't save it
         if not self.wallet:
             return
@@ -179,8 +203,9 @@ class User(Bootstrap):
 
     def load_wallet(self, child_dir):
         """
-        Loads the wallet from a file if it exists.
-        :return: the wallet if exists, else initialized wallet
+        Loads the wallet from a file if it exists; otherwise, initializes a new wallet.
+        :param child_dir: The directory where the wallet file is stored.
+        :return: Loaded wallet object.
         """
         if os.path.exists(self.wallet_path) and os.path.getsize(self.wallet_path) != 0:
             try:
@@ -198,7 +223,7 @@ class User(Bootstrap):
 
     def request_update_blockchain(self):
         """
-        Requests a specific block update from peers.
+        Requests a specific blockchain update from peers using the latest hash.
         :return: None
         """
         self.send_distributed_message(
