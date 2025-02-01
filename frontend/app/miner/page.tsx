@@ -20,7 +20,7 @@ export default function MinerPage() {
   const [sellOpen, setSellOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [miningOpen, setMiningOpen] = useState(false);
-  const [isMining, setIsMining] = useState(false);  // Add this state to prevent double mining
+  const [isMining, setIsMining] = useState(false);  // Prevent double mining
   const [balance, setBalance] = useState(2000);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const { toast } = useToast();
@@ -89,28 +89,30 @@ export default function MinerPage() {
     }
   };
 
-  const handleMining = () => {
-    // Prevent double mining
-    if (isMining) return;
-    
+  // Function to start mining
+  const startMining = () => {
+    if (isMining) return;  // Prevent double mining
+
     setIsMining(true);
-    setMiningOpen(false);
-    
-    const miningAmount = 20;
+    setMiningOpen(true);  // Open the MiningModal
+
     toast({
       title: "Mining Started",
       description: "Your block is being mined. Please wait...",
     });
+  };
 
-    setTimeout(() => {
-      createTransaction("mine", miningAmount);
-      toast({
-        title: "Block Mined Successfully!",
-        description: `You've earned ${miningAmount} Dini tokens.`,
-        duration: 5000,
-      });
-      setIsMining(false);  // Reset mining state
-    }, 3000);
+  // Function to handle mining completion
+  const handleMiningComplete = () => {
+    const miningAmount = 20;
+    createTransaction("mine", miningAmount);
+    toast({
+      title: "Block Mined Successfully!",
+      description: `You've earned ${miningAmount} Dini tokens.`,
+      duration: 5000,
+    });
+    setIsMining(false);  // Reset mining state
+    // Note: Do NOT close the modal here. Let the user close it manually.
   };
 
   return (
@@ -156,7 +158,7 @@ export default function MinerPage() {
             <Button
               variant="secondary"
               className="h-32 backdrop-blur-xl bg-white/10 border-white/20 hover:bg-white/20"
-              onClick={() => !isMining && setMiningOpen(true)}
+              onClick={startMining}
               disabled={isMining}
             >
               <div className="flex flex-col items-center gap-2">
@@ -200,7 +202,7 @@ export default function MinerPage() {
       <MiningModal
         open={miningOpen}
         onOpenChange={setMiningOpen}
-        onMiningComplete={handleMining}
+        onMiningComplete={handleMiningComplete}
       />
     </div>
   );
