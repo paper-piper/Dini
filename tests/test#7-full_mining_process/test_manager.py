@@ -16,6 +16,7 @@ if __name__ == "__main__":
     miner_sk, miner_pk = get_sk_pk_pair()
     print("Loading bootstrap...")
     bootstrap = Bootstrap(ip=ip, port=bootstrap_port, name="connecting_bootstrap")
+    time.sleep(1)
     print("Loading spending user...")
     spending_user = User(
         spending_user_pk,
@@ -24,6 +25,7 @@ if __name__ == "__main__":
         port=spending_user_port,
         name="spending_user_(kobi)"
     )
+    time.sleep(1)
     print("Loading mining miner...")
     miner = Miner(
         miner_pk,
@@ -32,6 +34,7 @@ if __name__ == "__main__":
         port=miner_port,
         name="mining_miner_(roni)"
     )
+    time.sleep(1)
     print(f"Finished loading! starting to cook 👨‍🍳")
     spending_user.buy_dinis(100)
     miner.start_mining(-1)

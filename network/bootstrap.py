@@ -33,9 +33,10 @@ class Bootstrap(Node):
         )
         if is_bootstrap:
             self.add_bootstrap_address()
-
-        # discover peers every few and then
-        threading.Thread(target=self.discover_peers_internally, daemon=True).start()
+            # discover peers every few and then
+            threading.Thread(target=self.discover_peers_internally, daemon=True).start()
+        else:
+            self.discover_peers()
 
     def __del__(self):
         self.delete_bootstrap_address()
@@ -44,7 +45,7 @@ class Bootstrap(Node):
         while True:
             try:
                 self.discover_peers()
-                time.sleep(10)
+                time.sleep(20)
             except Exception as e:
                 self.bootstrap_logger.warning(f"failed to connect to peers - {e}")
 
