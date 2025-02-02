@@ -106,6 +106,8 @@ class User(Bootstrap):
         """
         try:
             address = self.nodes_names_addresses[name]
+            if not address:
+                self.user_logger.warning(f"failed to find adress to name '{name}'. addresses list: {self.nodes_names_addresses}")
             transaction = Transaction(self.public_key, address, amount, tip)
             transaction.sign_transaction(self.private_key)
             # keep track of pending transactions
@@ -115,7 +117,7 @@ class User(Bootstrap):
 
             return transaction.signature[:ActionSettings.ID_LENGTH]
         except Exception as e:
-            self.user_logger.error(f"error while trying to send a transaction: - {e}")
+            self.user_logger.error(f"error while trying to send a transaction to address {address}: - {e}")
 
     def process_block_data(self, block):
         """

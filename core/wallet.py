@@ -88,7 +88,8 @@ class Wallet:
         :return: False if the block is new, otherwise True
         """
         if block.previous_hash != self.latest_hash:
-            self.wallet_logger.warning(f"Block rejected due to mismatched hash: {block}")
+            self.wallet_logger.warning(f"Block rejected due to mismatched hash."
+                                       f" our hash {self.latest_hash[:6]}... != {block.previous_hash[:6]}...")
             return True
 
         self.latest_hash = block.hash

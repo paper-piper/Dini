@@ -29,7 +29,7 @@ export default function Home() {
     try {
       const response = await fetch(`${API_URL}/transactions`);
       const data: Transaction[] = await response.json(); // Specify the type of 'data'
-      console.log("Fetched all transactions from backend:", data);
+      // console.log("Fetched all transactions from backend:", data);
   
       // Update local transactions state
       setTransactions((prevTransactions) => {
@@ -66,7 +66,7 @@ export default function Home() {
     if (!hasPendingTransactions) {
       return; // Skip polling if no pending transactions
     }
-    console.log("Cheking for updates...")
+    // console.log("Cheking for updates...")
     const interval = setInterval(fetchAllTransactions, 5000); // Poll every 5 seconds
   
     return () => clearInterval(interval); // Cleanup interval on unmount
@@ -91,9 +91,18 @@ export default function Home() {
       }
       const newTransaction = await response.json();
       console.log("Created transaction response:", newTransaction); // Debug log
-      setTransactions((prev) => [newTransaction, ...prev]);
-    } catch (error) {
-      console.error("Failed to create transaction:", error);
+
+      // Update state with formatted display details
+    setTransactions((prev) => [
+      {
+        ...newTransaction,
+        details:
+          newTransaction.type === "transfer" ? `To: ${newTransaction.details}` : newTransaction.details,
+      },
+      ...prev,
+    ]);
+  } catch (error) {
+    console.error("Failed to create transaction:", error);
     }
   };
   
@@ -168,7 +177,7 @@ export default function Home() {
         onOpenChange={setTransferOpen}
         onTransfer={(recipient, amount) => {
           setTransferOpen(false);
-          createTransaction("transfer", amount, `To: ${recipient}`);
+          createTransaction("transfer", amount, recipient);
         }}
       />
     </div>

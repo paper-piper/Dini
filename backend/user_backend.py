@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -11,11 +12,6 @@ logger = setup_basic_logger()
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
-# Create User instance
-ip = "127.0.0.1"
-sk, pk = get_sk_pk_pair()
-user_port = 8003
-user = User(pk, sk, ip=ip, port=user_port)
 
 
 def fetch_connected_users(user_instance):
@@ -157,4 +153,10 @@ def handle_transactions():
 
 if __name__ == "__main__":
     logger.info("Starting backend server on port 8000!")
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":  # This ensures only the second process runs this code
+        # Create User instance
+        ip = "127.0.0.1"
+        sk, pk = get_sk_pk_pair()
+        user = User(pk, sk, ip=ip)
+        print(f"Running on port: {user.port}")
     app.run(debug=True, port=8000)

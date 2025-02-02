@@ -128,22 +128,25 @@ class Node(ABC):
         :param msg_type: Type of the message.
         :param msg_sub_type: Subtype of the message.
         :param msg_params: Parameters for the message.
-        :param excluded_node: List of nodes to exclude from the message.
+        :param excluded_node: a node to exclude from the message.
         :return: None
         """
-        sent_nodes = []
         with self.node_connections_lock:
-            for node_info, node_socket in self.node_connections.items():
-                try:
-                    if not excluded_node or node_info is not excluded_node:
-                        send_protocol_message(node_socket, msg_type, msg_sub_type, *msg_params)
-                        sent_nodes.append(node_info)
-                except Exception as e:
-                    self.node_logger.error(f"Failed to send message to {node_info}: {e}")
-            if len(sent_nodes) > 0:
-                self.node_logger.info(
-                    f"Distributed message with {msg_sub_type} object: ({msg_params})"
-                    f" was sent to: {sent_nodes}")
+            connections_copy = self.node_connections.copy()
+
+        sent_nodes = []
+        for node_info, node_socket in connections_copy.items():
+            try:
+                if not excluded_node or node_info is not excluded_node:
+                    send_protocol_message(node_socket, msg_type, msg_sub_type, *msg_params)
+                    sent_nodes.append(node_info)
+            except Exception as e:
+                self.node_logger.error(f"Failed to send message to {node_info}: {e}")
+
+        if sent_nodes:
+            self.node_logger.info(
+                f"Distributed message with {msg_sub_type} object: ({msg_params})"
+                f" was sent to: {sent_nodes}")
 
     def send_focused_message(self, address, msg_type, msg_subtype, *msg_params):
         """
@@ -205,18 +208,13 @@ class Node(ABC):
         Processes messages from the message queue and directs them to appropriate handlers.
         """
         while True:
-            if not self.messages_queue.empty():
-                node_address, msg_type, msg_subtype, msg_params = self.messages_queue.get()
-                if msg_subtype == MsgSubTypes.BLOCKCHAIN:
-                    pass
-                try:
-                    self.process_message(node_address, msg_type, msg_subtype, msg_params)
-                except Exception as e:
-                    self.node_logger.error(f" Error handling message: "
-                                           f"Type: {msg_type}, "
-                                           f"Subtype: {msg_subtype}, "
-                                           f"Params: {msg_params}"
-                                           f"Error: {e}")
+            node_address, msg_type, msg_subtype, msg_params = self.messages_queue.get(block=True)
+            try:
+                self.process_message(node_address, msg_type, msg_subtype, msg_params)
+            except Exception as e:
+                self.node_logger.error(
+                    f"Error handling message: Type: {msg_type}, Subtype: {msg_subtype}, Params: {msg_params} - {e}"
+                )
 
     def process_message(self, node_address, msg_type, msg_subtype, msg_params):
         match msg_type:
@@ -237,18 +235,19 @@ class Node(ABC):
 
             case MsgTypes.RESPONSE:
                 msg_object = msg_params[0]
-                self.process_object_data(msg_subtype, msg_object)
                 self.node_logger.info(
                     f"received response {msg_subtype} object: ({msg_object}) from node with address: {node_address}"
                 )
+                self.process_object_data(msg_subtype, msg_object)
+
 
             case MsgTypes.BROADCAST:
                 msg_object = msg_params[0]
+                self.node_logger.info(f"received broadcast {msg_subtype} object: ({msg_object})"
+                                      f" from node with address: {node_address}")
                 already_seen = self.process_object_data(msg_subtype, msg_object)
                 if not already_seen:
                     self.send_distributed_message(msg_type, msg_subtype, excluded_node=node_address, *msg_params)
-                self.node_logger.info(f"received broadcast {msg_subtype} object: ({msg_object})"
-                                      f" from node with address: {node_address}")
 
             case _:
                 self.node_logger.warning(f"Received invalid message type ({msg_type})")
@@ -303,6 +302,14 @@ class Node(ABC):
 
         return already_seen
 
+    def process_name_data(self, name_pk_pair):
+        if not name_pk_pair or len(name_pk_pair) == 1 or name_pk_pair[1] is None:
+            self.node_logger.warning(f"Invalid name pk pair - {name_pk_pair}")
+            return
+        name = name_pk_pair[0]
+        public_key = serialization.load_pem_public_key(name_pk_pair[1].encode())
+        self.nodes_names_addresses[name] = public_key
+
     @abstractmethod
     def serve_blockchain_request(self, latest_hash):
         """
@@ -352,20 +359,11 @@ class Node(ABC):
         :param params: Parameters for transaction sending.
         """
 
-    def process_name_data(self, name_pk_pair):
-        if not name_pk_pair or len(name_pk_pair) == 1 or name_pk_pair[1] is None:
-            self.node_logger.warning(f"Invalid name pk pair - {name_pk_pair}")
-            return
-        name = name_pk_pair[0]
-        public_key = serialization.load_pem_public_key(name_pk_pair[1].encode())
-        self.nodes_names_addresses[name] = public_key
-
     @abstractmethod
     def get_public_key(self):
         """
         Sends the public key (depends on the class, not every class can send it)
         """
-
 
     def process_test_data(self, params):
         """
