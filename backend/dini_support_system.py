@@ -19,6 +19,7 @@ if __name__ == "__main__":
         miner_sk,
         ip=ip,
         port=miner_port,
+        name="Bob The Miner"
     )
     miner.start_mining(-1)
 

@@ -13,7 +13,6 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 
-
 def fetch_connected_users(user_instance):
     """
     Fetch the list of connected usernames from the User instance.
@@ -156,7 +155,8 @@ if __name__ == "__main__":
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":  # This ensures only the second process runs this code
         # Create User instance
         ip = "127.0.0.1"
+        port = 8100
         sk, pk = get_sk_pk_pair()
-        user = User(pk, sk, ip=ip)
+        user = User(pk, sk, ip=ip, port=port)
         print(f"Running on port: {user.port}")
     app.run(debug=True, port=8000)
