@@ -25,50 +25,45 @@ export default function Home() {
   // Transactions state
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  const fetchAllTransactions = async () => {
-    try {
-      const response = await fetch(`${API_URL}/transactions`);
-      const data: Transaction[] = await response.json(); // Specify the type of 'data'
-      // console.log("Fetched all transactions from backend:", data);
-  
-      // Update local transactions state
-      setTransactions((prevTransactions) => {
-        const updatedTransactions = data.map((newTx: Transaction) => {
-          // Find matching transaction in previous state
-          const oldTx = prevTransactions.find((tx) => tx.id === newTx.id);
-  
-          // If the transaction is new or has changed, update it
-          if (!oldTx || oldTx.status !== newTx.status) {
-            if (newTx.status === "approved" && newTx.status !== oldTx?.status) {
-              // Update wallet for approved transactions
-              if (newTx.type === "buy") setBalance((prev) => prev + (newTx.amount));
-              if (newTx.type === "sell" || newTx.type === "transfer")
-                setBalance((prev) => prev - (newTx.amount));
-            }
-            return newTx; // Updated transaction
+  const INITIAL_BALANCE = 1000;
+
+    const fetchAllTransactions = async () => {
+      try {
+        const response = await fetch(`${API_URL}/transactions`);
+        const data: Transaction[] = await response.json();
+        console.log("Fetched all transactions from backend:", data);
+
+        // Update local transactions state
+        setTransactions(data);
+
+        // Recalculate balance from scratch
+        const approvedTransactions = data.filter(tx => tx.status === "approved");
+        const newBalance = approvedTransactions.reduce((balance, tx) => {
+          if (tx.type === "buy") {
+            return balance + tx.amount;
+          } else if (tx.type === "sell" || tx.type === "transfer") {
+            return balance - tx.amount;
           }
-          return oldTx; // Keep the old transaction if unchanged
-        });
-  
-        // Return the updated transactions
-        return updatedTransactions;
-      });
-    } catch (error) {
-      console.error("Failed to fetch all transactions:", error);
-    }
-  };
+          return balance;
+        }, INITIAL_BALANCE);
+
+        setBalance(newBalance);
+      } catch (error) {
+        console.error("Failed to fetch all transactions:", error);
+      }
+    };
+
   
 
   useEffect(() => {
     // Check if there are pending transactions
     const hasPendingTransactions = transactions.some((tx) => tx.status === "pending");
-  
     if (!hasPendingTransactions) {
       return; // Skip polling if no pending transactions
     }
     // console.log("Cheking for updates...")
     const interval = setInterval(fetchAllTransactions, 5000); // Poll every 5 seconds
-  
+
     return () => clearInterval(interval); // Cleanup interval on unmount
   }, [transactions]);
 
