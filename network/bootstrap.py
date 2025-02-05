@@ -45,7 +45,7 @@ class Bootstrap(Node):
         while True:
             try:
                 self.discover_peers()
-                time.sleep(20)
+                time.sleep(90)
             except Exception as e:
                 self.bootstrap_logger.warning(f"failed to connect to peers - {e}")
 
