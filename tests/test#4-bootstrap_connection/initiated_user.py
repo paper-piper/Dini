@@ -1,7 +1,7 @@
 from network.user import User
 from threading import Event
 from core.transaction import get_sk_pk_pair
-from core.wallet import create_sample_light_blockchain
+from core.wallet import create_sample_wallet
 
 
 if __name__ == "__main__":
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     user_ip = "127.0.0.1"
 
     sk, pk = get_sk_pk_pair()
-    wallet = create_sample_light_blockchain(pk, sk)
+    wallet = create_sample_wallet(pk, sk)
     # Initialize User
     user = User(
         pk,

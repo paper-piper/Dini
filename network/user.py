@@ -1,8 +1,10 @@
+import time
+
 from cryptography.hazmat.primitives import serialization
 from network.bootstrap import Bootstrap
 import json
 import os
-from core.wallet import Wallet, create_sample_light_blockchain
+from core.wallet import Wallet, create_sample_wallet
 from core.transaction import Transaction, get_sk_pk_pair
 from utils.config import MsgTypes, MsgSubTypes, FilesSettings, BlockSettings, KeysSettings, ActionType, ActionSettings, \
     NodeSettings
@@ -123,10 +125,12 @@ class User(Bootstrap):
         :param tip: Optional tip amount to include in the transaction.
         :return: Transaction signature (shortened for identification).
         """
+        if name not in self.nodes_names_addresses.keys():
+            self.user_logger.warning(
+                f"failed to find address to name '{name}'. addresses list: {self.nodes_names_addresses}")
+            return
+        address = self.nodes_names_addresses[name]
         try:
-            address = self.nodes_names_addresses[name]
-            if not address:
-                self.user_logger.warning(f"failed to find adress to name '{name}'. addresses list: {self.nodes_names_addresses}")
             transaction = Transaction(self.public_key, address, amount, tip)
             transaction.sign_transaction(self.private_key)
             # keep track of pending transactions
@@ -235,6 +239,26 @@ class User(Bootstrap):
         )
         self.user_logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
 
+def get_first_wallet():
+    # Generate key pair for testing
+    sk, pk = get_sk_pk_pair()
+    port = 8110
+    # Create a sample blockchain and save it using the first User instance
+    user1 = User(
+        pk,
+        sk,
+        wallet=create_sample_wallet(pk, sk, str(port)),
+        port=port
+    )
+    user1.save_wallet()
+    return user1.load_wallet("User")
+
+def get_second_wallet():
+    sk, pk = get_sk_pk_pair()
+    port = 8110
+    # Load the blockchain from the saved file using a second User instance and save to a new file
+    user2 = User(pk, sk, port=port)
+    return user2.load_wallet("User")
 
 def assertion_check():
     """
@@ -242,26 +266,11 @@ def assertion_check():
 
     :return: None
     """
-    # Generate key pair for testing
-    sk, pk = get_sk_pk_pair()
-    # Create a sample blockchain and save it using the first User instance
-    user1 = User(
-        pk,
-        sk,
-        wallet=create_sample_light_blockchain(pk, sk),
-        )
-    user1.save_wallet()
+    first_wallet = get_first_wallet()
+    second_wallet = get_second_wallet()
 
-    # Load the blockchain from the saved file using a second User instance and save to a new file
-    user2 = User(pk, sk, )
-    user2.load_wallet("User")
-    user2.save_wallet()
-
-    # Load files and verify they are identical
-    with (open("../data/sample_wallet1.json", "r") as f1,
-          open("../data/sample_wallet2.json", "r") as f2):
-        blockchain_data_1 = json.load(f1)
-        blockchain_data_2 = json.load(f2)
+    blockchain_data_1 = json.load(first_wallet)
+    blockchain_data_2 = json.load(second_wallet)
 
     assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
 
