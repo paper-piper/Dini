@@ -54,19 +54,39 @@ class Node(ABC):
             instance_id=f"{self.ip}-{self.port}"
         )
 
+        self.running = threading.Event()
+        self.running.set()
         self.node_connections_lock = threading.Lock()
         self.node_connections = {} if not node_connections else node_connections
         self.nodes_names_addresses = {}  # name : public key
         self.messages_queue = Queue()
 
-        self.process_incoming_messages = threading.Thread(target=self.process_messages_from_queue, daemon=True)
-        self.process_incoming_messages.start()
-        self.accept_connections_thread = threading.Thread(target=self.accept_connections, daemon=True)
-        self.accept_connections_thread.start()
+        self.connections_threads = []
+        self.main_threads = []
+        process_incoming_messages = threading.Thread(target=self.process_messages_from_queue)
+        self.main_threads.append(process_incoming_messages)
+        process_incoming_messages.start()
+
+        accept_connections_thread = threading.Thread(target=self.accept_connections)
+        self.main_threads.append(accept_connections_thread)
+        accept_connections_thread.start()
+
+    def __del__(self):
+        self.accept_socket.close()
+
+    def stop_all_threads(self):
+        self.running.clear()
+
+        for thread in self.main_threads:
+            thread.join()
+
+        for thread in self.connections_threads:
+            thread.join()
 
     def get_connected_nodes(self):
         with self.node_connections_lock:
             return self.node_connections.keys()
+
 
     def accept_connections(self):
         """
@@ -78,16 +98,20 @@ class Node(ABC):
         self.accept_socket.listen(QUEUE_SIZE)
         while True:
             try:
+                if self.accept_socket.fileno() == -1:  # check if socket is closed
+                    return
                 node_socket, _ = self.accept_socket.accept()
                 _, _, node_address = receive_message(node_socket)
                 node_address = node_address[0]
                 with self.node_connections_lock:
                     self.node_connections[node_address] = node_socket
 
-                threading.Thread(target=self.receive_messages, args=(node_address, node_socket), daemon=True).start()
+                get_messages_from_node = threading.Thread(target=self.receive_messages, args=(node_address, node_socket))
+                self.connections_threads.append(get_messages_from_node)
+                get_messages_from_node.start()
                 self.node_logger.info(f"accepted connection from {node_address}")
             except Exception as e:
-                self.node_logger.error(f"Error in reading message: {e}")
+                self.node_logger.error(f"Error in connecting to node: {e}")
 
     def connect_to_node(self, address):
         """
@@ -116,7 +140,7 @@ class Node(ABC):
                 self.node_connections[address] = node_socket
 
             # Start a thread to listen for messages from this node
-            threading.Thread(target=self.receive_messages, args=(address, node_socket), daemon=True).start()
+            threading.Thread(target=self.receive_messages, args=(address, node_socket)).start()
         except socket.error as se:
             self.node_logger.info(f"Failed to connect to node with address {address}. {se}")
         except Exception as e:
