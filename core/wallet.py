@@ -64,8 +64,8 @@ class Wallet:
         else:
             action_type = ActionType.TRANSFER
             lord_key = load_key(KeysSettings.LORD_PK)
-            bonus_key = lord_key(KeysSettings.BONUS_PK)
-            tipping_key = lord_key(KeysSettings.TIPPING_PK)
+            bonus_key = load_key(KeysSettings.BONUS_PK)
+            tipping_key = load_key(KeysSettings.TIPPING_PK)
             if transaction.sender_pk == lord_key:
                 action_type = ActionType.BUY
             if transaction.recipient_pk == lord_key:
@@ -153,16 +153,17 @@ class Wallet:
         return sorted_actions[:num]
 
 
-def create_sample_light_blockchain(
+def create_sample_wallet(
         public_key,
         secret_key,
+        instance_id,
         other_public_key=None,
         starting_balance=0,
         transaction_nums=None,
-        latest_hash=None
+        latest_hash=None,
 ):
     """
-    Creates a sample LightBlockchain instance with a few random transactions
+    Creates a sample wallet instance with a few random transactions
     (some incoming, some outgoing).
     """
     other_public_key = get_sk_pk_pair()[1] if not other_public_key else other_public_key
@@ -170,7 +171,7 @@ def create_sample_light_blockchain(
     if transaction_nums is None:
         transaction_nums = [30, 20, 10, 40]
 
-    blockchain = Wallet(public_key, balance=starting_balance, latest_hash=latest_hash)
+    wallet = Wallet(public_key, balance=starting_balance, latest_hash=latest_hash, instance_id=instance_id)
 
     for i in range(len(transaction_nums)):
         if random.randint(0, 2) == 1:
@@ -179,9 +180,9 @@ def create_sample_light_blockchain(
             transaction = Transaction(other_public_key, public_key, transaction_nums[i])
 
         transaction.sign_transaction(secret_key)
-        blockchain.filter_and_add_transaction(transaction)
+        wallet.filter_and_add_transaction(transaction)
 
-    return blockchain
+    return wallet
 
 
 def test_wallet():
