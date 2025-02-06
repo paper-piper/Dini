@@ -1,5 +1,3 @@
-import time
-
 from cryptography.hazmat.primitives import serialization
 from network.bootstrap import Bootstrap
 import json
@@ -54,11 +52,14 @@ class User(Bootstrap):
         # make the wallet directory if you don't already exist
         full_directory = os.path.dirname(self.wallet_path)
         os.makedirs(full_directory, exist_ok=True)
-        self.wallet = wallet if wallet else self.load_wallet(child_dir)
+        if wallet:
+            self.wallet = wallet
+            self.save_wallet()
+        else:
+            self.wallet = self.load_wallet(child_dir)
 
         # try and get updates for wallet (in case of missing out)
         self.request_blockchain_update()
-        self.save_wallet()
 
     def request_blockchain_update(self):
         """
@@ -72,8 +73,7 @@ class User(Bootstrap):
         )
 
     def __del__(self):
-        if hasattr(self, "port_manager") and self.port_manager:
-            self.port_manager.release_port(self.port)
+        super().__del__()
         if hasattr(self, "wallet") and self.wallet:
             self.save_wallet()
 
@@ -218,7 +218,7 @@ class User(Bootstrap):
                 with open(self.wallet_path, "r") as f:
                     blockchain_data = json.load(f)
                     wallet = Wallet.from_dict(blockchain_data)
-                self.user_logger.info(f"core loaded from {self.wallet_path}")
+                    self.user_logger.info(f"loaded wallet - {wallet}")
                 return wallet
             except Exception as e:
                 self.user_logger.error(f"Error loading wallet: {e}")
@@ -239,25 +239,22 @@ class User(Bootstrap):
         )
         self.user_logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
 
-def get_first_wallet():
-    # Generate key pair for testing
-    sk, pk = get_sk_pk_pair()
-    port = 8110
+def get_first_wallet(ip,port, pk, sk):
     # Create a sample blockchain and save it using the first User instance
     user1 = User(
         pk,
         sk,
         wallet=create_sample_wallet(pk, sk, str(port)),
+        ip=ip,
         port=port
     )
     user1.save_wallet()
-    return user1.load_wallet("User")
+    user1.__del__()
+    return user1.wallet
 
-def get_second_wallet():
-    sk, pk = get_sk_pk_pair()
-    port = 8110
+def get_second_wallet(ip, port, pk, sk):
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    user2 = User(pk, sk, port=port)
+    user2 = User(pk, sk, ip=ip,port=port)
     return user2.load_wallet("User")
 
 def assertion_check():
@@ -266,13 +263,14 @@ def assertion_check():
 
     :return: None
     """
-    first_wallet = get_first_wallet()
-    second_wallet = get_second_wallet()
-
-    blockchain_data_1 = json.load(first_wallet)
-    blockchain_data_2 = json.load(second_wallet)
-
-    assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
+    sk, pk = get_sk_pk_pair()
+    ip = "127.0.0.1"
+    port = 8110
+    first_wallet = get_first_wallet(ip, port, pk, sk)
+    second_wallet = get_second_wallet(ip, port, pk, sk)
+    print(f"first wallet: {first_wallet.to_dict()}")
+    print(f"second wallet: {second_wallet.to_dict()}")
+    assert first_wallet.to_dict() == second_wallet.to_dict(), "Loaded blockchain data does not match saved data"
 
 
 if __name__ == "__main__":

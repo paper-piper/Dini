@@ -18,7 +18,7 @@ class Action:
 
     def to_dict(self):
         return {
-            "id": self.id,
+            "id": self.id.hex() if isinstance(self.id, bytes) else self.id,
             "type": self.type,
             "amount": self.amount,
             "status": self.status,
@@ -30,8 +30,10 @@ class Action:
     def from_dict(cls, data):
         details = data.get("details")
         timestamp = datetime.fromisoformat(data["timestamp"]) if "timestamp" in data else None
+
         return cls(
-            action_id=data["id"],
+            action_id=bytes.fromhex(data["id"]) if isinstance(data["id"], str) and all(
+                c in "0123456789abcdefABCDEF" for c in data["id"]) else data["id"],
             action_type=data["type"],
             amount=data["amount"],
             status=data["status"],

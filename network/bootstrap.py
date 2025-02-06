@@ -39,6 +39,7 @@ class Bootstrap(Node):
             self.discover_peers()
 
     def __del__(self):
+        super().__del__()
         self.delete_bootstrap_address()
 
     def discover_peers_internally(self):

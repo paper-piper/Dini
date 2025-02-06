@@ -23,6 +23,7 @@ class Wallet:
         self.balance = balance
         self.actions = actions or {}
         self.latest_hash = latest_hash if latest_hash else BlockChainSettings.SECOND_HASH
+        self.instance_id = instance_id
         self.wallet_logger = configure_logger(
             class_name="wallet",
             child_dir=child_dir,
@@ -118,6 +119,7 @@ class Wallet:
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             ).decode(),
             "balance": self.balance,
+            "instance_id": self.instance_id,  # Ensure instance_id is included
             "actions": {action_id.hex(): action.to_dict() for action_id, action in self.actions.items()},
             "latest_hash": self.latest_hash if self.latest_hash else None
         }
@@ -130,12 +132,13 @@ class Wallet:
         """
         owner_pk = serialization.load_pem_public_key(data["owner_pk"].encode())
         balance = data["balance"]
+        instance_id = data.get("instance_id", "unknown-unknown")  # Default value to prevent errors
         actions = {
             bytes.fromhex(key): Action.from_dict(value)
             for key, value in data.get("actions", {}).items()
         }
         latest_hash = data["latest_hash"] if data["latest_hash"] else None
-        light_blockchain = cls(owner_pk, balance, actions, latest_hash)
+        light_blockchain = cls(owner_pk, balance, actions, latest_hash, instance_id)
         return light_blockchain
 
     def get_recent_transactions(self, num=-1):
