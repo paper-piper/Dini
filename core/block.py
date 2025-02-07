@@ -43,7 +43,6 @@ class Block:
         self.timestamp = timestamp or time.time()
         self.nonce = nonce
         self.hash = block_hash  # Initially None to avoid confusion before mining
-        logger.info("Block created with previous hash: %s, transactions: %s", previous_hash, transactions)
 
     def to_dict(self):
         return {
@@ -197,7 +196,8 @@ def create_sample_block(
         transactions_num=2,
         transactions_amounts=None,
         previews_hash="0" * 64,
-        difficulty=MinerSettings.DIFFICULTY_LEVEL
+        difficulty=MinerSettings.DIFFICULTY_LEVEL,
+        recipient_pk=None
 ):
     if transactions_amounts is None:
         transactions_amounts = [random.randint(10, 100) for x in range(transactions_num)]
@@ -205,7 +205,7 @@ def create_sample_block(
         raise "transaction num does not much the transaction amounts"
     transactions = []
     for i in range(transactions_num):
-        transaction = create_sample_transaction(transactions_amounts[i])
+        transaction = create_sample_transaction(transactions_amounts[i], recipient_pk=recipient_pk)
         transactions.append(transaction)
 
     block = Block(previews_hash, transactions, difficulty)

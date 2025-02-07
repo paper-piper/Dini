@@ -184,7 +184,8 @@ def create_sample_blockchain(
         difficulty=MinerSettings.DIFFICULTY_LEVEL,
         blocks_num=2,
         transactions_nums=None,
-        transactions_ranges=None
+        transactions_ranges=None,
+        recipient_pk=None
 ):
     if transactions_ranges is None:
         transactions_ranges = [[10, 20], [15, 10, 30]]
@@ -197,7 +198,13 @@ def create_sample_blockchain(
     blockchain = Blockchain()
     previews_hash = blockchain.get_latest_block().calculate_hash()
     for i in range(blocks_num):
-        block = create_sample_block(transactions_nums[i], transactions_ranges[i], previews_hash, difficulty)
+        block = create_sample_block(
+            transactions_nums[i],
+            transactions_ranges[i],
+            previews_hash,
+            difficulty,
+            recipient_pk
+        )
 
         # Manually mine the block by finding a valid nonce and hash
         target = "0" * block.difficulty

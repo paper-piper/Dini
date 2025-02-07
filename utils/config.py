@@ -112,7 +112,9 @@ class BootSettings:
 
 class LoggingSettings:
     REWRITE = True
+    WRITE_BASIC_LOGS = False
     BASIC_LOGS = "basic"
+
 
 
 class PortSettings:
