@@ -205,7 +205,7 @@ class User(Bootstrap):
                 dictionary_wallet = self.wallet.to_dict()
                 json.dump(dictionary_wallet, f, indent=4)
         except Exception as e:
-            self.user_logger.error(f"Error saving wallet: {e} the wallet: {dictionary_wallet}")
+            self.user_logger.error(f"Error saving wallet: {e}")
 
     def load_wallet(self, child_dir):
         """
@@ -224,7 +224,7 @@ class User(Bootstrap):
                 self.user_logger.error(f"Error loading wallet: {e}")
                 return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
 
-        self.user_logger.warning(f"No wallet file found at {self.wallet_path}, initializing new blockchain.")
+        self.user_logger.warning(f"No wallet file found at {self.wallet_path}, initializing new wallet.")
         return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
 
     def request_update_blockchain(self):
@@ -252,10 +252,12 @@ def get_first_wallet(ip,port, pk, sk):
     user1.__del__()
     return user1.wallet
 
+
 def get_second_wallet(ip, port, pk, sk):
     # Load the blockchain from the saved file using a second User instance and save to a new file
     user2 = User(pk, sk, ip=ip,port=port)
     return user2.load_wallet("User")
+
 
 def assertion_check():
     """

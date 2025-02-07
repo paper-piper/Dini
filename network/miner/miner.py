@@ -211,20 +211,17 @@ class Miner(User):
 
 def assert_file_saving():
     pk, sk = get_sk_pk_pair()
-    miner1 = Miner(pk, sk, blockchain=create_sample_blockchain())
+    ip = "127.0.0.1"
+    port = 8110
+    miner1 = Miner(pk, sk, blockchain=create_sample_blockchain(), port=port, ip=ip)
+    first_blockchain = miner1.blockchain
+    miner1.__del__()
 
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    miner2 = Miner(pk, sk)
-    miner2.load_blockchain()
-    #  miner2.blockchain_filename = second_blockchain
-    miner2.save_blockchain()
+    miner2 = Miner(pk, sk, port=port, ip=ip)
+    second_blockchain = miner2.blockchain
 
-    # Load files and verify they are identical
-    with open("../../data/sample_blockchain_1.json", "r") as f1, open("../../data/sample_blockchain_2.json", "r") as f2:
-        blockchain_data_1 = json.load(f1)
-        blockchain_data_2 = json.load(f2)
-
-    assert blockchain_data_1 == blockchain_data_2, "Loaded blockchain data does not match saved data"
+    assert first_blockchain.to_dict() == second_blockchain.to_dict(), "Loaded blockchain data does not match saved data"
 
 
 def assertion_checks():
