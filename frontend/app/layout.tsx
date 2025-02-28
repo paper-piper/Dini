@@ -1,6 +1,7 @@
 import "./globals.css"
 import { Inter } from 'next/font/google'
 import { ToastProvider } from "@/components/ui/toast"
+import { UserProvider } from "@/contexts/user-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -12,6 +13,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+      <UserProvider>
         <ToastProvider>
 <div
   className="min-h-screen w-full"
@@ -24,6 +26,8 @@ export default function RootLayout({
             </div>
           </div>
         </ToastProvider>
+        </UserProvider>
+
       </body>
     </html>
   )
