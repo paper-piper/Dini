@@ -60,8 +60,9 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Session-Id": user.session_id,
+          "Session-Id": user?.session_id || "",
         },
+        credentials: "include",  // ✅ Ensure cookies & CORS work properly
         body: JSON.stringify({
           type,
           amount,

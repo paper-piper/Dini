@@ -239,6 +239,7 @@ class User(Bootstrap):
         )
         self.user_logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
 
+
 def get_first_wallet(ip,port, pk, sk):
     # Create a sample blockchain and save it using the first User instance
     user1 = User(

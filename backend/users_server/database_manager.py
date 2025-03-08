@@ -45,16 +45,24 @@ class DatabaseManager:
 
     @staticmethod
     def execute_query(query, params=(), fetchone=False, fetchall=False):
-        """Executes a database query safely and logs errors."""
+        """
+        Executes a database query safely and logs errors.
+        Returns the query result (if fetching) or True (if modifying data).
+        """
         try:
             db = DatabaseManager.get_db()
             cursor = db.cursor()
             cursor.execute(query, params)
-            db.commit()
+
             if fetchone:
-                return cursor.fetchone()
+                result = cursor.fetchone()
             elif fetchall:
-                return cursor.fetchall()
+                result = cursor.fetchall()
+            else:
+                db.commit()
+                result = True  # ✅ Return True when INSERT/UPDATE/DELETE succeeds
+
+            return result
         except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
-            return None
+            logger.error(f"Database error: {e} - Query: {query} - Params: {params}")
+            return None  # ✅ Return None when an error occurs
