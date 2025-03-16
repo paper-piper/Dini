@@ -11,6 +11,7 @@ from database_manager import DatabaseManager
 from cryptography.hazmat.primitives import serialization
 
 logger = setup_basic_logger()
+logger.info("user manager initializes")
 
 
 class UserManager:

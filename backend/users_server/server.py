@@ -101,6 +101,9 @@ def transactions():
     elif request.method == "POST":
         data = request.get_json(force=True)
         response, status = UserManager.handle_transactions(session_id, "POST", data)
+    else:
+        logger.error("Invalid method type when handling transactions")
+        return
 
     return jsonify(response), status
 
