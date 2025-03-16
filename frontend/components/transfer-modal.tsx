@@ -18,7 +18,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+}
+from "@/components/ui/select"
+import { useUser } from "@/context/user-context"; // ✅ Import user session
 
 // Define the shape of a user option
 interface UserOption {
@@ -36,6 +38,7 @@ interface TransferModalProps {
 const API_URL = "http://localhost:8000"
 
 export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalProps) {
+    const { user } = useUser()
   const [connectedUsers, setConnectedUsers] = useState<UserOption[]>([])
   const [selectedRecipient, setSelectedRecipient] = useState<string>("")
   const [amount, setAmount] = useState<number>(0)
@@ -45,7 +48,14 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
   useEffect(() => {
     if (open) {
       // GET the array of connected user names
-      fetch(`${API_URL}/connected-users`)
+      fetch(`${API_URL}/connected-users`, {
+        method: "GET",
+        headers: {
+          "Session-Id": user.session_id, // ✅ Include session ID for authentication
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // ✅ Allow session-based authentication
+      })
         .then((res) => {
           if (!res.ok) {
             throw new Error(`Error fetching users: ${res.statusText}`)
@@ -68,18 +78,41 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
   }, [open])
 
   const handleTransfer = useCallback(() => {
-    if (!selectedRecipient || amount <= 0 || isProcessing) return
-    setIsProcessing(true)
+    if (!selectedRecipient || amount <= 0 || isProcessing || !user?.session_id) return;
+    setIsProcessing(true);
 
-    // Call parent's onTransfer (which triggers the creation of a transaction)
-    onTransfer(selectedRecipient, amount)
-
-    // Reset fields
-    setSelectedRecipient("")
-    setAmount(0)
-    setIsProcessing(false)
-    onOpenChange(false)
-  }, [selectedRecipient, amount, isProcessing, onOpenChange, onTransfer])
+    fetch(`${API_URL}/transactions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Session-Id": user.session_id, // ✅ Include session ID
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        type: "transfer",
+        amount,
+        details: selectedRecipient,
+        status: "pending",
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create transfer transaction");
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Transfer transaction created:", data);
+        onTransfer(selectedRecipient, amount);
+      })
+      .catch((error) => {
+        console.error("Transfer failed:", error);
+      })
+      .finally(() => {
+        setIsProcessing(false);
+        onOpenChange(false);
+        setSelectedRecipient("");
+        setAmount(0);
+      });
+  }, [selectedRecipient, amount, isProcessing, user, onOpenChange, onTransfer]);
 
   return (
     <Dialog
