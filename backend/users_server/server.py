@@ -1,3 +1,5 @@
+import time
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from utils.logging_utils import setup_basic_logger
@@ -120,6 +122,10 @@ def get_connected_users():
             return jsonify({"error": "Invalid session"}), 401
 
         user_instance = UserManager.create_user_instance(user_row)
+        start_time = time.time()
+        while not user_instance.nodes_names_addresses and time.time() - start_time < 5:
+            time.sleep(0.1)  # Small delay to prevent CPU spinning
+            
         connected_users = list(user_instance.nodes_names_addresses.keys())
         logger.info(f"Connected users fetched: {connected_users}")
         return jsonify(connected_users), 200
