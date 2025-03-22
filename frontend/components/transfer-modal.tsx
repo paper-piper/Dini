@@ -20,7 +20,7 @@ import {
   SelectValue,
 }
 from "@/components/ui/select"
-import { useUser } from "@/context/user-context"; // ✅ Import user session
+import { useUser } from "@/contexts/user-context"; // ✅ Import user session from correct path
 
 // Define the shape of a user option
 interface UserOption {
