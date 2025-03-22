@@ -1,0 +1,5 @@
+/frontend/node_modules/
+/logs/
+/frontend/.next/
+/.venv/
+/data/
