@@ -3,7 +3,6 @@ from datetime import datetime
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
-
 from network.user import User
 from core.transaction import get_sk_pk_pair
 from utils.logging_utils import setup_basic_logger
@@ -11,20 +10,48 @@ from database_manager import DatabaseManager
 from cryptography.hazmat.primitives import serialization
 
 logger = setup_basic_logger()
-logger.info("user manager initializes")
+logger.info("UserManager initializing")
 
 
 class UserManager:
     """Manages user authentication and cryptocurrency operations."""
+    # Global registry of user objects (keyed by username)
+    all_users = {}
+
+    @classmethod
+    def initialize_users(cls):
+        """Initializes all user instances from the database."""
+        query = "SELECT * FROM users"
+        user_rows = DatabaseManager.execute_query(query, fetchall=True)
+        if user_rows:
+            for row in user_rows:
+                username = row["username"]
+                user_instance = cls.create_user_instance(row)
+                cls.all_users[username] = user_instance
+            logger.info(f"Initialized users: {', '.join(cls.all_users.keys())}")
+        else:
+            logger.info("No users found in database to initialize.")
+
     @staticmethod
     def handle_transactions(session_id, method, request_data=None):
         """Handles fetching or creating transactions for an authenticated user."""
-        user_row = UserManager.get_user_by_session(session_id)
-        if not user_row:
-            logger.warning("Invalid session ID in transaction request")
-            return {"error": "Invalid session"}, 401
+        from user_session_manager import UserSessionManager
 
-        user_instance = UserManager.create_user_instance(user_row)
+        # Try to fetch the active user from the session manager first.
+        user_instance = UserSessionManager.get_instance().get_user(session_id)
+
+        # If not active, look up the session in the database and get from the global registry.
+        if not user_instance:
+            user_row = UserManager.get_user_by_session(session_id)
+            if not user_row:
+                logger.warning("Invalid session ID in transaction request")
+                return {"error": "Invalid session"}, 401
+            username = user_row["username"]
+            user_instance = UserManager.all_users.get(username)
+            if not user_instance:
+                user_instance = UserManager.create_user_instance(user_row)
+                UserManager.all_users[username] = user_instance
+            UserSessionManager.get_instance().add_user(session_id, user_instance)
 
         if method == "GET":
             try:
@@ -128,6 +155,11 @@ class UserManager:
         query = "INSERT INTO users (username, password, pk, sk, session_id) VALUES (?, ?, ?, ?, ?)"
         if DatabaseManager.execute_query(query, (username, password, pk_pem, sk_pem, session_id)):
             logger.info(f"User {username} registered successfully.")
+            # Retrieve the inserted row and create a user instance.
+            user_row = UserManager.get_user_by_username(username)
+            if user_row:
+                user_instance = UserManager.create_user_instance(user_row)
+                UserManager.all_users[username] = user_instance
             return {"message": "Registration successful", "session_id": session_id}, 201
         else:
             logger.error("Database insert failed during registration.")
@@ -172,3 +204,9 @@ class UserManager:
         pk = load_pem_public_key(pk_pem.encode(), backend=default_backend())
         sk = load_pem_private_key(sk_pem.encode(), password=None, backend=default_backend())
         return User(pk, sk, ip=ip)
+
+    def cleanup(self):
+        """Cleanup user resources before removing the instance."""
+        if hasattr(self, 'blockchain_node'):
+            self.blockchain_node.close()
+        self.nodes_names_addresses = {}
