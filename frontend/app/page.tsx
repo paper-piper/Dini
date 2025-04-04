@@ -54,15 +54,19 @@ export default function Home() {
   }, [user]);
 
   const createTransaction = async (type: string, amount: number, details?: string) => {
-    if (!user?.session_id) return;
+    if (!user?.session_id) {
+      console.error("No active session");
+      // You might want to redirect to login here
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Session-Id": user?.session_id || "",
+          "Session-Id": user.session_id,
         },
-        credentials: "include",  // ✅ Ensure cookies & CORS work properly
         body: JSON.stringify({
           type,
           amount,
@@ -70,22 +74,36 @@ export default function Home() {
           status: "pending",
         }),
       });
-      if (!response.ok) throw new Error("Failed to create transaction");
+
+      if (response.status === 401) {
+        // Session expired
+        console.error("Session expired");
+        logout(); // Call your logout function to clear the invalid session
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const newTransaction = await response.json();
       console.log("Created transaction:", newTransaction);
 
       setTransactions(prev => [
         {
           ...newTransaction,
-          details:
-            newTransaction.type === "transfer"
-              ? `To: ${newTransaction.details}`
-              : newTransaction.details,
+          details: newTransaction.type === "transfer" 
+            ? `To: ${newTransaction.details}` 
+            : newTransaction.details,
         },
         ...prev,
       ]);
+
+      // Refresh transactions to get updated balance
+      fetchAllTransactions();
     } catch (error) {
       console.error("Transaction creation error:", error);
+      // You might want to show an error message to the user here
     }
   };
 
