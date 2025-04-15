@@ -60,8 +60,9 @@ class Wallet:
 
         transaction_id = transaction.signature[:ActionSettings.ID_LENGTH]
         if transaction_id in self.actions:
+            action = self.actions[transaction_id]
             self.actions[transaction_id].status = ActionStatus.APPROVED
-            self.wallet_logger.info(f"action updated to be approved: {self.actions[transaction_id]}")
+            self.wallet_logger.info(f"transaction of type '{action.type}' with amount {action.amount} is approved")
         else:
             action_type = ActionType.TRANSFER
             lord_key = load_key(KeysSettings.LORD_PK)
@@ -78,7 +79,7 @@ class Wallet:
 
             action = Action(transaction_id[:ActionSettings.ID_LENGTH], action_type, transaction.amount, ActionStatus.APPROVED)
             self.actions[transaction_id] = action
-            self.wallet_logger.info(f"Action added: {action}")
+            self.wallet_logger.info(f"new transaction of type transfer was added with amount of {action.amount}")
         return True
 
     def filter_and_add_block(self, block):

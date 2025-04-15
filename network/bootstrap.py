@@ -7,6 +7,7 @@ from utils.config import MsgTypes, MsgSubTypes, FilesSettings, NodeSettings
 from utils.logging_utils import configure_logger
 import threading
 
+
 class Bootstrap(Node):
 
     def __init__(

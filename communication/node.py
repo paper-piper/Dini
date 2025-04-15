@@ -87,7 +87,6 @@ class Node(ABC):
         with self.node_connections_lock:
             return self.node_connections.keys()
 
-
     def accept_connections(self):
         """
         Accepts incoming connections from other nodes and adds them to node connections.
@@ -109,7 +108,7 @@ class Node(ABC):
                 get_messages_from_node = threading.Thread(target=self.receive_messages, args=(node_address, node_socket))
                 self.connections_threads.append(get_messages_from_node)
                 get_messages_from_node.start()
-                self.node_logger.info(f"accepted connection from {node_address}")
+                self.node_logger.debug(f"accepted connection from {node_address}")
             except Exception as e:
                 self.node_logger.error(f"Error in connecting to node: {e}")
 
@@ -131,7 +130,7 @@ class Node(ABC):
             # Attempt to connect to the new node
             node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             node_socket.connect(address)
-            self.node_logger.info(f"Connected to node with address {address}")
+            self.node_logger.debug(f"Connected to node with address {address}")
 
             # send the accepting node the actual address
             send_protocol_message(node_socket, MsgTypes.RESPONSE, MsgSubTypes.NODE_INIT, self.address)
@@ -168,7 +167,7 @@ class Node(ABC):
                 self.node_logger.error(f"Failed to send message to {node_info}: {e}")
 
         if sent_nodes:
-            self.node_logger.info(
+            self.node_logger.debug(
                 f"Distributed message with {msg_sub_type} object: ({msg_params})"
                 f" was sent to: {sent_nodes}")
 
@@ -189,7 +188,7 @@ class Node(ABC):
         try:
             with self.node_connections_lock:
                 send_protocol_message(self.node_connections[address], msg_type, msg_subtype, *msg_params)
-            self.node_logger.info(f"Focused message sent to {address}: "
+            self.node_logger.debug(f"Focused message sent to {address}: "
                                   f"({msg_type}), ({msg_subtype}), ({msg_params})")
             return True
         except Exception as e:
@@ -254,20 +253,19 @@ class Node(ABC):
                     msg_subtype,
                     requested_object
                 )
-                self.node_logger.info(f"{node_address} Requested ({msg_subtype}) object."
-                                      f" replied with object {requested_object}")
+                self.node_logger.debug(f"{node_address} Requested ({msg_subtype}) object."
+                                       f" replied with object {requested_object}")
 
             case MsgTypes.RESPONSE:
                 msg_object = msg_params[0]
-                self.node_logger.info(
+                self.node_logger.debug(
                     f"received response {msg_subtype} object: ({msg_object}) from node with address: {node_address}"
                 )
                 self.process_object_data(msg_subtype, msg_object)
 
-
             case MsgTypes.BROADCAST:
                 msg_object = msg_params[0]
-                self.node_logger.info(f"received broadcast {msg_subtype} object: ({msg_object})"
+                self.node_logger.debug(f"received broadcast {msg_subtype} object: ({msg_object})"
                                       f" from node with address: {node_address}")
                 already_seen = self.process_object_data(msg_subtype, msg_object)
                 if not already_seen:
@@ -333,6 +331,7 @@ class Node(ABC):
         name = name_pk_pair[0]
         public_key = serialization.load_pem_public_key(name_pk_pair[1].encode())
         self.nodes_names_addresses[name] = public_key
+        self.node_logger.info(f"Connected to new node named '{name}'")
 
     @abstractmethod
     def serve_blockchain_request(self, latest_hash):

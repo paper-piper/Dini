@@ -97,7 +97,7 @@ class User(Bootstrap):
         self.wallet.add_pending_transaction(transaction, ActionType.BUY)
 
         self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
-        self.user_logger.info(f"bought {amount} Dini's")
+        self.user_logger.info(f"Transaction of type 'Buy' with amount of {amount} is pending...")
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
 
@@ -112,7 +112,7 @@ class User(Bootstrap):
         transaction.sign_transaction(self.private_key)
         self.wallet.add_pending_transaction(transaction, ActionType.SELL)
         self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
-        self.user_logger.info(f" {amount} Dini's")
+        self.user_logger.info(f"Transaction of type 'Sell' with amount of {amount} is pending...")
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
 
@@ -135,7 +135,7 @@ class User(Bootstrap):
             # keep track of pending transactions
             self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
             self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
-            self.user_logger.info(f"new transaction made: {transaction} ")
+            self.user_logger.info(f"Transaction of type 'Transfer' to '{name}' with amount of {amount} is pending...")
 
             return transaction.signature[:ActionSettings.ID_LENGTH]
         except Exception as e:
@@ -150,7 +150,7 @@ class User(Bootstrap):
         # check
         already_seen = self.wallet.filter_and_add_block(block)
         self.save_wallet()
-        self.user_logger.info(f" Block added to wallet and saved. block: {block}")
+        self.user_logger.debug(f" Block added to wallet and saved. block: {block}")
         return already_seen
 
     def process_blockchain_data(self, blockchain):
@@ -162,7 +162,7 @@ class User(Bootstrap):
         relevant_blocks = blockchain.get_blocks_after(self.wallet.latest_hash)
         for block in relevant_blocks:
             self.process_block_data(block)
-        self.user_logger.info(f"Blockchain response added to wallet and saved.")
+        self.user_logger.debug(f"Blockchain response added to wallet and saved.")
 
     def serve_blockchain_request(self, latest_hash):
         """
@@ -236,10 +236,10 @@ class User(Bootstrap):
             MsgSubTypes.BLOCKCHAIN,
             self.wallet.latest_hash
         )
-        self.user_logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
+        self.user_logger.debug(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
 
 
-def get_first_wallet(ip,port, pk, sk):
+def get_first_wallet(ip, port, pk, sk):
     # Create a sample blockchain and save it using the first User instance
     user1 = User(
         pk,

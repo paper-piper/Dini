@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 
 
@@ -114,6 +115,7 @@ class LoggingSettings:
     REWRITE = True
     WRITE_BASIC_LOGS = False
     BASIC_LOGS = "basic"
+    LOGGING_LEVEL = logging.INFO
 
 
 

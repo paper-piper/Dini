@@ -37,7 +37,7 @@ def configure_logger(class_name, child_dir, instance_id, name=None) -> logging.L
 
     # Get (or create) the logger
     logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.DEBUG)  # Or any level you prefer
+    logger.setLevel(LoggingSettings.LOGGING_LEVEL)  # Or any level you prefer
 
     # If this logger already has handlers, return it as is
     # (so we don't add multiple FileHandlers to the same logger)
