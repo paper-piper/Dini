@@ -46,7 +46,6 @@ class User(Bootstrap):
             instance_id=f"{self.ip}-{self.port}"
         )
 
-
         directory_name = f"{child_dir}_{str(self.port)}"
         self.wallet_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, directory_name, FilesSettings.WALLET_FILE_NAME)
         # make the wallet directory if you don't already exist

@@ -20,7 +20,7 @@ def clean_logs():
     os.makedirs(LOGS_DIRECTORY)
 
 
-def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
+def configure_logger(class_name, child_dir, instance_id, name=None) -> logging.Logger:
     """
     Configure and return a logger for `class_name`.
     `child_dir`   : The directory under logs/ where the file will go (e.g. "miner").
@@ -33,7 +33,7 @@ def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
     """
 
     # Build the logger name
-    logger_name = class_name + instance_id
+    logger_name = class_name + instance_id + name if name else class_name + instance_id
 
     # Get (or create) the logger
     logger = logging.getLogger(logger_name)

@@ -3,7 +3,7 @@ import os
 
 
 class NodeSettings:
-    DEFAULT_NAME = "boring node :("
+    DEFAULT_NAME = "nameless node"
 
 
 class PortsRanges:
