@@ -30,7 +30,7 @@ class Bootstrap(Node):
         self.bootstrap_logger = configure_logger(
             class_name="Bootstrap",
             child_dir=child_dir,
-            instance_id=f"{self.ip}-{self.port}"
+            instance_id=name
         )
         if is_bootstrap:
             self.add_bootstrap_address()

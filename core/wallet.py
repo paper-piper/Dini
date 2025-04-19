@@ -2,7 +2,7 @@ from cryptography.hazmat.primitives import serialization
 from network.miner.action import Action
 from utils.keys_manager import load_key
 from utils.logging_utils import configure_logger
-from utils.config import BlockChainSettings, KeysSettings, ActionStatus, ActionType, ActionSettings
+from utils.config import BlockChainSettings, KeysSettings, ActionStatus, ActionType, ActionSettings, NodeSettings
 from core.transaction import Transaction, get_sk_pk_pair, create_sample_transaction
 from core.block import create_sample_block
 import random
@@ -18,7 +18,7 @@ class Wallet:
     :param actions: List of transactions associated with the blockchain
     :param latest_hash: Hash of the latest block added to the blockchain
     """
-    def __init__(self, owner_pk, balance=0, actions=None, latest_hash=None, instance_id=None, child_dir="wallet"):
+    def __init__(self, owner_pk, balance=0, actions=None, latest_hash=None, instance_id=None, child_dir="wallet", name=NodeSettings.DEFAULT_NAME):
         self.owner_pk = owner_pk
         self.balance = balance
         self.actions = actions or {}
@@ -27,7 +27,7 @@ class Wallet:
         self.wallet_logger = configure_logger(
             class_name="wallet",
             child_dir=child_dir,
-            instance_id=instance_id
+            instance_id=name
         )
 
     def add_pending_transaction(self, transaction, action_type):

@@ -51,7 +51,7 @@ class Node(ABC):
         self.node_logger = configure_logger(
             class_name="Node",
             child_dir=child_dir,
-            instance_id=f"{self.ip}-{self.port}"
+            instance_id=name
         )
 
         self.running = threading.Event()

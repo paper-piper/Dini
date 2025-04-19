@@ -43,19 +43,20 @@ class User(Bootstrap):
         self.user_logger = configure_logger(
             class_name="User",
             child_dir=child_dir,
-            instance_id=f"{self.ip}-{self.port}"
+            instance_id=name,
         )
 
-        directory_name = f"{child_dir}_{str(self.port)}"
+        directory_name = f"{child_dir}_{name}"
         self.wallet_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY, directory_name, FilesSettings.WALLET_FILE_NAME)
         # make the wallet directory if you don't already exist
         full_directory = os.path.dirname(self.wallet_path)
         os.makedirs(full_directory, exist_ok=True)
         if wallet:
             self.wallet = wallet
-            self.save_wallet()
         else:
             self.wallet = self.load_wallet(child_dir)
+
+        self.save_wallet()
 
         # try and get updates for wallet (in case of missing out)
         self.request_blockchain_update()

@@ -199,11 +199,11 @@ class UserManager:
         ip = "127.0.0.1"
         pk_pem = user_row["pk"]
         sk_pem = user_row["sk"]
-
+        username = user_row["username"]
         # Convert PEM back to key objects
         pk = load_pem_public_key(pk_pem.encode(), backend=default_backend())
         sk = load_pem_private_key(sk_pem.encode(), password=None, backend=default_backend())
-        return User(pk, sk, ip=ip)
+        return User(pk, sk, ip=ip, name=username)
 
     def cleanup(self):
         """Cleanup user resources before removing the instance."""
