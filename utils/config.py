@@ -49,7 +49,8 @@ class BlockChainSettings:
     # e4e5e801f8d62dc6564612ad956763af4ac2350080093abca3765b020fa6af6c
 
     SECOND_HASH_DATA = 'e4e5e801f8d62dc6564612ad956763af4ac2350080093abca3765b020fa6af6c|Transaction(Sender: 304..., Recipient: 304..., Amount: 0, Tip: 0)|3|time-zero|0'
-    SECOND_HASH = hashlib.sha256(SECOND_HASH_DATA.encode()).hexdigest()
+    #SECOND_HASH = hashlib.sha256(SECOND_HASH_DATA.encode()).hexdigest()
+    SECOND_HASH = '6c4709c3ec9daa2f9916b684c4eb5fb53912c883876e3f1cf817131d58d689e2'
     # 4e3648a67b524ea1fc7d6fbca79447c44372abf0f926d3f49848966d5356b08b
 
 

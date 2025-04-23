@@ -207,7 +207,7 @@ class User(Bootstrap):
         except Exception as e:
             self.user_logger.error(f"Error saving wallet: {e}")
 
-    def load_wallet(self, child_dir, name=None):
+    def load_wallet(self, child_dir, name):
         """
         Loads the wallet from a file if it exists; otherwise, initializes a new wallet.
         :param child_dir: The directory where the wallet file is stored.
