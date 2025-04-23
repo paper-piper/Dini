@@ -39,6 +39,7 @@ class ActionType:
 class BlockSettings:
     MAX_TRANSACTIONS = 1024
     BONUS_AMOUNT = 199
+    USUAL_TIP = 5
     PROCESSES_NUMBER = 10
 
 
@@ -115,7 +116,7 @@ class LoggingSettings:
     REWRITE = True
     WRITE_BASIC_LOGS = False
     BASIC_LOGS = "basic"
-    LOGGING_LEVEL = logging.INFO
+    LOGGING_LEVEL = logging.DEBUG
 
 
 

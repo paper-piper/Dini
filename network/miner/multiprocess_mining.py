@@ -6,7 +6,7 @@ import time
 
 
 class MultiprocessMining:
-    def __init__(self, num_processes=BlockSettings.PROCESSES_NUMBER, instance_id=None, child_dir="multiprocess_mining"):
+    def __init__(self, instance_id,  num_processes=BlockSettings.PROCESSES_NUMBER, child_dir="multiprocess_mining"):
         """
         Initialize the MultiprocessMining class.
         :param num_processes: Number of processes to use for mining.

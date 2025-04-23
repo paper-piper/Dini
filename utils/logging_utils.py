@@ -33,7 +33,7 @@ def configure_logger(class_name, child_dir, instance_id) -> logging.Logger:
     """
 
     # Build the logger name
-    logger_name = instance_id
+    logger_name = class_name + instance_id
 
     # Get (or create) the logger
     logger = logging.getLogger(logger_name)

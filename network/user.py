@@ -54,7 +54,7 @@ class User(Bootstrap):
         if wallet:
             self.wallet = wallet
         else:
-            self.wallet = self.load_wallet(child_dir)
+            self.wallet = self.load_wallet(child_dir, name)
 
         self.save_wallet()
 
@@ -93,7 +93,7 @@ class User(Bootstrap):
         """
         lord_pk = load_key(KeysSettings.LORD_PK)
         lord_sk = load_key(KeysSettings.LORD_SK)
-        transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.BONUS_AMOUNT)
+        transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.USUAL_TIP)
         transaction.sign_transaction(lord_sk)
         self.wallet.add_pending_transaction(transaction, ActionType.BUY)
 
@@ -207,10 +207,11 @@ class User(Bootstrap):
         except Exception as e:
             self.user_logger.error(f"Error saving wallet: {e}")
 
-    def load_wallet(self, child_dir):
+    def load_wallet(self, child_dir, name=None):
         """
         Loads the wallet from a file if it exists; otherwise, initializes a new wallet.
         :param child_dir: The directory where the wallet file is stored.
+        :param name: optional object name
         :return: Loaded wallet object.
         """
         if os.path.exists(self.wallet_path) and os.path.getsize(self.wallet_path) != 0:
@@ -222,10 +223,10 @@ class User(Bootstrap):
                 return wallet
             except Exception as e:
                 self.user_logger.error(f"Error loading wallet: {e}")
-                return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
+                return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir, name=name)
 
         self.user_logger.warning(f"No wallet file found at {self.wallet_path}, initializing new wallet.")
-        return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
+        return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir, name=name)
 
     def request_update_blockchain(self):
         """
@@ -256,7 +257,7 @@ def get_first_wallet(ip, port, pk, sk):
 
 def get_second_wallet(ip, port, pk, sk):
     # Load the blockchain from the saved file using a second User instance and save to a new file
-    user2 = User(pk, sk, ip=ip,port=port)
+    user2 = User(pk, sk, ip=ip, port=port)
     return user2.load_wallet("User")
 
 

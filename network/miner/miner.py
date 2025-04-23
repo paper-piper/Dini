@@ -48,16 +48,16 @@ class Miner(User):
         self.miner_logger = configure_logger(
             class_name="Miner",
             child_dir=child_dir,
-            instance_id=f"{self.ip}-{self.port}"
+            instance_id=name
         )
 
-        self.mempool = mempool if mempool else Mempool(f"{self.ip}-{self.port}", child_dir)
+        self.mempool = mempool if mempool else Mempool(name, child_dir)
         self.mempool_lock = threading.Lock()
-        self.multi_miner = MultiprocessMining(instance_id=f"{self.ip}-{self.port}", child_dir=child_dir)
+        self.multi_miner = MultiprocessMining(name, child_dir=child_dir)
         self.new_block_event = threading.Event()
         self.currently_mining = threading.Event()
 
-        directory_name = f"{child_dir}_{str(self.port)}"
+        directory_name = f"{child_dir}_{name}"
         self.blockchain_path = os.path.join(FilesSettings.DATA_ROOT_DIRECTORY,
                                             directory_name,
                                             FilesSettings.BLOCKCHAIN_FILE_NAME
@@ -66,9 +66,10 @@ class Miner(User):
         os.makedirs(full_directory, exist_ok=True)
         if blockchain:
             self.blockchain = blockchain
-            self.save_blockchain()
         else:
             self.blockchain = self.load_blockchain()
+
+        self.save_blockchain()
 
     def __del__(self):
         super().__del__()
@@ -190,6 +191,7 @@ class Miner(User):
                 blocks_num -= 1
                 self.send_distributed_message(MsgTypes.BROADCAST, MsgSubTypes.BLOCK, mined_block)
                 self.mempool.remove_transactions(mined_block.transactions)
+                self.save_blockchain()
                 self.miner_logger.info(f"Block mined and added to blockchain successfully. Block: {mined_block}")
 
     def create_block(self):

@@ -22,7 +22,6 @@ if __name__ == "__main__":
         name="Bob The Miner"
     )
     miner.start_mining(-1)
-
     # Keep the script running
     stop_event = Event()
 
