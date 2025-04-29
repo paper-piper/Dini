@@ -11,7 +11,7 @@ import { History } from "@/components/history";
 import { Coins, ArrowLeftRight, WalletIcon, LogOut } from "lucide-react";
 import { useUser } from "@/contexts/user-context";
 
-const API_URL = "http://localhost:8000"; // Backend URL
+const API_URL = "https://localhost:8000";
 
 export default function Home() {
   const { user, logout } = useUser();
@@ -21,7 +21,7 @@ export default function Home() {
   const [balance, setBalance] = useState(1000);
   const [transactions, setTransactions] = useState([]);
 
-  const INITIAL_BALANCE = 1000;
+  const INITIAL_BALANCE = 0;
 
   const fetchAllTransactions = async () => {
     if (!user?.session_id) return;
@@ -88,16 +88,6 @@ export default function Home() {
 
       const newTransaction = await response.json();
       console.log("Created transaction:", newTransaction);
-
-      setTransactions(prev => [
-        {
-          ...newTransaction,
-          details: newTransaction.type === "transfer" 
-            ? `To: ${newTransaction.details}` 
-            : newTransaction.details,
-        },
-        ...prev,
-      ]);
 
       // Refresh transactions to get updated balance
       fetchAllTransactions();

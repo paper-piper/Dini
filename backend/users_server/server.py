@@ -10,11 +10,13 @@ from user_session_manager import UserSessionManager
 
 logger = setup_basic_logger()
 
+ALLOWED_ORIGINS = {"http://localhost:3000", "https://localhost:3000"}
+
 app = Flask(__name__)
 CORS(
     app,
     supports_credentials=True,
-    origins=["http://localhost:3000"],
+    origins=list(ALLOWED_ORIGINS),
     allow_headers=["Content-Type", "Session-Id"],
     methods=["GET", "POST", "OPTIONS"]
 )
@@ -22,8 +24,9 @@ CORS(
 
 @app.after_request
 def add_cors_headers(response):
-    """✅ Manually ensure all responses include CORS headers"""
-    response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    origin = request.headers.get("Origin")
+    if origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Session-Id"
@@ -184,10 +187,10 @@ if __name__ == "__main__":
     cleanup_thread = threading.Thread(target=cleanup_task, daemon=True)
     cleanup_thread.start()
 
-    # Initialize database and then load all user objects from the database.
+    # Initialize database and then load all user objects from t\he database.
     with app.app_context():
         DatabaseManager.init_db()
         UserManager.initialize_users()
 
     logger.info("Starting backend server on port 8000!")
-    app.run(debug=True, port=8000)
+    app.run(debug=True, port=8000, ssl_context=('ssl/cert.pem', 'ssl/key.pem'))
