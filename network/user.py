@@ -151,7 +151,8 @@ class User(Bootstrap):
         # check
         already_seen = self.wallet.filter_and_add_block(block)
         self.save_wallet()
-        self.user_logger.debug(f" Block added to wallet and saved. block: {block}")
+        if not already_seen:
+            self.user_logger.debug(f" Block added to wallet and saved. block: {block}")
         return already_seen
 
     def process_blockchain_data(self, blockchain):
