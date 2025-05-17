@@ -64,6 +64,7 @@ class KeysSettings:
 class FilesSettings:
     LOGS_FOLDER_NAME = "logs"
     DATA_FOLDER_NAME = "data"
+    SERVER_DATABASE_FILENAME = "users.db"
     DATA_ROOT_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", DATA_FOLDER_NAME)
     BOOTSTRAP_CONFIG_FILENAME = "bootstrap_config.json"
     KEYS_FILENAME = "keys.json"
@@ -117,8 +118,7 @@ class LoggingSettings:
     REWRITE = True
     WRITE_BASIC_LOGS = False
     BASIC_LOGS = "basic"
-    LOGGING_LEVEL = logging.DEBUG
-
+    LOGGING_LEVEL = logging.INFO
 
 
 class PortSettings:

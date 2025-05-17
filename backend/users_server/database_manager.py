@@ -1,9 +1,8 @@
 import sqlite3
 from flask import g
 from utils.logging_utils import setup_basic_logger
-
+from utils.config import FilesSettings
 logger = setup_basic_logger()
-DATABASE = 'users.db'
 
 
 class DatabaseManager:
@@ -14,7 +13,7 @@ class DatabaseManager:
         """Opens a new database connection per request."""
         db = getattr(g, '_database', None)
         if db is None:
-            db = g._database = sqlite3.connect(DATABASE)
+            db = g._database = sqlite3.connect(FilesSettings.SERVER_DATABASE_FILENAME)
             db.row_factory = sqlite3.Row
         return db
 
@@ -28,6 +27,7 @@ class DatabaseManager:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE,
                     password TEXT,
+                    salt TEXT,
                     pk TEXT,
                     sk TEXT,
                     session_id TEXT

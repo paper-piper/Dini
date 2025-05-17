@@ -8,6 +8,9 @@ from core.transaction import get_sk_pk_pair
 from utils.logging_utils import setup_basic_logger
 from database_manager import DatabaseManager
 from cryptography.hazmat.primitives import serialization
+import hashlib
+import os
+import hmac
 
 logger = setup_basic_logger()
 logger.info("UserManager initializing")
@@ -152,8 +155,9 @@ class UserManager:
 
         session_id = UserManager.create_session()
 
-        query = "INSERT INTO users (username, password, pk, sk, session_id) VALUES (?, ?, ?, ?, ?)"
-        if DatabaseManager.execute_query(query, (username, password, pk_pem, sk_pem, session_id)):
+        password_hash, salt = hash_password(password)
+        query = "INSERT INTO users (username, password, pk, sk, session_id, salt) VALUES (?, ?, ?, ?, ?, ?)"
+        if DatabaseManager.execute_query(query, (username, password_hash, pk_pem, sk_pem, session_id, salt)):
             logger.info(f"User {username} registered successfully.")
             # Retrieve the inserted row and create a user instance.
             user_row = UserManager.get_user_by_username(username)
@@ -169,9 +173,13 @@ class UserManager:
     def authenticate_user(username, password):
         """Verifies login credentials and returns a session ID."""
         user = UserManager.get_user_by_username(username)
-        if not user or user["password"] != password:
-            logger.warning("Invalid login attempt.")
-            return {"error": "Invalid username or password"}, 401
+        try:
+            if not user or not verify_password(user["password"], user["salt"], password):
+                logger.warning("Password verification failed.")
+                return {"error": "Invalid username or password"}, 401
+        except Exception as e:
+            logger.error(f"Password check failed with exception: {e}")
+            return {"error": "Internal server error"}, 500
 
         session_id = UserManager.create_session()
         query = "UPDATE users SET session_id = ? WHERE username = ?"
@@ -210,3 +218,15 @@ class UserManager:
         if hasattr(self, 'blockchain_node'):
             self.blockchain_node.close()
         self.nodes_names_addresses = {}
+
+
+def hash_password(password: str, salt: bytes = None) -> tuple[str, str]:
+    if not salt:
+        salt = os.urandom(16)
+    hashed = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100000)
+    return hashed.hex(), salt.hex()
+
+
+def verify_password(stored_hash: str, stored_salt: str, guessed_password: str) -> bool:
+    guessed_hash, _ = hash_password(guessed_password, bytes.fromhex(stored_salt))
+    return hmac.compare_digest(guessed_hash, stored_hash)
