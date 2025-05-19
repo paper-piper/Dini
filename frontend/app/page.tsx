@@ -172,6 +172,10 @@ export default function Home() {
           open={sellOpen}
           onOpenChange={setSellOpen}
           onSell={(amount: number) => {
+              if (balance - amount < 0) {
+              alert("❌ Insufficient balance to perform this sell transaction.");
+              return;
+            }
             setSellOpen(false)
             createTransaction("sell", amount)
           }}
@@ -180,6 +184,10 @@ export default function Home() {
           open={transferOpen}
           onOpenChange={setTransferOpen}
           onTransfer={(recipient, amount) => {
+              if (balance - amount < 0) {
+              alert("❌ Insufficient balance to perform this transfer.");
+              return;
+            }
             setTransferOpen(false);  // just close the modal
             fetchAllTransactions();  // optionally refresh
           }}
