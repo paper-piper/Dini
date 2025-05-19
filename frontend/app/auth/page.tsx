@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Toaster, toast } from "sonner"
 
 export default function AuthPage() {
   const router = useRouter()
@@ -27,15 +28,16 @@ export default function AuthPage() {
         body: JSON.stringify({ username, password })
       })
 
-      if (!response.ok) throw new Error("Login failed")
-
       const result = await response.json()
-      // Save both username and session_id in localStorage
+      if (!response.ok) {
+        throw new Error(result.message || "Login failed")
+      }
+
       localStorage.setItem("user", JSON.stringify({ username, session_id: result.session_id }))
       router.push("/")
-    } catch (error) {
-      console.error("Login error:", error)
-      // Optionally, display an error message to the user here.
+    } catch (err: any) {
+      console.error("Login error:", err)
+      toast.error(err.message)
     } finally {
       setIsLoading(false)
     }
@@ -51,6 +53,7 @@ export default function AuthPage() {
 
     if (password !== confirmPassword) {
       console.error("Passwords do not match")
+      toast.error("Passwords do not match")
       setIsLoading(false)
       return
     }
@@ -62,108 +65,112 @@ export default function AuthPage() {
         body: JSON.stringify({ username, password })
       })
 
-      if (!response.ok) throw new Error("Registration failed")
-
       const result = await response.json()
-      // Save both username and session_id in localStorage
+      if (!response.ok) {
+        throw new Error(result.message || "Registration failed")
+      }
+
       localStorage.setItem("user", JSON.stringify({ username, session_id: result.session_id }))
       router.push("/")
-    } catch (error) {
-      console.error("Signup error:", error)
-      // Optionally, display an error message to the user here.
+    } catch (err: any) {
+      console.error("Signup error:", err)
+      toast.error(err.message)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-      <Card className="w-full max-w-md backdrop-blur-xl bg-white/10 border-white/20">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-white">Welcome to Dini</CardTitle>
-          <CardDescription className="text-center text-white/70">
-            Login or create an account to start trading
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/10">
-              <TabsTrigger value="login" className="text-white data-[state=active]:bg-white/20">Login</TabsTrigger>
-              <TabsTrigger value="signup" className="text-white data-[state=active]:bg-white/20">Sign Up</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-white">Username</Label>
-                  <Input
-                    id="username"
-                    name="username"
-                    required
-                    className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Loading..." : "Login"}
-                </Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-username" className="text-white">Username</Label>
-                  <Input
-                    id="new-username"
-                    name="username"
-                    required
-                    className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-password" className="text-white">Password</Label>
-                  <Input
-                    id="new-password"
-                    name="password"
-                    type="password"
-                    required
-                    className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="text-white">Confirm Password</Label>
-                  <Input
-                    id="confirm-password"
-                    name="confirmPassword"
-                    type="password"
-                    required
-                    className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Loading..." : "Sign Up"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <Toaster position="top-center" richColors />
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <Card className="w-full max-w-md backdrop-blur-xl bg-white/10 border-white/20">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center text-white">Welcome to Dini</CardTitle>
+            <CardDescription className="text-center text-white/70">
+              Login or create an account to start trading
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-white/10">
+                <TabsTrigger value="login" className="text-white data-[state=active]:bg-white/20">Login</TabsTrigger>
+                <TabsTrigger value="signup" className="text-white data-[state=active]:bg-white/20">Sign Up</TabsTrigger>
+              </TabsList>
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="username" className="text-white">Username</Label>
+                    <Input
+                      id="username"
+                      name="username"
+                      required
+                      className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-white">Password</Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Loading..." : "Login"}
+                  </Button>
+                </form>
+              </TabsContent>
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-username" className="text-white">Username</Label>
+                    <Input
+                      id="new-username"
+                      name="username"
+                      required
+                      className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password" className="text-white">Password</Label>
+                    <Input
+                      id="new-password"
+                      name="password"
+                      type="password"
+                      required
+                      className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password" className="text-white">Confirm Password</Label>
+                    <Input
+                      id="confirm-password"
+                      name="confirmPassword"
+                      type="password"
+                      required
+                      className="backdrop-blur-xl bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Loading..." : "Sign Up"}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   )
 }
