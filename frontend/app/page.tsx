@@ -49,9 +49,17 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    fetchAllTransactions();
-  }, [user]);
+    useEffect(() => {
+      if (!user?.session_id) return;
+
+      const interval = setInterval(() => {
+        fetchAllTransactions();
+      }, 5000); // Poll every 5 seconds
+
+      // Clean up on unmount or when user changes
+      return () => clearInterval(interval);
+    }, [user?.session_id]);
+
 
   const createTransaction = async (type: string, amount: number, details?: string) => {
     if (!user?.session_id) {
