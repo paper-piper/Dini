@@ -39,7 +39,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const heartbeat = async () => {
       try {
-        const response = await fetch('http://localhost:8000/heartbeat', {
+        const response = await fetch('https://localhost:8000/heartbeat', {
           method: 'POST',
           headers: {
             'Session-Id': user.session_id,

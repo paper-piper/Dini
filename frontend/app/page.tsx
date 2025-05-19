@@ -180,8 +180,8 @@ export default function Home() {
           open={transferOpen}
           onOpenChange={setTransferOpen}
           onTransfer={(recipient, amount) => {
-            setTransferOpen(false)
-            createTransaction("transfer", amount, recipient)
+            setTransferOpen(false);  // just close the modal
+            fetchAllTransactions();  // optionally refresh
           }}
         />
       </div>

@@ -35,7 +35,7 @@ interface TransferModalProps {
 }
 
 // Adjust this to match your backend URL if it's different
-const API_URL = "http://localhost:8000"
+const API_URL = "https://localhost:8000"
 
 export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalProps) {
     const { user } = useUser()
