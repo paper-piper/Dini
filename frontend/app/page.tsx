@@ -10,6 +10,7 @@ import { Wallet } from "@/components/wallet";
 import { History } from "@/components/history";
 import { Coins, ArrowLeftRight, WalletIcon, LogOut } from "lucide-react";
 import { useUser } from "@/contexts/user-context";
+import { toast } from "sonner";
 
 const API_URL = "https://localhost:8000";
 
@@ -173,7 +174,7 @@ export default function Home() {
           onOpenChange={setSellOpen}
           onSell={(amount: number) => {
               if (balance - amount < 0) {
-              alert("❌ Insufficient balance to perform this sell transaction.");
+            toast.error("Insufficient balance to sell this amount of Dini.");
               return;
             }
             setSellOpen(false)
@@ -185,7 +186,7 @@ export default function Home() {
           onOpenChange={setTransferOpen}
           onTransfer={(recipient, amount) => {
               if (balance - amount < 0) {
-              alert("❌ Insufficient balance to perform this transfer.");
+                toast.error("Insufficient balance to transfer this amount.");
               return;
             }
             setTransferOpen(false);  // just close the modal
