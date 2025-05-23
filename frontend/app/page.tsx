@@ -11,11 +11,15 @@ import { History } from "@/components/history";
 import { Coins, ArrowLeftRight, WalletIcon, LogOut } from "lucide-react";
 import { useUser } from "@/contexts/user-context";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
 
 const API_URL = "https://localhost:8000";
 
 export default function Home() {
   const { user, logout } = useUser();
+  const router = useRouter();
+
   const [buyOpen, setBuyOpen] = useState(false);
   const [sellOpen, setSellOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
@@ -23,6 +27,13 @@ export default function Home() {
   const [transactions, setTransactions] = useState([]);
 
   const INITIAL_BALANCE = 0;
+
+   // 🔁 Redirect if not logged in
+  useEffect(() => {
+    if (!user?.session_id) {
+      router.push("/auth");
+    }
+  }, [user?.session_id]);
 
   const fetchAllTransactions = async () => {
     if (!user?.session_id) return;
