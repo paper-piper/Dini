@@ -98,20 +98,10 @@ class MsgSubTypes:
     ALL_MSGSUB_TYPES = [TEST, NODE_ADDRESS, NODE_INIT, NODE_NAME, BLOCK, TRANSACTION, BLOCKCHAIN]
 
 
-class MsgSideParameters:
-    DONT_PASS = False
-    PASS = True
-
-
 class MinerSettings:
     PROCESSES_NUMBER = 7
     PROCESS_RANGE = 10 ** 4
     DIFFICULTY_LEVEL = 3
-
-
-class BootSettings:
-    ADDRESSES_LIST = "bootstrap_addresses"
-    BOOTSTRAP_SERVERS = 3
 
 
 class LoggingSettings:
@@ -119,10 +109,3 @@ class LoggingSettings:
     WRITE_BASIC_LOGS = False
     BASIC_LOGS = "basic"
     LOGGING_LEVEL = logging.INFO
-
-
-class PortSettings:
-    BOOTSTRAP_RANGE = (5000, 5500)
-    USER_RANGE = (5501, 5800)
-    MINER_RANGE = (5801, 6000)
-    GENERAL_RANGE = (5000, 6000)
