@@ -34,6 +34,8 @@ export default function AuthPage() {
       }
 
       localStorage.setItem("user", JSON.stringify({ username, session_id: result.session_id }))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       router.push("/")
     } catch (err: any) {
       console.error("Login error:", err)
