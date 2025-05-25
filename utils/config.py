@@ -109,3 +109,7 @@ class LoggingSettings:
     WRITE_BASIC_LOGS = False
     BASIC_LOGS = "basic"
     LOGGING_LEVEL = logging.INFO
+
+
+class IPSettings:
+    LOCAL_IP = "10.100.102.6"

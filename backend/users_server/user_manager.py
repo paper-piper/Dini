@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives.serialization import load_pem_public_key, lo
 from network.user import User
 from core.transaction import get_sk_pk_pair
 from utils.logging_utils import setup_basic_logger
+from utils.config import IPSettings
 from database_manager import DatabaseManager
 from cryptography.hazmat.primitives import serialization
 import hashlib
@@ -204,7 +205,7 @@ class UserManager:
     @staticmethod
     def create_user_instance(user_row):
         """Creates a User instance from database row."""
-        ip = "127.0.0.1"
+        ip = IPSettings.LOCAL_IP
         pk_pem = user_row["pk"]
         sk_pem = user_row["sk"]
         username = user_row["username"]
