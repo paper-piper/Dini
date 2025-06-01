@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 
-const API_URL = "https://localhost:8000";
+const API_URL = "https://10.100.102.6:8000";
 
 export default function Home() {
   const { user, logout } = useUser();

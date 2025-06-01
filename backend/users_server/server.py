@@ -187,10 +187,15 @@ if __name__ == "__main__":
     cleanup_thread = threading.Thread(target=cleanup_task, daemon=True)
     cleanup_thread.start()
 
-    # Initialize database and then load all user objects from t\he database.
+    # Initialize database and then load all user objects from the database.
     with app.app_context():
         DatabaseManager.init_db()
         UserManager.initialize_users()
 
     logger.info("Starting backend server on port 8000!")
-    app.run(debug=True, port=8000, ssl_context=('ssl/cert.pem', 'ssl/key.pem'))
+    app.run(
+        debug=True,
+        host="0.0.0.0",  # Accept connections from any IP
+        port=8000,
+        ssl_context=('ssl/cert.pem', 'ssl/key.pem')
+    )
