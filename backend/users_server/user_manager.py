@@ -205,14 +205,14 @@ class UserManager:
     @staticmethod
     def create_user_instance(user_row):
         """Creates a User instance from database row."""
-        ip = IPSettings.LOCAL_IP
+        #  ip = IPSettings.LOCAL_IP
         pk_pem = user_row["pk"]
         sk_pem = user_row["sk"]
         username = user_row["username"]
         # Convert PEM back to key objects
         pk = load_pem_public_key(pk_pem.encode(), backend=default_backend())
         sk = load_pem_private_key(sk_pem.encode(), password=None, backend=default_backend())
-        return User(pk, sk, ip=ip, name=username)
+        return User(pk, sk, name=username)
 
     def cleanup(self):
         """Cleanup user resources before removing the instance."""

@@ -4,7 +4,7 @@ from abc import abstractmethod, ABC
 
 from cryptography.hazmat.primitives import serialization
 
-from utils.config import MsgTypes, MsgSubTypes, NodeSettings
+from utils.config import MsgTypes, MsgSubTypes, NodeSettings, IPSettings
 from utils.logging_utils import configure_logger
 from communication.protocol import receive_message, send_protocol_message
 import socket
@@ -36,7 +36,7 @@ class Node(ABC):
         :return: None
         """
 
-        self.ip = socket.gethostbyname(socket.gethostname()) if not ip else ip
+        self.ip = IPSettings.LOCAL_IP if not ip else ip
         self.accept_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if port:
             self.port = port

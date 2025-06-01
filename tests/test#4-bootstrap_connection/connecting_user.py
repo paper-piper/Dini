@@ -1,12 +1,12 @@
 from network.user import User
 from threading import Event
 from core.transaction import get_sk_pk_pair
-
+from utils.config import IPSettings
 
 if __name__ == "__main__":
 
     # Use localhost for same-computer testing
-    user_ip = "127.0.0.1"
+    user_ip = IPSettings.LOCAL_IP
 
     sk, pk = get_sk_pk_pair()
     # Initialize User
@@ -14,7 +14,8 @@ if __name__ == "__main__":
         pk,
         sk,
         ip=user_ip,
-        port=9092
+        port=9092,
+        name="connecting_user"
     )
     # Keep the script running
     stop_event = Event()

@@ -2,22 +2,23 @@ from network.user import User
 from threading import Event
 from core.transaction import get_sk_pk_pair
 from core.wallet import create_sample_wallet
-
+from utils.config import IPSettings
 
 if __name__ == "__main__":
 
     # Use localhost for same-computer testing
-    user_ip = "127.0.0.1"
+    user_ip = IPSettings.LOCAL_IP
 
     sk, pk = get_sk_pk_pair()
-    wallet = create_sample_wallet(pk, sk)
+    wallet = create_sample_wallet(pk, sk, f"{user_ip}-9091")
     # Initialize User
     user = User(
         pk,
         sk,
         ip=user_ip,
         port=9091,
-        wallet=wallet
+        wallet=wallet,
+        name="initiated_user"
     )
     # Keep the script running
     stop_event = Event()
