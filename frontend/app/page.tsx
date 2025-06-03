@@ -130,7 +130,7 @@ export default function Home() {
         <Card className="w-full backdrop-blur-xl bg-white/10 border-white/20 shadow-xl">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-center text-white">
-              Dini - User Dashboard
+              Dini - Dashboard
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-6">
