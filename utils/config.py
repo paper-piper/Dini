@@ -2,6 +2,8 @@ import hashlib
 import logging
 import os
 
+from cffi.cffi_opcode import PRIM_INT8
+
 
 class NodeSettings:
     DEFAULT_NAME = "nameless node"
@@ -44,14 +46,13 @@ class BlockSettings:
 
 
 class BlockChainSettings:
-    FIRST_GEN_ENCODED_STR = '5f6bef989faab6438c2eacd664f0fd3ac7523ab688e6ed68560b0eb152bcf76c|Transaction(Sender: 270..., Recipient: 270..., Amount: 0, Tip: 0)|2|time-zero|0'
-    FIRST_HASH = hashlib.sha256(FIRST_GEN_ENCODED_STR.encode()).hexdigest()
+    GENESYS_PREVIEWS_HASH_DATA = '5f6bef989faab6438c2eacd664f0fd3ac7523ab688e6ed68560b0eb152bcf76c|Transaction(Sender: 270..., Recipient: 270..., Amount: 0, Tip: 0)|2|time-zero|0'
+    GENESYS_PREVIEWS_HASH = hashlib.sha256(GENESYS_PREVIEWS_HASH_DATA.encode()).hexdigest()
     # e4e5e801f8d62dc6564612ad956763af4ac2350080093abca3765b020fa6af6c
 
-    SECOND_HASH_DATA = 'e4e5e801f8d62dc6564612ad956763af4ac2350080093abca3765b020fa6af6c|Transaction(Sender: 304..., Recipient: 304..., Amount: 0, Tip: 0)|3|time-zero|0'
-    #SECOND_HASH = hashlib.sha256(SECOND_HASH_DATA.encode()).hexdigest()
-    SECOND_HASH = '6c4709c3ec9daa2f9916b684c4eb5fb53912c883876e3f1cf817131d58d689e2'
-    # 4e3648a67b524ea1fc7d6fbca79447c44372abf0f926d3f49848966d5356b08b
+    GENESYS_HASH_DATA = 'e4e5e801f8d62dc6564612ad956763af4ac2350080093abca3765b020fa6af6c|Transaction(Sender: 251..., Recipient: 251..., Amount: 0, Tip: 0)|3|time-zero|0'
+    GENESYS_HASH = hashlib.sha256(GENESYS_HASH_DATA.encode()).hexdigest()
+    # 6c4709c3ec9daa2f9916b684c4eb5fb53912c883876e3f1cf817131d58d689e2
 
 
 class KeysSettings:
@@ -112,4 +113,4 @@ class LoggingSettings:
 
 
 class IPSettings:
-    LOCAL_IP = "10.100.102.6"
+    LOCAL_IP = "10.0.0.37"
