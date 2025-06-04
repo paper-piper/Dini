@@ -71,6 +71,8 @@ class User(Bootstrap):
             MsgSubTypes.BLOCKCHAIN,
             self.wallet.latest_hash
         )
+        self.user_logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
+
 
     def __del__(self):
         super().__del__()
@@ -98,6 +100,7 @@ class User(Bootstrap):
         self.wallet.add_pending_transaction(transaction, ActionType.BUY)
 
         self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
+        self.request_blockchain_update()
         self.user_logger.info(f"Transaction of type 'Buy' with amount of {amount} is pending...")
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
@@ -228,18 +231,6 @@ class User(Bootstrap):
 
         self.user_logger.warning(f"No wallet file found at {self.wallet_path}, initializing new wallet.")
         return Wallet(self.public_key, instance_id=f"{self.ip}-{self.port}", child_dir=child_dir, name=name)
-
-    def request_update_blockchain(self):
-        """
-        Requests a specific blockchain update from peers using the latest hash.
-        :return: None
-        """
-        self.send_distributed_message(
-            MsgTypes.REQUEST,
-            MsgSubTypes.BLOCKCHAIN,
-            self.wallet.latest_hash
-        )
-        self.user_logger.debug(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
 
 
 def get_first_wallet(ip, port, pk, sk):

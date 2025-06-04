@@ -6,7 +6,6 @@ from utils.config import BlockChainSettings, KeysSettings, ActionStatus, ActionT
 from core.transaction import Transaction, get_sk_pk_pair, create_sample_transaction
 from core.block import create_sample_block
 import random
-# Setup logger for the file
 
 
 class Wallet:
@@ -22,7 +21,7 @@ class Wallet:
         self.owner_pk = owner_pk
         self.balance = balance
         self.actions = actions or {}
-        self.latest_hash = latest_hash if latest_hash else BlockChainSettings.SECOND_HASH
+        self.latest_hash = latest_hash if latest_hash else BlockChainSettings.GENESYS_HASH
         self.instance_id = instance_id
         self.wallet_logger = configure_logger(
             class_name="wallet",

@@ -2,7 +2,7 @@ from network.bootstrap import Bootstrap
 from network.miner.miner import Miner
 from threading import Event
 from core.transaction import get_sk_pk_pair
-from utils.config import IPSettings
+
 
 if __name__ == "__main__":
 
@@ -19,6 +19,7 @@ if __name__ == "__main__":
         port=miner_port,
         name="Bob The Miner"
     )
+    print("Starting to mine!")
     miner.start_mining(-1)
     # Keep the script running
     stop_event = Event()
