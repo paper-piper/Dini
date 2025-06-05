@@ -103,8 +103,7 @@ class Wallet:
             else:
                 not_relevant_transaction += 1
 
-        self.wallet_logger.info(f"Block added with {relevant_transactions} relevant transactions "
-                                f"and {not_relevant_transaction} not relevant transactions. the block: {block}")
+        self.wallet_logger.info(f"Block added with {relevant_transactions} relevant transactions. the block: {block}")
         return False
 
     def to_dict(self):
