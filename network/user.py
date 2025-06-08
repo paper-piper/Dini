@@ -93,6 +93,8 @@ class User(Bootstrap):
         :param amount: The amount of Dini's to purchase.
         :return: Transaction signature (shortened for identification).
         """
+        self.request_blockchain_update()
+
         lord_pk = load_key(KeysSettings.LORD_PK)
         lord_sk = load_key(KeysSettings.LORD_SK)
         transaction = Transaction(lord_pk, self.public_key, amount, BlockSettings.USUAL_TIP)
@@ -100,7 +102,6 @@ class User(Bootstrap):
         self.wallet.add_pending_transaction(transaction, ActionType.BUY)
 
         self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
-        self.request_blockchain_update()
         self.user_logger.info(f"Transaction of type 'Buy' with amount of {amount} is pending...")
 
         return transaction.signature[:ActionSettings.ID_LENGTH]
@@ -111,6 +112,8 @@ class User(Bootstrap):
         :param amount: The amount of Dini's to sell.
         :return: Transaction signature (shortened for identification).
         """
+        self.request_blockchain_update()
+
         lord_pk = load_key(KeysSettings.LORD_PK)
         transaction = Transaction(self.public_key, lord_pk, amount, BlockSettings.BONUS_AMOUNT)
         transaction.sign_transaction(self.private_key)
@@ -128,6 +131,8 @@ class User(Bootstrap):
         :param tip: Optional tip amount to include in the transaction.
         :return: Transaction signature (shortened for identification).
         """
+        self.request_blockchain_update()
+
         if name not in self.nodes_names_addresses.keys():
             self.user_logger.warning(
                 f"failed to find address to name '{name}'. addresses list: {self.nodes_names_addresses}")

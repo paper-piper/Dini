@@ -41,7 +41,7 @@ class UserSessionManager:
         if session_id in self.active_users:
             logger.info(f"Removing user session: {session_id}")
             user_instance, _ = self.active_users[session_id]
-            user_instance.cleanup()  # Cleanup user resources
+            del user_instance  # Cleanup user resources
             del self.active_users[session_id]
     
     def cleanup_inactive_sessions(self):
@@ -54,7 +54,3 @@ class UserSessionManager:
         for session_id in inactive_sessions:
             logger.info(f"Cleaning up inactive session: {session_id}")
             self.remove_user(session_id)
-    
-    def get_all_active_users(self):
-        """Get list of all active usernames"""
-        return [user.username for user, _ in self.active_users.values()]

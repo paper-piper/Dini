@@ -34,8 +34,8 @@ interface TransferModalProps {
   onTransfer: (recipient: string, amount: number) => void // callback from parent
 }
 
-// Adjust this to match your backend URL if it's different
-const API_URL = "https://localhost:8000"
+const API_IP = process.env.NEXT_PUBLIC_API_IP;
+const API_URL = `https://${API_IP}:8000`;
 
 export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalProps) {
     const { user } = useUser()
