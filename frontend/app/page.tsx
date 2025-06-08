@@ -13,8 +13,9 @@ import { useUser } from "@/contexts/user-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+const API_IP = process.env.NEXT_PUBLIC_API_IP || "localhost";
+const API_URL = `https://${API_IP}:8000`;
 
-const API_URL = "https://10.100.102.6:8000";
 
 export default function Home() {
   const { user, logout } = useUser();
