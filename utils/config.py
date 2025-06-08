@@ -113,4 +113,6 @@ class LoggingSettings:
 
 
 class IPSettings:
-    LOCAL_IP = "10.0.0.37"
+    LOCAL_IP = "10.100.102.6"
+    OUTER_BOOTSTRAP_IP = "134.2134.53"  # none if there is not an outer bootstrap
+    OUTER_BOOTSTRAP_PORT = 8000  # none if there is not an outer bootstrap
