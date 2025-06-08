@@ -124,7 +124,7 @@ class Node(ABC):
         # Check if the node is already connected
         with self.node_connections_lock:
             if address in self.node_connections.keys():
-                self.node_logger.warning(f"node {address} is already connected.")
+                self.node_logger.debug(f"node {address} is already connected.")
                 return
         try:
             # Attempt to connect to the new node

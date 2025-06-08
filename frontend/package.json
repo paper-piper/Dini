@@ -3,11 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "dev": "cross-env HTTPS=true SSL_CRT_FILE=./localhost.pem SSL_KEY_FILE=./localhost-key.pem next dev -H 0.0.0.0",
+    "dev": "cross-env HTTPS=true SSL_CRT_FILE=./localhost.pem SSL_KEY_FILE=./localhost-key.pem next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "shadcn:add:select": "npx shadcn add select"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.3",
@@ -24,6 +23,7 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.468.0",
     "next": "14.2.16",
+    "openssl": "^2.0.0",
     "react": "^18",
     "react-dom": "^18",
     "react-select": "^5.10.0",

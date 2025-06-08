@@ -12,7 +12,6 @@ import { Toaster, toast } from "sonner"
 export default function AuthPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  console.log("API_IP is:", process.env.NEXT_PUBLIC_API_IP);
   const API_IP = process.env.NEXT_PUBLIC_API_IP;
   const API_URL = `https://${API_IP}:8000`;
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
