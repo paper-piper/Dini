@@ -10,7 +10,7 @@ from user_session_manager import UserSessionManager
 
 logger = setup_basic_logger()
 
-ALLOWED_ORIGINS = {"http://localhost:3000", "https://localhost:3000"}
+ALLOWED_ORIGINS = {"*"}
 
 app = Flask(__name__)
 CORS(
