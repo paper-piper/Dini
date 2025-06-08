@@ -142,7 +142,7 @@ class User(Bootstrap):
             transaction = Transaction(self.public_key, address, amount, tip)
             transaction.sign_transaction(self.private_key)
             # keep track of pending transactions
-            self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
+            self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER, name)
             self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
             self.user_logger.info(f"Transaction of type 'Transfer' to '{name}' with amount of {amount} is pending...")
 

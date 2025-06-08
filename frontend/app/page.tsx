@@ -52,11 +52,21 @@ export default function Home() {
 
       const approvedTransactions = data.filter(tx => tx.status === "approved");
       const newBalance = approvedTransactions.reduce((balance, tx) => {
-        if (tx.type === "buy") return balance + tx.amount;
-        else if (tx.type === "sell" || tx.type === "transfer") return balance - tx.amount;
+        if (tx.type === "buy") {
+          return balance + tx.amount;
+        } else if (tx.type === "sell") {
+          return balance - tx.amount;
+        } else if (tx.type === "transfer") {
+            console.log(tx)
+            console.log(user.username)
+          // If the user is the recipient, add, else subtract
+          return tx.details === user.username
+            ? balance + tx.amount
+            : balance - tx.amount;
+        }
         return balance;
       }, INITIAL_BALANCE);
-      setBalance(newBalance);
+    setBalance(newBalance);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
@@ -204,6 +214,7 @@ export default function Home() {
             setTransferOpen(false);  // just close the modal
             fetchAllTransactions();  // optionally refresh
           }}
+          balance={balance}
         />
       </div>
     </div>

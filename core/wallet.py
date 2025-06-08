@@ -29,7 +29,7 @@ class Wallet:
             instance_id=name
         )
 
-    def add_pending_transaction(self, transaction, action_type):
+    def add_pending_transaction(self, transaction, action_type, name):
         """
         Place a transaction in the pending pool with a timestamp.
         """
@@ -37,7 +37,8 @@ class Wallet:
             transaction.signature[:ActionSettings.ID_LENGTH],
             action_type,
             transaction.amount,
-            ActionStatus.PENDING
+            ActionStatus.PENDING,
+            name
         )
         self.actions[action.id] = action
 
