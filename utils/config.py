@@ -114,5 +114,11 @@ class LoggingSettings:
 
 class IPSettings:
     LOCAL_IP = "10.100.102.6"
+    BACKEND_SERVER_IP = "10.100.102.6"
     OUTER_BOOTSTRAP_IP = "134.2134.53"  # none if there is not an outer bootstrap
     OUTER_BOOTSTRAP_PORT = 8000  # none if there is not an outer bootstrap
+
+
+class FrontendEnvSettings:
+    ENV_FILEPATH = "../frontend/.env"
+    BACKEND_SERVER_VARIABLE_NAME = "NEXT_PUBLIC_API_IP"

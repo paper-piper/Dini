@@ -1,6 +1,6 @@
 import json
 import os
-from utils.config import FilesSettings, IPSettings
+from utils.config import FilesSettings, IPSettings, FrontendEnvSettings
 from utils.logging_utils import setup_basic_logger
 
 logger = setup_basic_logger()
@@ -54,6 +54,13 @@ def _save_config(config):
         logger.error(f"An error occurred while saving the config: {e}")
 
 
+def config_env_frontend_file():
+    with open(FrontendEnvSettings.ENV_FILEPATH, 'w') as f:
+        f.write(f'{FrontendEnvSettings.BACKEND_SERVER_VARIABLE_NAME}={IPSettings.BACKEND_SERVER_IP}\n')
+
+
 if __name__ == "__main__":
     if IPSettings.OUTER_BOOTSTRAP_IP and IPSettings.OUTER_BOOTSTRAP_PORT:
         add_bootstrap_address(IPSettings.OUTER_BOOTSTRAP_IP, IPSettings.OUTER_BOOTSTRAP_PORT)
+
+    config_env_frontend_file()
