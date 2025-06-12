@@ -11,7 +11,7 @@ from utils.config import IPSettings
 
 logger = setup_basic_logger()
 
-ALLOWED_ORIGINS = {f"http://{IPSettings.LOCAL_IP}:3000"}
+ALLOWED_ORIGINS = {f"http://{IPSettings.LOCAL_IP}:3000", r"http://localhost:3000"}
 
 app = Flask(__name__)
 CORS(
