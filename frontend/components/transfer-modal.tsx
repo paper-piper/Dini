@@ -52,10 +52,10 @@ export function TransferModal({ open, onOpenChange, onTransfer, balance }: Trans
       fetch(`${API_URL}/connected-users`, {
         method: "GET",
         headers: {
-          "Session-Id": user.session_id, // ✅ Include session ID for authentication
+          "Session-Id": user.session_id,
           "Content-Type": "application/json",
         },
-        credentials: "include", // ✅ Allow session-based authentication
+        credentials: "include",
       })
         .then((res) => {
           if (!res.ok) {
