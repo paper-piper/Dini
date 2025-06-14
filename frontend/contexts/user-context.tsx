@@ -40,7 +40,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const heartbeat = async () => {
       try {
           const API_IP = process.env.NEXT_PUBLIC_API_IP;
-        const response = await fetch('https://${API_IP}:8000/heartbeat', {
+        const response = await fetch(`https://${API_IP}:8000/heartbeat`, {
           method: 'POST',
           headers: {
             'Session-Id': user.session_id,
