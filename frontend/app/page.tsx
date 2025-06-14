@@ -57,12 +57,9 @@ export default function Home() {
         } else if (tx.type === "sell") {
           return balance - tx.amount;
         } else if (tx.type === "transfer") {
-            console.log(tx)
-            console.log(user.username)
-          // If the user is the recipient, add, else subtract
-          return tx.details === user.username
-            ? balance + tx.amount
-            : balance - tx.amount;
+          return balance - tx.amount;
+        } else if (tx.type === "receive") {
+            return balance + tx.amount
         }
         return balance;
       }, INITIAL_BALANCE);

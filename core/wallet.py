@@ -29,7 +29,7 @@ class Wallet:
             instance_id=name
         )
 
-    def add_pending_transaction(self, transaction, action_type, name):
+    def add_pending_transaction(self, transaction, action_type, name=None):
         """
         Place a transaction in the pending pool with a timestamp.
         """
@@ -41,19 +41,25 @@ class Wallet:
             name
         )
         self.actions[action.id] = action
+        if name:
+            self.wallet_logger.info(f"Added pending transaction with name {name}")
 
-    def filter_and_add_transaction(self, transaction):
+    def filter_and_add_transaction(self, transaction, names_pk_dict):
         """
         Filters a transaction to determine if it is relevant and updates the balance accordingly.
-
+        :param names_pk_dict: a way to get name from pk
         :param transaction: A transaction object containing sender, recipient, and amount details
         :return: False if the transaction is not relevant, otherwise True
         """
+
         # add or subtract transaction from balance
         if transaction.sender_pk == self.owner_pk:
             self.balance -= transaction.amount
+            addision = False
         elif transaction.recipient_pk == self.owner_pk:
             self.balance += transaction.amount
+            addision = True
+
         else:
             self.wallet_logger.info(f"Irrelevant transaction detected: {transaction}")
             return False
@@ -64,28 +70,41 @@ class Wallet:
             self.actions[transaction_id].status = ActionStatus.APPROVED
             self.wallet_logger.info(f"transaction of type '{action.type}' with amount {action.amount} is approved")
         else:
-            action_type = ActionType.TRANSFER
+            name = None
             lord_key = load_key(KeysSettings.LORD_PK)
             bonus_key = load_key(KeysSettings.BONUS_PK)
             tipping_key = load_key(KeysSettings.TIPPING_PK)
             if transaction.sender_pk == lord_key:
                 action_type = ActionType.BUY
-            if transaction.recipient_pk == lord_key:
+            elif transaction.recipient_pk == lord_key:
                 action_type = ActionType.SELL
-            if transaction.sender_pk == bonus_key:
+            elif transaction.sender_pk == bonus_key:
                 action_type = ActionType.MINE
-            if transaction.sender_pk == tipping_key:
+            elif transaction.sender_pk == tipping_key:
                 action_type = ActionType.TIP
+            else:
+                if addision:
+                    action_type = ActionType.RECEIVE
+                else:
+                    action_type = ActionType.TRANSFER
+                target_pk = transaction.sender_pk if transaction.sender_pk != self.owner_pk else transaction.recipient_pk
+                name = next(k for k, v in names_pk_dict.items() if v == target_pk)
 
-            action = Action(transaction_id[:ActionSettings.ID_LENGTH], action_type, transaction.amount, ActionStatus.APPROVED)
+            action = Action(
+                transaction_id[:ActionSettings.ID_LENGTH],
+                action_type,
+                transaction.amount,
+                ActionStatus.APPROVED,
+                name
+            )
             self.actions[transaction_id] = action
             self.wallet_logger.info(f"new transaction of type transfer was added with amount of {action.amount}")
         return True
 
-    def filter_and_add_block(self, block):
+    def filter_and_add_block(self, block, names_pk_dict):
         """
         Filters and adds a block to the blockchain if it is valid.
-
+        :param names_pk_dict: a way to get name from pk
         :param block: A block object containing transactions and hash details
         :return: False if the block is new, otherwise True
         """
@@ -98,7 +117,7 @@ class Wallet:
         relevant_transactions = 0
         not_relevant_transaction = 0
         for transaction in block.transactions:
-            passed = self.filter_and_add_transaction(transaction)
+            passed = self.filter_and_add_transaction(transaction, names_pk_dict)
             if passed:
                 relevant_transactions += 1
             else:

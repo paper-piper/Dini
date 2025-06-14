@@ -4,10 +4,10 @@ import { format } from "date-fns";
 
 export interface Transaction {
   id: string;
-  type: "buy" | "sell" | "transfer" | "mine";
+  type: "buy" | "sell" | "transfer" | "mine" | "receive";
   amount: number;
   timestamp: string;
-  status: "pending" | "failed" | "approved"; // New status field
+  status: "pending" | "failed" | "approved";
   details?: string;
 }
 
@@ -62,9 +62,9 @@ export function History({ transactions }: HistoryProps) {
               className="grid grid-cols-4 gap-4 items-center text-white"
             >
               <span className="capitalize">
-                {transaction.type === "transfer" && transaction.details
-                  ? `${transaction.type} (${transaction.details})`
-                  : transaction.type}
+              {(["transfer", "receive"].includes(transaction.type) && transaction.details)
+                ? `${transaction.type} (${transaction.details})`
+                : transaction.type}
               </span>
               <span>{transaction.amount.toFixed(2)} DINI</span>
               <span className="text-sm text-white/70">

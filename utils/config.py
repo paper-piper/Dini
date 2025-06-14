@@ -34,6 +34,7 @@ class ActionType:
     BUY = "buy"
     SELL = "sell"
     TRANSFER = "transfer"
+    RECEIVE = "receive"
     MINE = "mine"
     TIP = "mining tip"
 
@@ -113,8 +114,8 @@ class LoggingSettings:
 
 
 class IPSettings:
-    LOCAL_IP = "10.100.102.6"
-    BACKEND_SERVER_IP = "10.100.102.6"
+    LOCAL_IP = "10.100.102.28"
+    BACKEND_SERVER_IP = "10.100.102.28"
     OUTER_BOOTSTRAP_IP = None  # none if there is not an outer bootstrap
     OUTER_BOOTSTRAP_PORT = None  # none if there is not an outer bootstrap
 
