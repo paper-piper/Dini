@@ -1,6 +1,6 @@
 import time
 import threading
-
+from utils.config import IPSettings
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from utils.logging_utils import setup_basic_logger
@@ -11,7 +11,9 @@ from utils.config import IPSettings
 
 logger = setup_basic_logger()
 
-ALLOWED_ORIGINS = {f"http://{IPSettings.LOCAL_IP}:3000", r"http://localhost:3000"}
+ALLOWED_ORIGINS = {"http://localhost:3000",
+                   "http://127.0.0.1:3000",
+                   f"http://{IPSettings.LOCAL_IP}:3000"}
 
 app = Flask(__name__)
 CORS(
@@ -28,9 +30,9 @@ def add_cors_headers(response):
     origin = request.headers.get("Origin")
     if origin in ALLOWED_ORIGINS:
         response.headers["Access-Control-Allow-Origin"] = origin
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Session-Id"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Session-Id"
     return response
 
 

@@ -6,7 +6,6 @@ from cryptography.hazmat.primitives.serialization import load_pem_public_key, lo
 from network.user import User
 from core.transaction import get_sk_pk_pair
 from utils.logging_utils import setup_basic_logger
-from utils.config import IPSettings
 from database_manager import DatabaseManager
 from cryptography.hazmat.primitives import serialization
 import hashlib
@@ -71,7 +70,7 @@ class UserManager:
                     }
                     for action in actions
                 ]
-                logger.info(f"Successfully fetched {len(response)} transactions.")
+                logger.info(f"Successfully fetched the following transactions: {response}.")
                 return response, 200
             except Exception as e:
                 logger.error(f"Error while retrieving transactions: {e}")
@@ -218,7 +217,6 @@ class UserManager:
         """Cleanup user resources before removing the instance."""
         if hasattr(self, 'blockchain_node'):
             self.blockchain_node.close()
-        self.nodes_names_addresses = {}
 
 
 def hash_password(password: str, salt: bytes = None) -> tuple[str, str]:

@@ -28,7 +28,6 @@ class Action:
 
     @classmethod
     def from_dict(cls, data):
-        details = data.get("details")
         timestamp = datetime.fromisoformat(data["timestamp"]) if "timestamp" in data else None
 
         return cls(
@@ -37,6 +36,6 @@ class Action:
             action_type=data["type"],
             amount=data["amount"],
             status=data["status"],
-            details=details,
+            details=data["details"],
             timestamp=timestamp
         )

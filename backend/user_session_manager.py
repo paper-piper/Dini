@@ -54,4 +54,3 @@ class UserSessionManager:
         for session_id in inactive_sessions:
             logger.info(f"Cleaning up inactive session: {session_id}")
             self.remove_user(session_id)
-

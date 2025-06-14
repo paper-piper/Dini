@@ -73,7 +73,6 @@ class User(Bootstrap):
         )
         self.user_logger.info(f"Requesting updates with latest hash: {self.wallet.latest_hash}")
 
-
     def __del__(self):
         super().__del__()
         if hasattr(self, "wallet") and self.wallet:
@@ -142,7 +141,8 @@ class User(Bootstrap):
             transaction = Transaction(self.public_key, address, amount, tip)
             transaction.sign_transaction(self.private_key)
             # keep track of pending transactions
-            self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER)
+            self.user_logger.info(f"Adding transfer with name '{name}'")
+            self.wallet.add_pending_transaction(transaction, ActionType.TRANSFER, name)
             self.send_distributed_message(MsgTypes.RESPONSE, MsgSubTypes.TRANSACTION, transaction)
             self.user_logger.info(f"Transaction of type 'Transfer' to '{name}' with amount of {amount} is pending...")
 
@@ -157,7 +157,7 @@ class User(Bootstrap):
         :return: Boolean indicating whether the block was already seen.
         """
         # check
-        already_seen = self.wallet.filter_and_add_block(block)
+        already_seen = self.wallet.filter_and_add_block(block, self.nodes_names_addresses)
         self.save_wallet()
         if not already_seen:
             self.user_logger.debug(f" Block added to wallet and saved. block: {block}")

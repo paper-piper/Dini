@@ -20,7 +20,7 @@ import {
   SelectValue,
 }
 from "@/components/ui/select"
-import { useUser } from "@/contexts/user-context"; // ✅ Import user session from correct path
+import { useUser } from "@/contexts/user-context";
 
 // Define the shape of a user option
 interface UserOption {
@@ -32,12 +32,13 @@ interface TransferModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onTransfer: (recipient: string, amount: number) => void // callback from parent
+  balance: number
 }
 
 const API_IP = process.env.NEXT_PUBLIC_API_IP;
 const API_URL = `https://${API_IP}:8000`;
 
-export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalProps) {
+export function TransferModal({ open, onOpenChange, onTransfer, balance }: TransferModalProps) {
     const { user } = useUser()
   const [connectedUsers, setConnectedUsers] = useState<UserOption[]>([])
   const [selectedRecipient, setSelectedRecipient] = useState<string>("")
@@ -79,6 +80,11 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
 
   const handleTransfer = useCallback(() => {
     if (!selectedRecipient || amount <= 0 || isProcessing || !user?.session_id) return;
+      if (amount > balance) {
+        toast.error("Insufficient balance to transfer this amount.");
+        return;
+      }
+
     setIsProcessing(true);
 
     fetch(`${API_URL}/transactions`, {
@@ -112,7 +118,7 @@ export function TransferModal({ open, onOpenChange, onTransfer }: TransferModalP
         setSelectedRecipient("");
         setAmount(0);
       });
-  }, [selectedRecipient, amount, isProcessing, user, onOpenChange, onTransfer]);
+  }, [selectedRecipient, amount, isProcessing, user, balance, onOpenChange, onTransfer]);
 
   return (
     <Dialog
